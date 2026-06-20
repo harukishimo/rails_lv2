@@ -4,8 +4,6 @@ module Admin
 
     def show
       authorize :admin_dashboard, :show?
-
-      render plain: "Admin dashboard"
     end
   end
 end

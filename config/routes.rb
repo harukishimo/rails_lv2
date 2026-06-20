@@ -12,6 +12,12 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resource :dashboard, only: :show, controller: :dashboard
+    resource :evaluation_target_import, only: :new, controller: :evaluation_target_imports do
+      post :preview
+      post :import, action: :create
+    end
+    get "exports", to: "exports#show", as: :exports
+    get "exports/:report(.:format)", to: "exports#download", as: :export
   end
 
   resources :exam_applications, only: %i[index show new create] do

@@ -8,7 +8,8 @@ class AdminDashboardAuthorizationTest < ActionDispatch::IntegrationTest
     get admin_dashboard_path
 
     assert_response :success
-    assert_equal "Admin dashboard", response.body
+    assert_includes response.body, "受験対象取込"
+    assert_includes response.body, "帳票出力"
   end
 
   test "candidate is forbidden from admin dashboard" do

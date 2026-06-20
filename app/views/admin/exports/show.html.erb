@@ -1,0 +1,29 @@
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Admin / Exports</p>
+    <h1>帳票出力</h1>
+  </div>
+  <%= link_to "管理へ戻る", admin_dashboard_path, class: "button" %>
+</section>
+
+<section class="panel">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>帳票</th>
+        <th>出力</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @reports.each do |report| %>
+        <tr>
+          <td><%= report.title %></td>
+          <td class="actions">
+            <%= link_to "CSV", admin_export_path(report.key, format: :csv), class: "button" %>
+            <%= link_to "XLSX", admin_export_path(report.key, format: :xlsx), class: "button" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
