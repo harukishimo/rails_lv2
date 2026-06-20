@@ -4,7 +4,7 @@ class UserTest < ActiveSupport::TestCase
   test "devise authenticates a valid password" do
     user = User.create!(
       name: "Candidate",
-      email: "candidate@example.com",
+      email: "candidate-#{SecureRandom.hex(4)}@example.com",
       password: "password123",
       password_confirmation: "password123"
     )

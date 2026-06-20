@@ -14,6 +14,8 @@ Rails.application.routes.draw do
     resource :dashboard, only: :show, controller: :dashboard
   end
 
+  resource :dashboard, only: :show, controller: :dashboard
+
   resources :exam_applications, only: %i[index show new create] do
     resource :interview_application, only: %i[new create]
     resources :review_applications, only: %i[new create], shallow: true do
@@ -44,7 +46,8 @@ Rails.application.routes.draw do
   end
   resources :review_comments, only: :update
 
-  root "health#index"
+  root "dashboard#show"
+  get "health" => "health#index", as: :app_health
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
