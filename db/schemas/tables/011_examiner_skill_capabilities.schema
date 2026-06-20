@@ -1,6 +1,6 @@
 create_table "examiner_skill_capabilities", force: :cascade do |t|
   t.references "examiner_profile", null: false, index: false
-  t.bigint "evaluation_target_id", null: false
+  t.references "evaluation_target", null: false, index: false
   t.boolean "active", null: false, default: true
   t.timestamps null: false
 

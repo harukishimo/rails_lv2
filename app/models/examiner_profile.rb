@@ -1,6 +1,7 @@
 class ExaminerProfile < ApplicationRecord
   belongs_to :user
   has_many :examiner_skill_capabilities, dependent: :destroy
+  has_many :evaluation_targets, through: :examiner_skill_capabilities
 
   validates :display_name, presence: true
   validates :user_id, uniqueness: true

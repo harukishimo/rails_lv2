@@ -4,8 +4,10 @@ require "rails/test_help"
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors)
+    # Ridgepole is the schema source of truth, and this app intentionally does
+    # not maintain db/schema.rb. Rails process-based parallelization clones test
+    # databases from db/schema.rb, so keep tests in a single process.
+    parallelize(workers: 1)
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
