@@ -6,7 +6,7 @@ module Api
       def login
         user = User.find_for_database_authentication(email: login_params[:email].to_s.downcase)
 
-        if user&.valid_password?(login_params[:password])
+        if user&.valid_password?(login_params[:password]) && user.active_for_authentication?
           render json: token_response_for(user), status: :created
         else
           render_unauthorized("invalid_credentials", "メールアドレスまたはパスワードが正しくありません")

@@ -19,15 +19,20 @@ class RefreshToken < ApplicationRecord
   def self.authenticate(raw_token)
     return if raw_token.blank?
 
-    active.find_by(token_digest: digest(raw_token))
+    token = active.includes(:user).find_by(token_digest: digest(raw_token))
+    token if token&.user&.active_for_authentication?
   end
 
   def self.rotate!(raw_token)
-    token = authenticate(raw_token)
-    return unless token
+    return if raw_token.blank?
 
     transaction do
+      token = find_by(token_digest: digest(raw_token))
+      next unless token
+
       token.lock!
+      next unless token.active? && token.user.active_for_authentication?
+
       token.revoke!
       issue_for!(token.user)
     end

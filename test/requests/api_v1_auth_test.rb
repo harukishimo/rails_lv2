@@ -33,6 +33,20 @@ class ApiV1AuthTest < ActionDispatch::IntegrationTest
     assert_equal "invalid_credentials", response.parsed_body.dig("error", "code")
   end
 
+  test "inactive users cannot login through API" do
+    user = create_user(active: false)
+
+    post api_v1_auth_login_path, params: {
+      auth: {
+        email: user.email,
+        password: "password123"
+      }
+    }
+
+    assert_response :unauthorized
+    assert_equal "invalid_credentials", response.parsed_body.dig("error", "code")
+  end
+
   test "bearer access token returns current user" do
     user = create_user
     access_token = JwtToken.issue_for(user)
@@ -41,6 +55,17 @@ class ApiV1AuthTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal user.email, response.parsed_body.dig("user", "email")
+  end
+
+  test "inactive users cannot use an existing bearer access token" do
+    user = create_user
+    access_token = JwtToken.issue_for(user)
+    user.update!(active: false)
+
+    get api_v1_auth_me_path, headers: { "Authorization" => "Bearer #{access_token}" }
+
+    assert_response :unauthorized
+    assert_equal "invalid_token", response.parsed_body.dig("error", "code")
   end
 
   test "refresh rotates token and rejects old refresh token" do
@@ -52,6 +77,17 @@ class ApiV1AuthTest < ActionDispatch::IntegrationTest
     assert_response :created
     new_refresh_token = response.parsed_body.fetch("refresh_token")
     assert_not_equal raw_refresh_token, new_refresh_token
+
+    post api_v1_auth_refresh_path, params: { refresh_token: raw_refresh_token }
+
+    assert_response :unauthorized
+    assert_equal "invalid_refresh_token", response.parsed_body.dig("error", "code")
+  end
+
+  test "inactive users cannot refresh an existing refresh token" do
+    user = create_user
+    _record, raw_refresh_token = RefreshToken.issue_for!(user)
+    user.update!(active: false)
 
     post api_v1_auth_refresh_path, params: { refresh_token: raw_refresh_token }
 
@@ -78,12 +114,13 @@ class ApiV1AuthTest < ActionDispatch::IntegrationTest
 
   private
 
-  def create_user
+  def create_user(active: true)
     User.create!(
       name: "Candidate",
       email: "candidate-#{SecureRandom.hex(4)}@example.com",
       password: "password123",
-      password_confirmation: "password123"
+      password_confirmation: "password123",
+      active: active
     )
   end
 end

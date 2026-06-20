@@ -22,6 +22,27 @@ class RefreshTokenTest < ActiveSupport::TestCase
     assert_equal new_record, RefreshToken.authenticate(new_raw_token)
   end
 
+  test "does not rotate a revoked refresh token" do
+    user = create_user
+    record, raw_token = RefreshToken.issue_for!(user)
+    record.revoke!
+
+    assert_no_difference("RefreshToken.count") do
+      assert_nil RefreshToken.rotate!(raw_token)
+    end
+  end
+
+  test "does not rotate refresh token for inactive user" do
+    user = create_user
+    _record, raw_token = RefreshToken.issue_for!(user)
+    user.update!(active: false)
+
+    assert_nil RefreshToken.authenticate(raw_token)
+    assert_no_difference("RefreshToken.count") do
+      assert_nil RefreshToken.rotate!(raw_token)
+    end
+  end
+
   test "expired refresh tokens are not authenticated" do
     user = create_user
     _record, raw_token = RefreshToken.issue_for!(user, expires_at: 1.minute.ago)

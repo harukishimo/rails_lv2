@@ -31,7 +31,7 @@ class JwtToken
     payload = decode!(token)
     return unless payload[:typ] == TOKEN_TYPE
 
-    User.find_by(id: payload[:sub])
+    User.find_by(id: payload[:sub])&.then { |user| user if user.active_for_authentication? }
   end
 
   def self.secret

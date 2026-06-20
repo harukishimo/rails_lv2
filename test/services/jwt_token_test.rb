@@ -21,6 +21,14 @@ class JwtTokenTest < ActiveSupport::TestCase
     end
   end
 
+  test "inactive users are rejected when resolving access tokens" do
+    user = create_user
+    token = JwtToken.issue_for(user)
+    user.update!(active: false)
+
+    assert_nil JwtToken.user_for(token)
+  end
+
   test "tampered access tokens are rejected" do
     user = create_user
     token = "#{JwtToken.issue_for(user)}tampered"
