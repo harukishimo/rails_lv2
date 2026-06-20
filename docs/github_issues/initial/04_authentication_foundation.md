@@ -69,7 +69,7 @@ Deviseによる画面向けsession認証と、API向けJWT/refresh token rotatio
 
 - Web画面の認証はDeviseを使う
 - `jwt` gemを使う
-- User/RefreshTokenのDB schema変更はRidgepoleの `db/Schemafile` で管理する
+- User/RefreshTokenのDB schema変更はRidgepoleの `db/schemas/tables/*.schema` で1 table 1 fileとして管理する
 - refresh tokenはJWTではなくopaque token digest/rotation/revocation方針
 - Deviseは画面の認証土台に限定し、業務固有の認可は後続IssueのPunditで扱う
 - API JWT/refresh tokenはDevise任せにせず、`jwt` gemとRefreshTokenモデル/サービスで実装する
