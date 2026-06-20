@@ -1,11 +1,21 @@
 require "test_helper"
 
 class DemoSeedTest < ActiveSupport::TestCase
+  include ActiveSupport::Testing::TimeHelpers
+
   test "seed data is idempotent and creates local demo accounts" do
+    interview_schedule_count = nil
+
     assert_nothing_raised do
       Rails.application.load_seed
       Rails.application.load_seed
+      interview_schedule_count = InterviewSchedule.count
+      travel 1.day do
+        Rails.application.load_seed
+      end
     end
+
+    assert_equal interview_schedule_count, InterviewSchedule.count
 
     admin = User.find_by!(email: "admin@example.com")
     candidate = User.find_by!(email: "candidate@example.com")

@@ -248,7 +248,7 @@ def seed_assignment(interview_application:, actor:, examiner_profile:, reason: n
 end
 
 def seed_interview_schedule(interview_application:, actor:, starts_at:, ends_at:)
-  existing = interview_application.interview_schedules.find_by(starts_at: starts_at, ends_at: ends_at)
+  existing = interview_application.interview_schedules.order(:id).first
   return existing if existing
   return unless interview_application.schedulable?
 
