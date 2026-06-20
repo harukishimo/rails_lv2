@@ -17,6 +17,8 @@ class InterviewApplication < ApplicationRecord
   belongs_to :assigned_examiner_profile, class_name: "ExaminerProfile", optional: true
   belongs_to :assignment_overridden_by, class_name: "User", optional: true
   has_many :interview_schedules, dependent: :restrict_with_error
+  has_one :interview_result, dependent: :restrict_with_error
+  has_many :status_change_events, as: :subject
 
   validates :requested_at, presence: true
   validates :exam_application_id, uniqueness: { conditions: -> { where(deleted_at: nil) } }
@@ -51,6 +53,10 @@ class InterviewApplication < ApplicationRecord
 
   def closed_for_business?
     completed?
+  end
+
+  def result_decidable?
+    (scheduled? || calendar_created?) && interview_result.blank?
   end
 
   private

@@ -24,6 +24,10 @@ module InterviewApplications
       transition_to!(:scheduled)
     end
 
+    def complete!
+      transition_to!(:completed)
+    end
+
     private
 
     attr_reader :interview_application, :actor
@@ -35,6 +39,12 @@ module InterviewApplications
 
       ensure_transition_allowed!(previous_status, next_status)
       interview_application.update!(status: next_status)
+      StatusChangeRecorder.call(
+        interview_application: interview_application,
+        actor: actor,
+        previous_status: previous_status,
+        next_status: next_status
+      )
       interview_application
     end
 

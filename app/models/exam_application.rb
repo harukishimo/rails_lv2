@@ -33,6 +33,7 @@ class ExamApplication < ApplicationRecord
   has_many :review_applications, dependent: :restrict_with_error
   has_one :interview_application
   has_one :user_qualification
+  has_many :status_change_events, as: :subject
 
   validates :attempt_number, numericality: { only_integer: true, greater_than: 0 }
   validates :declared_at, presence: true, unless: :draft?

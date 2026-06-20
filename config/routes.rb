@@ -26,6 +26,7 @@ Rails.application.routes.draw do
       patch :assignment, action: :assign
     end
     resources :interview_schedules, only: :create
+    resource :interview_result, only: :create
   end
   resources :interview_schedules, only: [] do
     patch :approve, on: :member

@@ -60,6 +60,10 @@ class InterviewApplicationPolicy < ApplicationPolicy
     (user.admin? || examiner_capable?) && record.assignable? && !self_interview?
   end
 
+  def decide_result?
+    (user.admin? || assigned_examiner?) && record.result_decidable? && !self_interview?
+  end
+
   def cancel?
     false
   end
@@ -76,6 +80,10 @@ class InterviewApplicationPolicy < ApplicationPolicy
 
   def examiner_capable?
     user.examiner? && user.examiner_profile&.can_interview_for?(record.exam_application.evaluation_target)
+  end
+
+  def assigned_examiner?
+    user.examiner? && record.assigned_examiner_profile&.user_id == user.id
   end
 
   def acceptable_exam_application?
