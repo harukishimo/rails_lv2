@@ -53,6 +53,19 @@ class ExaminerProfileTest < ActiveSupport::TestCase
     assert recreated.persisted?
   end
 
+  test "profile restore does not create active duplicate for same user" do
+    examiner = create_user_with_role(Role::EXAMINER)
+    deleted_profile = ExaminerProfile.create!(user: examiner, display_name: "Examiner")
+    deleted_profile.destroy
+    ExaminerProfile.create!(user: examiner, display_name: "Examiner Again")
+
+    assert_no_difference -> { ExaminerProfile.where(user: examiner).count } do
+      deleted_profile.restore(recursive: false)
+    end
+    assert deleted_profile.reload.deleted?
+    assert_includes deleted_profile.errors[:base], "cannot restore because active duplicate exists"
+  end
+
   private
 
   def create_evaluation_target

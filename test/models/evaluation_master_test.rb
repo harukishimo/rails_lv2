@@ -16,6 +16,19 @@ class EvaluationMasterTest < ActiveSupport::TestCase
     assert SkillArea.create!(name: name, display_order: 3)
   end
 
+  test "skill area restore does not create active duplicate" do
+    name = "Backend #{SecureRandom.hex(4)}"
+    deleted_area = SkillArea.create!(name: name, display_order: 1)
+    deleted_area.destroy
+    SkillArea.create!(name: name, display_order: 2)
+
+    assert_no_difference -> { SkillArea.where(name: name).count } do
+      deleted_area.restore(recursive: false)
+    end
+    assert deleted_area.reload.deleted?
+    assert_includes deleted_area.errors[:base], "cannot restore because active duplicate exists"
+  end
+
   test "programming language name is unique" do
     name = "Ruby #{SecureRandom.hex(4)}"
     ProgrammingLanguage.create!(name: name)
@@ -26,6 +39,18 @@ class EvaluationMasterTest < ActiveSupport::TestCase
 
     ProgrammingLanguage.find_by!(name: name).destroy
     assert ProgrammingLanguage.create!(name: name)
+  end
+
+  test "programming language restore does not create active duplicate" do
+    name = "Ruby #{SecureRandom.hex(4)}"
+    deleted_language = ProgrammingLanguage.create!(name: name)
+    deleted_language.destroy
+    ProgrammingLanguage.create!(name: name)
+
+    assert_no_difference -> { ProgrammingLanguage.where(name: name).count } do
+      deleted_language.restore(recursive: false)
+    end
+    assert deleted_language.reload.deleted?
   end
 
   test "framework name is unique per programming language" do
@@ -44,6 +69,18 @@ class EvaluationMasterTest < ActiveSupport::TestCase
     assert Framework.create!(name: "Web", programming_language: ruby)
   end
 
+  test "framework restore does not create active duplicate for same language" do
+    ruby = ProgrammingLanguage.create!(name: "Ruby #{SecureRandom.hex(4)}")
+    deleted_framework = Framework.create!(name: "Web", programming_language: ruby)
+    deleted_framework.destroy
+    Framework.create!(name: "Web", programming_language: ruby)
+
+    assert_no_difference -> { Framework.where(name: "Web", programming_language: ruby).count } do
+      deleted_framework.restore(recursive: false)
+    end
+    assert deleted_framework.reload.deleted?
+  end
+
   test "skill level requires positive numeric level" do
     level = SkillLevel.new(code: "Lv0", numeric_level: 0)
 
@@ -56,5 +93,17 @@ class EvaluationMasterTest < ActiveSupport::TestCase
     SkillLevel.create!(code: code, numeric_level: 2).destroy
 
     assert SkillLevel.create!(code: code, numeric_level: 2)
+  end
+
+  test "skill level restore does not create active duplicate" do
+    code = "Lv#{rand(1000..9999)}"
+    deleted_level = SkillLevel.create!(code: code, numeric_level: 2)
+    deleted_level.destroy
+    SkillLevel.create!(code: code, numeric_level: 2)
+
+    assert_no_difference -> { SkillLevel.where(code: code).count } do
+      deleted_level.restore(recursive: false)
+    end
+    assert deleted_level.reload.deleted?
   end
 end

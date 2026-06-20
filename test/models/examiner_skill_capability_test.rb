@@ -32,6 +32,20 @@ class ExaminerSkillCapabilityTest < ActiveSupport::TestCase
     assert recreated.persisted?
   end
 
+  test "capability restore does not create active duplicate for same profile and target" do
+    profile = create_examiner_profile
+    target = create_evaluation_target
+    deleted_capability = ExaminerSkillCapability.create!(examiner_profile: profile, evaluation_target: target)
+    deleted_capability.destroy
+    ExaminerSkillCapability.create!(examiner_profile: profile, evaluation_target: target)
+
+    assert_no_difference -> { ExaminerSkillCapability.where(examiner_profile: profile, evaluation_target: target).count } do
+      deleted_capability.restore(recursive: false)
+    end
+    assert deleted_capability.reload.deleted?
+    assert_includes deleted_capability.errors[:base], "cannot restore because active duplicate exists"
+  end
+
   test "requires active evaluation target" do
     profile = create_examiner_profile
     target = create_evaluation_target(active: false)

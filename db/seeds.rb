@@ -10,7 +10,7 @@
 
 def seed_record(model, lookup)
   relation = model.respond_to?(:with_deleted) ? model.with_deleted : model
-  record = relation.find_or_initialize_by(lookup)
+  record = model.find_by(lookup) || relation.find_or_initialize_by(lookup)
   record.restore(recursive: false) if record.respond_to?(:deleted?) && record.deleted?
   yield record
   record.save!

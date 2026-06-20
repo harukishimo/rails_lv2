@@ -1,5 +1,8 @@
 class SkillLevel < ApplicationRecord
   acts_as_paranoid
+  include RestoreDuplicateGuard
+
+  prevents_restore_duplicates_by :code, case_insensitive: :code
 
   has_many :evaluation_targets, dependent: :restrict_with_error
 

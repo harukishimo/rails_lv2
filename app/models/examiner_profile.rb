@@ -1,5 +1,8 @@
 class ExaminerProfile < ApplicationRecord
   acts_as_paranoid
+  include RestoreDuplicateGuard
+
+  prevents_restore_duplicates_by :user_id
 
   belongs_to :user
   has_many :examiner_skill_capabilities, dependent: :destroy

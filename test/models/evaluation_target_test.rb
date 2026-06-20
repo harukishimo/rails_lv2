@@ -73,6 +73,31 @@ class EvaluationTargetTest < ActiveSupport::TestCase
     assert recreated.save
   end
 
+  test "restore does not create active duplicate target identity" do
+    target = create_evaluation_target
+    target.destroy
+    create_evaluation_target(
+      skill_area: target.skill_area,
+      programming_language: target.programming_language,
+      framework: target.framework,
+      skill_level: target.skill_level,
+      version: target.version
+    )
+
+    assert_no_difference -> {
+      EvaluationTarget.where(
+        programming_language: target.programming_language,
+        framework: target.framework,
+        skill_level: target.skill_level,
+        version: target.version
+      ).count
+    } do
+      target.restore(recursive: false)
+    end
+    assert target.reload.deleted?
+    assert_includes target.errors[:base], "cannot restore because active duplicate exists"
+  end
+
   private
 
   def build_evaluation_target(attributes = {})

@@ -2,6 +2,9 @@ require "uri"
 
 class EvaluationTarget < ApplicationRecord
   acts_as_paranoid
+  include RestoreDuplicateGuard
+
+  prevents_restore_duplicates_by :programming_language_id, :framework_id, :skill_level_id, :version
 
   belongs_to :skill_area
   belongs_to :programming_language

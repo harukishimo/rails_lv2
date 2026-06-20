@@ -1,5 +1,8 @@
 class ExaminerSkillCapability < ApplicationRecord
   acts_as_paranoid
+  include RestoreDuplicateGuard
+
+  prevents_restore_duplicates_by :examiner_profile_id, :evaluation_target_id
 
   belongs_to :examiner_profile
   belongs_to :evaluation_target

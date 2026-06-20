@@ -1,5 +1,8 @@
 class SkillArea < ApplicationRecord
   acts_as_paranoid
+  include RestoreDuplicateGuard
+
+  prevents_restore_duplicates_by :name, case_insensitive: :name
 
   has_many :evaluation_targets, dependent: :restrict_with_error
 
