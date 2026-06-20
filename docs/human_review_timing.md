@@ -11,17 +11,17 @@ TODO 13の [LoopEngineering実行計画](/Users/haruki.shimo/Documents/ruby_stud
 ## 基本方針
 
 - 人間確認は45分ごとの全loopでは行わない。
-- 原則として2 loopごと、つまり90分ごとにまとめて確認する。
-- ただし、DB、認証/認可、状態遷移、外部連携、評価基準充足に影響する変更は、定期確認を待たずに確認対象にする。
+- 通常の確認は、Issue完了後に作成されるPRレビューで行う。
+- DB、認証/認可、状態遷移、外部連携、評価基準充足に影響する変更は、PR本文とLoop Reportにリスク、判断内容、テスト結果を明記する。
 - 人間確認は「作業の進捗確認」ではなく、「設計判断、仕様差分、評価基準の網羅性、取り返しにくい変更」を見るために行う。
-- Looperが判断に迷った場合は、実装を進めずIssueへ `human-review` を付けて止める。
+- Looperが判断に迷った場合のみ、実装を進めずIssueへ `human-review` を付けて止める。
 
 ## 確認タイミング
 
 | 種別 | タイミング | 人間が見るもの | Looperの扱い |
 | --- | --- | --- | --- |
-| 定期確認 | 2 loopごと、約90分ごと | IssueのLoop Report、PR差分、テスト結果、未完了点 | `human-review` が不要なら次Issueへ進んでよい |
-| 高リスク確認 | 高リスクIssueの1 loop完了時 | DB、認証/認可、状態遷移、外部連携、transaction、soft deleteの変更 | `human-review` labelを付け、確認まで次の破壊的変更はしない |
+| 定期確認 | PR作成時、または人間が任意で確認したい時 | IssueのLoop Report、PR差分、テスト結果、未完了点 | `human-review` が不要なら次Issueへ進んでよい |
+| 高リスク確認 | 高リスクIssueのPR作成時、または方針判断が必要になった時 | DB、認証/認可、状態遷移、外部連携、transaction、soft deleteの変更 | 通常はPRレビューへ回す。方針判断が必要な場合のみ `human-review` labelを付ける |
 | ブロッカー確認 | 仕様矛盾、テスト原因不明、外部連携判断などが出た時 | 何が詰まっているか、選択肢、推奨案 | 作業停止。人間回答後に再開 |
 | PR確認 | Issueの受け入れ条件を満たした時 | 変更内容、テスト、評価基準対応、残リスク | 承認後にmerge対象 |
 | フェーズ確認 | 主要フェーズ完了時 | 複数Issue横断の整合性、次フェーズに進めるか | 人間承認後に次フェーズへ進む |
@@ -66,7 +66,7 @@ TODO 13の [LoopEngineering実行計画](/Users/haruki.shimo/Documents/ruby_stud
 - `area:workflow`
 - `area:integration`
 
-高リスクIssueでは、1 loop完了時点で以下をIssueコメントに残す。
+高リスクIssueでは、Loop ReportまたはPR本文に以下を残す。
 
 ```markdown
 ## Human Review Checkpoint
@@ -81,11 +81,11 @@ TODO 13の [LoopEngineering実行計画](/Users/haruki.shimo/Documents/ruby_stud
 - Recommendation:
 ```
 
-人間確認が不要と判断できる軽微な実装でも、`risk:high` のIssueではLoop Report内に「なぜ人間確認不要と判断したか」を書く。
+`risk:high` のIssueでは、PRレビューへ回せる変更なのか、PR前に `human-review` が必要な変更なのかをLoop Report内に書く。
 
 ## 定期確認で見る項目
 
-2 loopごとの定期確認では、以下を見る。
+定期確認またはPR確認では、以下を見る。
 
 - Issueの受け入れ条件が満たされているか
 - 実行したテストと失敗/skipしたテスト
