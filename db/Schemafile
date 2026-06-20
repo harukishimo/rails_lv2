@@ -1,0 +1,5 @@
+# frozen_string_literal: true
+
+# Ridgepole is the source of truth for application-managed database schema.
+# Domain tables will be added by feature Issues. Rails internal tables remain
+# managed by Rails itself where required.
