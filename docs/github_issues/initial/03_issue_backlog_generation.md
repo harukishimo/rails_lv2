@@ -74,7 +74,7 @@
 - このIssueはLoopEngineeringの外側作業である
 - 人間が確認してから個別Issueを `loop:ready` に変更する
 - GitHub CLIで作成する場合も、Organization access不要のfine-grained PATのみ使う
-- DB schema変更IssueのAcceptance Criteriaには、Schemafile変更、Ridgepole dry-run、Ridgepole applyまたは未実行理由を含める
+- DB schema変更IssueのAcceptance Criteriaには、対象tableの `db/schemas/tables/*.schema` 変更、Ridgepole dry-run、Ridgepole applyまたは未実行理由を含める
 - UI/UX整備Issueは、受験者/評価官のナビゲーション、一覧/詳細/作成/編集/承認/却下の導線、ステータスバッジ、取消不可操作の注意喚起、フォームエラー、flash、空状態、デモで説明しやすい画面順をScopeに含める
 - UI/UX整備Issueでは、本格的なデザインシステム構築、過度な装飾、業務フローを変える大幅な画面仕様変更はOut of Scopeにする
 
