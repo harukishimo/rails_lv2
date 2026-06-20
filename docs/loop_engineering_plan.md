@@ -220,9 +220,12 @@ Evidence Matrixには最低限、以下を記載する。
 7. 変更差分を自己レビューする
 8. IssueへLoop Reportをコメントする
 9. 完了していればEvidence Matrixを埋めたPRを作成する
-10. 未完了なら次loop提案をIssueへ残す
-11. 人間判断が必要な場合のみ `human-review` を付けて停止する
-12. 判断不要かつ時間・依存関係に問題がなければ、次の `loop:ready` Issueへ進んでよい
+10. PR作成後、PR Review Agentを起動し、人間レビュー前の第三者レビューを行う
+11. PR Review Agentで問題があれば、指摘をもとにLooperが修正し、再度PR Review Agentを起動する
+12. PR Review Agentでblocking findingがなければ、PRへ確認済み範囲と人間が見るべき残リスクをコメントする
+13. 未完了なら次loop提案をIssueへ残す
+14. 人間判断が必要な場合のみ `human-review` を付けて停止する
+15. PR Review Agentでblocking findingがなく、時間・依存関係に問題がなければ、次の `loop:ready` Issueへ進んでよい
 
 ## 各Issueの受け入れ条件
 

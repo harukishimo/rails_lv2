@@ -1,4 +1,15 @@
 Rails.application.routes.draw do
+  devise_for :users
+
+  namespace :api do
+    namespace :v1 do
+      post "auth/login", to: "auth#login"
+      post "auth/refresh", to: "auth#refresh"
+      delete "auth/logout", to: "auth#logout"
+      get "auth/me", to: "auth#me"
+    end
+  end
+
   root "health#index"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

@@ -23,7 +23,7 @@ TODO 13の [LoopEngineering実行計画](/Users/haruki.shimo/Documents/ruby_stud
 | 定期確認 | PR作成時、または人間が任意で確認したい時 | IssueのLoop Report、PR差分、テスト結果、未完了点 | `human-review` が不要なら次Issueへ進んでよい |
 | 高リスク確認 | 高リスクIssueのPR作成時、または方針判断が必要になった時 | DB、認証/認可、状態遷移、外部連携、transaction、soft deleteの変更 | 通常はPRレビューへ回す。方針判断が必要な場合のみ `human-review` labelを付ける |
 | ブロッカー確認 | 仕様矛盾、テスト原因不明、外部連携判断などが出た時 | 何が詰まっているか、選択肢、推奨案 | 作業停止。人間回答後に再開 |
-| PR確認 | Issueの受け入れ条件を満たした時 | 変更内容、テスト、評価基準対応、残リスク | 承認後にmerge対象 |
+| PR確認 | Issueの受け入れ条件を満たし、PR Review Agentが確認した後 | 変更内容、テスト、評価基準対応、残リスク、PR Review Agentの指摘/確認済み範囲 | 承認後にmerge対象 |
 | フェーズ確認 | 主要フェーズ完了時 | 複数Issue横断の整合性、次フェーズに進めるか | 人間承認後に次フェーズへ進む |
 
 ## 人間確認が必須の変更
@@ -104,6 +104,8 @@ PR確認では、以下を確認する。
 - Issue本文の受け入れ条件を満たしているか
 - PR本文にIssue番号、実装内容、テスト、Evidence Matrixがあるか
 - Evidence Matrixで、要件/評価基準ID、証拠、確認方法、残リスクが対応しているか
+- PR Review Agentでblocking findingがないか
+- PR Review Agentが人間に確認してほしい箇所をPRコメントに残しているか
 - 重要なファイル差分が説明と一致しているか
 - 失敗テスト、未実行テスト、未解決TODOが残っていないか
 - 評価資料へ転用する証跡がIssue/PRに残っているか
@@ -113,6 +115,7 @@ PRをmergeしてよい条件:
 
 - 必須テストが通っている
 - 受け入れ条件を満たしている
+- PR Review Agentでblocking findingがない
 - Evidence Matrixで、評価基準を満たす根拠が追える
 - `human-review` の未解決事項がない
 - 評価基準との対応がIssueまたはPRに記録されている
