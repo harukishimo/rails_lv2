@@ -2,9 +2,9 @@ class ExamApplicationsController < ApplicationController
   before_action :authenticate_user!
 
   def index
-    exam_applications = policy_scope(ExamApplication).includes(:evaluation_period, :evaluation_target).recent
+    exam_applications = Search::ExamApplicationSearch.new(policy_scope(ExamApplication), search_params).relation
 
-    render plain: exam_applications.map(&:display_name).join("\n")
+    render plain: exam_applications.map { |exam_application| exam_application_line(exam_application) }.join("\n")
   end
 
   def show
@@ -38,6 +38,22 @@ class ExamApplicationsController < ApplicationController
   end
 
   private
+
+  def search_params
+    params.permit(:status, :result, :evaluation_target_id, :candidate_id, :keyword, :page, :per_page)
+  end
+
+  def exam_application_line(exam_application)
+    [
+      "exam_application=#{exam_application.id}",
+      exam_application.display_name,
+      "status=#{exam_application.status}",
+      "result=#{exam_application.result}",
+      "candidate=#{exam_application.candidate.name}<#{exam_application.candidate.email}>",
+      "target=#{exam_application.evaluation_target.display_name}",
+      "period=#{exam_application.evaluation_period.name}"
+    ].join(" | ")
+  end
 
   def build_authorization_record
     ExamApplication.new(
