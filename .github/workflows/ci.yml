@@ -39,5 +39,8 @@ jobs:
       - name: Ridgepole apply
         run: bundle exec ridgepole --config config/database.yml --env test --file db/Schemafile --apply
 
+      - name: Seed verification
+        run: RAILS_ENV=test bin/rails db:seed:replant
+
       - name: Rails tests
         run: bin/rails test

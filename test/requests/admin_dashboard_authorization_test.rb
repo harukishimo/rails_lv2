@@ -20,6 +20,23 @@ class AdminDashboardAuthorizationTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  test "forbidden admin dashboard access is logged for audit" do
+    user = create_user_with_role(Role::CANDIDATE)
+
+    sign_in_as(user)
+    logs = capture_rails_logs do
+      get admin_dashboard_path
+    end
+
+    assert_response :forbidden
+    assert_includes logs, "pundit.authorization_denied"
+    assert_includes logs, "\"user_id\":#{user.id}"
+    assert_includes logs, "\"policy\":\"AdminDashboardPolicy\""
+    assert_includes logs, "\"query\":\"show?\""
+    assert_includes logs, "\"record\":\"admin_dashboard\""
+    assert_not_includes logs, user.email
+  end
+
   test "examiner is forbidden from admin dashboard" do
     user = create_user_with_role(Role::EXAMINER)
 
@@ -59,5 +76,17 @@ class AdminDashboardAuthorizationTest < ActionDispatch::IntegrationTest
         password: "password123"
       }
     }
+  end
+
+  def capture_rails_logs
+    output = StringIO.new
+    previous_logger = Rails.logger
+    Rails.logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new(output))
+
+    yield
+
+    output.string
+  ensure
+    Rails.logger = previous_logger
   end
 end

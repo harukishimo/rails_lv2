@@ -9,8 +9,8 @@ CI.run do
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
   step "Schema: Ridgepole dry-run", "bundle exec ridgepole --config config/database.yml --env test --file db/Schemafile --apply --dry-run"
   step "Schema: Ridgepole apply", "bundle exec ridgepole --config config/database.yml --env test --file db/Schemafile --apply"
-  step "Tests: Rails", "bin/rails test"
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
+  step "Tests: Rails", "bin/rails test"
 
   # Optional: Run system tests
   # step "Tests: System", "bin/rails test:system"
