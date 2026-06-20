@@ -4,7 +4,7 @@
 
 ## 目的
 
-`SkillEvidenceHub` の開発では、実装完了を「コードを書いたこと」ではなく、「要件・評価基準を満たした証拠をPR上で説明できること」として扱う。
+`SkillEvidenceHub` の開発では、実装完了を「コードを書いたこと」ではなく、「要件・評価基準を満たした証拠をIssueコメントとまとめPR上で説明できること」として扱う。
 
 この運用により、評価面談で以下を説明できる状態にする。
 
@@ -17,12 +17,12 @@
 
 - Issueは「満たすべき要件・評価基準」を定義する。
 - 実装は「要件・評価基準を満たす証拠」を作る。
-- PRは「なぜ満たしたと言えるか」をEvidence Matrixで説明する。
+- IssueコメントとまとめPRは「なぜ満たしたと言えるか」をEvidence Matrixで説明する。
 - Reviewでは、コード差分だけでなく証拠の十分性を確認する。
 
 ## Evidence Matrix
 
-すべての実装PRは、`.github/PULL_REQUEST_TEMPLATE.md` の `Evidence Matrix` を埋める。
+夜間連続実行では、Issueごとの実装PRは作らない。各IssueのLoop ReportにEvidence Matrixを残し、最後のまとめPRでは `.github/PULL_REQUEST_TEMPLATE.md` の `Evidence Matrix` をIssueごとに集約する。
 
 | 要件 / 評価基準 | 証拠 | 確認方法 | 残リスク |
 | --- | --- | --- | --- |
@@ -56,9 +56,9 @@ Issueに記載されたAcceptance Criteria、`R-xx`、`B-xx` を書く。
 
 未検証項目、後続Issueへ送る項目、mock止まりの外部連携などを書く。残リスクがない場合は「なし」と書く。
 
-## PRレビュー観点
+## レビュー観点
 
-PRレビューでは以下を見る。
+ローカルレビューとまとめPRレビューでは以下を見る。
 
 - Evidence Matrixが埋まっているか
 - 要件/評価基準と証拠が対応しているか
@@ -68,8 +68,8 @@ PRレビューでは以下を見る。
 
 ## LoopEngineeringでの扱い
 
-Implementation Looperは、Issue完了時にEvidence Matrixを含むPRを作成する。
+Implementation Looperは、Issue完了時にEvidence Matrixを含むIssueコメントを作成する。
 
 Test / QA Agentは、テスト結果だけでなくEvidence Matrixの妥当性も確認する。
 
-Evidence Collectorは、PR上のEvidence MatrixをTODO 18の評価資料へ転用する。
+Evidence Collectorは、IssueコメントとまとめPR上のEvidence MatrixをTODO 18の評価資料へ転用する。

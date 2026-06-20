@@ -11,19 +11,22 @@ TODO 13の [LoopEngineering実行計画](/Users/haruki.shimo/Documents/ruby_stud
 ## 基本方針
 
 - 人間確認は45分ごとの全loopでは行わない。
-- 通常の確認は、Issue完了後に作成されるPRレビューで行う。
-- DB、認証/認可、状態遷移、外部連携、評価基準充足に影響する変更は、PR本文とLoop Reportにリスク、判断内容、テスト結果を明記する。
+- 夜間連続実行では、通常の確認はIssue完了ごとのPRではなく、最後のまとめPRで行う。
+- DB、認証/認可、状態遷移、外部連携、評価基準充足に影響する変更は、IssueのLoop Report、Evidence Matrix、最後のまとめPRにリスク、判断内容、テスト結果を明記する。
 - 人間確認は「作業の進捗確認」ではなく、「設計判断、仕様差分、評価基準の網羅性、取り返しにくい変更」を見るために行う。
 - Looperが判断に迷った場合のみ、実装を進めずIssueへ `human-review` を付けて止める。
+- 人間が事前に `loop:ready` にしたIssueは、確認不要で進めてよいIssueとして扱う。
+- `loop:ready` が残っている限り、通常のPRレビュー待ちではLoopを終了しない。
 
 ## 確認タイミング
 
 | 種別 | タイミング | 人間が見るもの | Looperの扱い |
 | --- | --- | --- | --- |
-| 定期確認 | PR作成時、または人間が任意で確認したい時 | IssueのLoop Report、PR差分、テスト結果、未完了点 | `human-review` が不要なら次Issueへ進んでよい |
-| 高リスク確認 | 高リスクIssueのPR作成時、または方針判断が必要になった時 | DB、認証/認可、状態遷移、外部連携、transaction、soft deleteの変更 | 通常はPRレビューへ回す。方針判断が必要な場合のみ `human-review` labelを付ける |
+| 定期確認 | 人間が任意で確認したい時、または最後のまとめPR作成時 | IssueのLoop Report、まとめPR差分、テスト結果、未完了点 | `human-review` が不要なら次Issueへ進む。夜間中は通常停止しない |
+| 高リスク確認 | 高リスクIssueで方針判断が必要になった時、または最後のまとめPR作成時 | DB、認証/認可、状態遷移、外部連携、transaction、soft deleteの変更 | 既存docsに沿う実装は進める。方針判断が必要な場合のみ `human-review` labelを付ける |
 | ブロッカー確認 | 仕様矛盾、テスト原因不明、外部連携判断などが出た時 | 何が詰まっているか、選択肢、推奨案 | 作業停止。人間回答後に再開 |
-| PR確認 | Issueの受け入れ条件を満たし、PR Review Agentが確認した後 | 変更内容、テスト、評価基準対応、残リスク、PR Review Agentの指摘/確認済み範囲 | 承認後にmerge対象 |
+| ローカルレビュー確認 | Issueの受け入れ条件を満たし、ローカルのPR Review Agent相当が確認した後 | 変更内容、テスト、評価基準対応、残リスク、レビュー指摘/確認済み範囲 | blocking findingがなければIssue branchをpushし、統合ブランチへ取り込む |
+| まとめPR確認 | `loop:ready` がなくなり、まとめPRを作成した後 | 複数Issueの統合差分、Loop Report、Evidence Matrix、レビュー結果、残リスク | 人間が確認し、必要なら追加修正Issueを作る |
 | フェーズ確認 | 主要フェーズ完了時 | 複数Issue横断の整合性、次フェーズに進めるか | 人間承認後に次フェーズへ進む |
 
 ## 人間確認が必須の変更
@@ -66,7 +69,7 @@ TODO 13の [LoopEngineering実行計画](/Users/haruki.shimo/Documents/ruby_stud
 - `area:workflow`
 - `area:integration`
 
-高リスクIssueでは、Loop ReportまたはPR本文に以下を残す。
+高リスクIssueでは、Loop Reportまたは最後のまとめPR本文に以下を残す。
 
 ```markdown
 ## Human Review Checkpoint
@@ -81,11 +84,11 @@ TODO 13の [LoopEngineering実行計画](/Users/haruki.shimo/Documents/ruby_stud
 - Recommendation:
 ```
 
-`risk:high` のIssueでは、PRレビューへ回せる変更なのか、PR前に `human-review` が必要な変更なのかをLoop Report内に書く。
+`risk:high` のIssueでは、既存docsに沿って自走できる変更なのか、人間判断が必要な変更なのかをLoop Report内に書く。
 
 ## 定期確認で見る項目
 
-定期確認またはPR確認では、以下を見る。
+定期確認またはまとめPR確認では、以下を見る。
 
 - Issueの受け入れ条件が満たされているか
 - 実行したテストと失敗/skipしたテスト
@@ -93,29 +96,29 @@ TODO 13の [LoopEngineering実行計画](/Users/haruki.shimo/Documents/ruby_stud
 - 実装が要件定義・詳細設計と矛盾していないか
 - 追加された仕様判断がないか
 - 次のIssueへ進んでよいか
-- 人間が先に確認すべきPR/Issueがないか
+- 人間が先に確認すべきIssueがないか
 
 定期確認は細かなコードレビューではない。深いコードレビューはPR確認で行う。
 
-## PR確認で見る項目
+## まとめPR確認で見る項目
 
-PR確認では、以下を確認する。
+まとめPR確認では、以下を確認する。
 
 - Issue本文の受け入れ条件を満たしているか
-- PR本文にIssue番号、実装内容、テスト、Evidence Matrixがあるか
+- まとめPR本文にIssue番号、実装内容、テスト、Evidence Matrixがあるか
 - Evidence Matrixで、要件/評価基準ID、証拠、確認方法、残リスクが対応しているか
-- PR Review Agentでblocking findingがないか
-- PR Review Agentが人間に確認してほしい箇所をPRコメントに残しているか
+- IssueごとのローカルPR Review Agent相当でblocking findingがないか
+- レビューAgentが人間に確認してほしい箇所をIssueコメントまたはまとめPRコメントに残しているか
 - 重要なファイル差分が説明と一致しているか
 - 失敗テスト、未実行テスト、未解決TODOが残っていないか
-- 評価資料へ転用する証跡がIssue/PRに残っているか
+- 評価資料へ転用する証跡がIssue/まとめPRに残っているか
 - merge後に次Issueへ進める状態か
 
-PRをmergeしてよい条件:
+まとめPRをmergeしてよい条件:
 
 - 必須テストが通っている
 - 受け入れ条件を満たしている
-- PR Review Agentでblocking findingがない
+- IssueごとのレビューAgentでblocking findingがない
 - Evidence Matrixで、評価基準を満たす根拠が追える
 - `human-review` の未解決事項がない
 - 評価基準との対応がIssueまたはPRに記録されている

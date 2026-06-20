@@ -12,7 +12,7 @@ LoopEngineeringの外側エージェント。
 - `docs/detailed_design.md`
 - `docs/human_review_timing.md`
 - 対象Issue
-- 対象PR差分
+- 対象Issue branchまたはまとめPR差分
 
 ## Prompt
 
@@ -27,7 +27,7 @@ DB、association、状態遷移、認可、外部連携、transaction、soft del
 - docs/detailed_design.md
 - docs/human_review_timing.md
 - 対象Issue
-- 対象PR差分
+- 対象Issue branchまたはまとめPR差分
 
 確認観点:
 - ExamApplicationを中心にした設計が崩れていないか
