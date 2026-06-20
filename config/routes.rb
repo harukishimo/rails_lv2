@@ -14,6 +14,8 @@ Rails.application.routes.draw do
     resource :dashboard, only: :show, controller: :dashboard
   end
 
+  resources :exam_applications, only: %i[index show new create]
+
   root "health#index"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

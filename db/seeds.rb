@@ -27,6 +27,14 @@ if ActiveRecord::Base.connection.data_source_exists?("roles")
   end
 end
 
+if ActiveRecord::Base.connection.data_source_exists?("evaluation_periods")
+  seed_record(EvaluationPeriod, name: "2026 Evaluation Period") do |record|
+    record.starts_on = Date.new(2026, 1, 1)
+    record.ends_on = Date.new(2026, 12, 31)
+    record.active = true
+  end
+end
+
 if %w[
   skill_areas
   programming_languages

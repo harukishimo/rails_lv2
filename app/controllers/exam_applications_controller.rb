@@ -1,0 +1,53 @@
+class ExamApplicationsController < ApplicationController
+  before_action :authenticate_user!
+
+  def index
+    exam_applications = policy_scope(ExamApplication).includes(:evaluation_period, :evaluation_target).recent
+
+    render plain: exam_applications.map(&:display_name).join("\n")
+  end
+
+  def show
+    exam_application = policy_scope(ExamApplication).find(params[:id])
+    authorize exam_application
+
+    render plain: exam_application.display_name
+  end
+
+  def new
+    exam_application = ExamApplication.new(candidate: current_user)
+    authorize exam_application
+
+    render plain: "New exam application"
+  end
+
+  def create
+    exam_application = build_authorization_record
+    authorize exam_application
+
+    created_application = ExamApplications::CreateService.call(
+      candidate: current_user,
+      evaluation_period: exam_application.evaluation_period,
+      evaluation_target: exam_application.evaluation_target,
+      actor: current_user
+    )
+
+    redirect_to exam_application_path(created_application), notice: "受験表明を登録しました"
+  rescue ActiveRecord::RecordInvalid => error
+    render plain: error.record.errors.full_messages.to_sentence, status: :unprocessable_entity
+  end
+
+  private
+
+  def build_authorization_record
+    ExamApplication.new(
+      candidate: current_user,
+      evaluation_period: EvaluationPeriod.find(exam_application_params.fetch(:evaluation_period_id)),
+      evaluation_target: EvaluationTarget.find(exam_application_params.fetch(:evaluation_target_id))
+    )
+  end
+
+  def exam_application_params
+    params.require(:exam_application).permit(:evaluation_period_id, :evaluation_target_id)
+  end
+end

@@ -5,6 +5,7 @@ class User < ApplicationRecord
   has_many :user_roles, dependent: :destroy
   has_many :roles, through: :user_roles
   has_one :examiner_profile, dependent: :destroy
+  has_many :exam_applications, foreign_key: :candidate_id, inverse_of: :candidate, dependent: :restrict_with_error
 
   validates :name, presence: true
 

@@ -12,6 +12,7 @@ class EvaluationTarget < ApplicationRecord
   belongs_to :skill_level
   has_many :examiner_skill_capabilities, dependent: :restrict_with_error
   has_many :examiner_profiles, through: :examiner_skill_capabilities
+  has_many :exam_applications, dependent: :restrict_with_error
 
   validates :version, presence: true, length: { maximum: 50 }
   validates :external_knowledge_url, length: { maximum: 500 }, allow_blank: true

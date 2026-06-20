@@ -1,0 +1,13 @@
+create_table "evaluation_periods", force: :cascade do |t|
+  t.string "name", null: false
+  t.date "starts_on", null: false
+  t.date "ends_on", null: false
+  t.boolean "active", null: false, default: true
+  t.integer "lock_version", null: false, default: 0
+  t.datetime "deleted_at"
+  t.timestamps null: false
+
+  t.index [ "active", "starts_on", "ends_on" ], name: "index_evaluation_periods_on_active_and_dates"
+  t.index [ "deleted_at" ], name: "index_evaluation_periods_on_deleted_at"
+  t.index [ "name" ], name: "index_evaluation_periods_on_name"
+end
