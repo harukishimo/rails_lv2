@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Set up application
+        run: bin/setup --skip-server
+
+      - name: RuboCop
+        run: bin/rubocop
+
+      - name: Bundler Audit
+        run: bin/bundler-audit check --update
+
+      - name: Brakeman
+        run: bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
+
+      - name: Ridgepole dry-run
+        run: bundle exec ridgepole --config config/database.yml --env test --file db/Schemafile --apply --dry-run
+
+      - name: Rails tests
+        run: bin/rails test
