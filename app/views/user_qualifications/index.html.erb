@@ -1,0 +1,49 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">取得資格</h1>
+    <p class="page-description">合格判定により反映された資格を確認します。</p>
+  </div>
+</div>
+
+<%= form_with url: user_qualifications_path, method: :get, class: "toolbar" do |form| %>
+  <div class="field">
+    <%= form.label :user_keyword, "ユーザー" %>
+    <%= form.search_field :user_keyword, value: params[:user_keyword] %>
+  </div>
+  <div class="field">
+    <%= form.label :acquired_on_from, "取得日From" %>
+    <%= form.date_field :acquired_on_from, value: params[:acquired_on_from] %>
+  </div>
+  <div class="field">
+    <%= form.label :acquired_on_to, "取得日To" %>
+    <%= form.date_field :acquired_on_to, value: params[:acquired_on_to] %>
+  </div>
+  <%= form.submit "検索" %>
+<% end %>
+
+<% if @qualifications.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>資格</th>
+          <th>ユーザー</th>
+          <th>取得日</th>
+          <th>判定者</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @qualifications.each do |qualification| %>
+          <tr>
+            <td>qualification=<%= qualification.id %> <%= qualification.evaluation_target.display_name %></td>
+            <td>user=<%= qualification.user.name %>&lt;<%= qualification.user.email %>&gt;</td>
+            <td><%= qualification.acquired_on %></td>
+            <td><%= qualification.granted_by.name %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= empty_state("取得資格はまだありません。") %>
+<% end %>

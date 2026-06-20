@@ -5,24 +5,20 @@ module Examiner
     def index
       authorize User, :candidate_index?
 
-      candidates = Search::ExaminerCandidateSearch.new(
+      @candidates = Search::ExaminerCandidateSearch.new(
         policy_scope(User),
         search_params,
         visible_evaluation_target_ids: search_visible_evaluation_target_ids
       ).relation
-
-      render plain: candidates.map { |candidate| candidate_line(candidate) }.join("\n")
     end
 
     def show
-      candidate = Search::ExaminerCandidateSearch.new(
+      @candidate = Search::ExaminerCandidateSearch.new(
         policy_scope(User),
         {},
         visible_evaluation_target_ids: search_visible_evaluation_target_ids
       ).relation.find(params[:id])
-      authorize candidate, :candidate_show?
-
-      render plain: candidate_detail(candidate)
+      authorize @candidate, :candidate_show?
     end
 
     private
@@ -46,13 +42,7 @@ module Examiner
       ].join(" | ")
     end
 
-    def candidate_detail(candidate)
-      [
-        candidate_line(candidate),
-        qualification_lines(candidate),
-        exam_application_lines(candidate)
-      ].flatten.join("\n")
-    end
+    helper_method :candidate_line, :visible_exam_applications, :visible_qualifications
 
     def qualification_lines(candidate)
       visible_qualifications(candidate).sort_by { |qualification| [ qualification.acquired_on, qualification.id ] }.reverse.map do |qualification|

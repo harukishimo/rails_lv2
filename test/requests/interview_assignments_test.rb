@@ -74,6 +74,24 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 
+  test "assignment without examiner selection is rejected" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    interview_application = create_interview_application(candidate: candidate)
+    examiner = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
+    sign_in_as(examiner)
+
+    patch assignment_interview_application_path(interview_application), params: {
+      interview_application: {
+        assigned_examiner_profile_id: ""
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "入力内容を確認してください"
+    assert_includes response.body, "Assigned examiner profile must be selected"
+    assert_nil interview_application.reload.assigned_examiner_profile
+  end
+
   test "candidate cannot open assignment form" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)

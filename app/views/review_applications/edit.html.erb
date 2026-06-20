@@ -1,0 +1,9 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Edit <%= @review_application.display_name %></h1>
+    <p class="page-description">差し戻し後の再提出や提出物コメントの更新を行います。</p>
+  </div>
+  <%= link_to "詳細へ戻る", review_application_path(@review_application), class: "button button--secondary" %>
+</div>
+
+<%= render "form", review_application: @review_application %>

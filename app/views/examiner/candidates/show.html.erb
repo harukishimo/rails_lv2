@@ -1,0 +1,44 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><%= @candidate.name %></h1>
+    <p class="page-description"><%= @candidate.email %></p>
+  </div>
+  <%= link_to "検索へ戻る", examiner_candidates_path, class: "button button--secondary" %>
+</div>
+
+<dl class="detail-list">
+  <dt>受験者</dt>
+  <dd><%= candidate_line(@candidate) %></dd>
+  <dt>表示対象受験数</dt>
+  <dd><%= visible_exam_applications(@candidate).size %></dd>
+  <dt>表示対象資格数</dt>
+  <dd><%= visible_qualifications(@candidate).size %></dd>
+</dl>
+
+<section class="stack">
+  <div class="form-panel">
+    <h2>取得資格</h2>
+    <% if visible_qualifications(@candidate).any? %>
+      <ul>
+        <% visible_qualifications(@candidate).each do |qualification| %>
+          <li>qualification=<%= qualification.id %> <%= qualification.evaluation_target.display_name %> acquired_on=<%= qualification.acquired_on %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <%= empty_state("表示できる取得資格はありません。") %>
+    <% end %>
+  </div>
+
+  <div class="form-panel">
+    <h2>受験履歴</h2>
+    <% if visible_exam_applications(@candidate).any? %>
+      <ul>
+        <% visible_exam_applications(@candidate).each do |exam_application| %>
+          <li>exam_application=<%= exam_application.id %> <%= status_badge(exam_application.status) %> <%= exam_application.evaluation_target.display_name %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <%= empty_state("表示できる受験履歴はありません。") %>
+    <% end %>
+  </div>
+</section>

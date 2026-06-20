@@ -2,78 +2,86 @@ class InterviewApplicationsController < ApplicationController
   before_action :authenticate_user!
 
   def show
-    interview_application = policy_scope(InterviewApplication).includes(:interview_schedules).find(params[:id])
-    authorize interview_application
-
-    render plain: interview_application_summary(interview_application)
+    @interview_application = policy_scope(InterviewApplication)
+                             .includes(
+                               :interview_schedules,
+                               :interview_result,
+                               :assigned_examiner_profile,
+                               exam_application: [
+                                 :candidate,
+                                 { evaluation_target: %i[skill_area programming_language framework skill_level] }
+                               ]
+                             )
+                             .find(params[:id])
+    authorize @interview_application
+    @interview_schedule = @interview_application.interview_schedules.build
+    @interview_result = InterviewResult.new(interview_application: @interview_application)
   end
 
   def new
-    exam_application = policy_scope(ExamApplication).find(params[:exam_application_id])
-    interview_application = InterviewApplication.new(exam_application: exam_application)
-    authorize interview_application
-
-    render plain: "New interview application\n応募後は取消できません"
+    @exam_application = policy_scope(ExamApplication).find(params[:exam_application_id])
+    @interview_application = InterviewApplication.new(exam_application: @exam_application)
+    authorize @interview_application
   end
 
   def create
-    exam_application = policy_scope(ExamApplication).find(params[:exam_application_id])
-    interview_application = InterviewApplication.new(exam_application: exam_application)
-    authorize interview_application
+    @exam_application = policy_scope(ExamApplication).find(params[:exam_application_id])
+    @interview_application = InterviewApplication.new(exam_application: @exam_application)
+    authorize @interview_application
 
     created_application = InterviewApplications::CreateService.call(
-      exam_application: exam_application,
+      exam_application: @exam_application,
       actor: current_user
     )
 
     redirect_to interview_application_path(created_application), notice: "面談応募を登録しました"
   rescue ActiveRecord::RecordInvalid => error
-    render_validation_errors(error.record)
+    @interview_application = error.record
+    @exam_application = @interview_application.exam_application
+    flash.now[:alert] = "面談応募を登録できませんでした"
+    render :new, status: :unprocessable_entity
   end
 
   def assignment
-    interview_application = policy_scope(InterviewApplication).find(params[:id])
-    authorize interview_application
-    suggested_examiner = ExaminerSuggestionService.call(interview_application: interview_application)
-
-    render plain: assignment_summary(interview_application, suggested_examiner)
+    @interview_application = policy_scope(InterviewApplication).find(params[:id])
+    authorize @interview_application
+    prepare_assignment_options
   end
 
   def assign
-    interview_application = policy_scope(InterviewApplication).find(params[:id])
-    authorize interview_application
+    @interview_application = policy_scope(InterviewApplication).find(params[:id])
+    authorize @interview_application
     assigned_application = InterviewApplications::AssignExaminerService.call(
-      interview_application: interview_application,
+      interview_application: @interview_application,
       actor: current_user,
-      examiner_profile: ExaminerProfile.find(assignment_params.fetch(:assigned_examiner_profile_id)),
+      examiner_profile: selected_examiner_profile,
       reason: assignment_params[:assignment_override_reason]
     )
 
     redirect_to interview_application_path(assigned_application), notice: "面談評価官を確定しました"
   rescue ActiveRecord::RecordInvalid => error
-    render_validation_errors(error.record)
+    @interview_application = error.record
+    prepare_assignment_options
+    flash.now[:alert] = "面談評価官を確定できませんでした"
+    render :assignment, status: :unprocessable_entity
   end
 
   private
 
-  def interview_application_summary(interview_application)
-    [
-      interview_application.display_name,
-      "status=#{interview_application.status}",
-      "assigned_examiner=#{interview_application.assigned_examiner_name}",
-      interview_application.interview_schedules.map do |schedule|
-        "schedule=#{schedule.display_name}:#{schedule.status}"
-      end
-    ].flatten.join("\n")
+  def prepare_assignment_options
+    @suggested_examiner = ExaminerSuggestionService.call(interview_application: @interview_application)
+    @examiner_profiles = ExaminerProfile.available_for_interviews
+                                       .joins(:examiner_skill_capabilities)
+                                       .where(examiner_skill_capabilities: {
+                                         evaluation_target_id: @interview_application.exam_application.evaluation_target_id,
+                                         active: true,
+                                         can_interview: true
+                                       })
+                                       .distinct
   end
 
-  def assignment_summary(interview_application, suggested_examiner)
-    [
-      "Assignment for #{interview_application.display_name}",
-      "current_examiner=#{interview_application.assigned_examiner_name}",
-      "suggested_examiner_id=#{suggested_examiner&.id}",
-      "suggested_examiner=#{suggested_examiner&.display_name || "候補なし"}"
-    ].join("\n")
+  def selected_examiner_profile
+    ExaminerProfile.find_by(id: assignment_params[:assigned_examiner_profile_id])
   end
 
   def assignment_params

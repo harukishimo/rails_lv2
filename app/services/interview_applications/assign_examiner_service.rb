@@ -19,6 +19,8 @@ module InterviewApplications
     def call
       InterviewApplication.transaction do
         interview_application.with_lock do
+          raise_examiner_required! if examiner_profile.blank?
+
           examiner_profile.with_lock do
             raise_not_assignable! unless interview_application.assignable?
             raise_not_capable! unless examiner_profile.can_interview_for?(interview_application.exam_application.evaluation_target)
@@ -91,6 +93,11 @@ module InterviewApplications
 
     def self_assignment?
       examiner_profile.user_id == interview_application.exam_application.candidate_id
+    end
+
+    def raise_examiner_required!
+      interview_application.errors.add(:assigned_examiner_profile, "must be selected")
+      raise ActiveRecord::RecordInvalid, interview_application
     end
 
     def raise_not_assignable!

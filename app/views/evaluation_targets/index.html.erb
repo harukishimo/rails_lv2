@@ -1,0 +1,43 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">受験対象</h1>
+    <p class="page-description">言語、フレームワーク、Lv、外部ナレッジ参照を検索します。</p>
+  </div>
+</div>
+
+<%= form_with url: evaluation_targets_path, method: :get, class: "toolbar" do |form| %>
+  <div class="field">
+    <%= form.label :keyword, "キーワード" %>
+    <%= form.search_field :keyword, value: params[:keyword] %>
+  </div>
+  <div class="field">
+    <%= form.label :active, "有効状態" %>
+    <%= form.select :active, options_for_select([["すべて", ""], ["有効", "true"], ["無効", "false"]], params[:active]) %>
+  </div>
+  <%= form.submit "検索" %>
+<% end %>
+
+<% if @evaluation_targets.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>受験対象</th>
+          <th>状態</th>
+          <th>外部キー</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @evaluation_targets.each do |target| %>
+          <tr>
+            <td>target=<%= target.id %> <%= target.display_name %></td>
+            <td><%= status_badge(target.active? ? "active" : "inactive") %></td>
+            <td>external_key=<%= target.external_knowledge_key %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= empty_state("受験対象が見つかりません。検索条件を変更してください。") %>
+<% end %>

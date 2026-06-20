@@ -1,0 +1,45 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">受験者検索</h1>
+    <p class="page-description">対応可能な受験対象に紐づく受験者だけを検索します。</p>
+  </div>
+</div>
+
+<%= form_with url: examiner_candidates_path, method: :get, class: "toolbar" do |form| %>
+  <div class="field">
+    <%= form.label :keyword, "氏名・メール" %>
+    <%= form.search_field :keyword, value: params[:keyword] %>
+  </div>
+  <div class="field">
+    <%= form.label :status, "受験状態" %>
+    <%= form.select :status, options_for_select(ExamApplication.statuses.keys, params[:status]), include_blank: "すべて" %>
+  </div>
+  <%= form.submit "検索" %>
+<% end %>
+
+<% if @candidates.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>受験者</th>
+          <th>受験数</th>
+          <th>取得資格</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @candidates.each do |candidate| %>
+          <tr>
+            <td>candidate=<%= candidate.id %> <%= candidate.name %>&lt;<%= candidate.email %>&gt;</td>
+            <td><%= visible_exam_applications(candidate).size %></td>
+            <td><%= visible_qualifications(candidate).size %></td>
+            <td><%= link_to "詳細", examiner_candidate_path(candidate), class: "button button--secondary" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= empty_state("条件に一致する受験者はいません。") %>
+<% end %>
