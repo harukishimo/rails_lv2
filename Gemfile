@@ -2,6 +2,10 @@ source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3"
+# Use Devise for browser session authentication.
+gem "devise", ">= 5.0.4", "< 6.0"
+# Encode/decode API access tokens explicitly.
+gem "jwt", "~> 3.1"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use sqlite3 as the database for Active Record
