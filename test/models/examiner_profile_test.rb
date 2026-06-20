@@ -44,6 +44,15 @@ class ExaminerProfileTest < ActiveSupport::TestCase
     assert ExaminerSkillCapability.with_deleted.exists?(capability.id)
   end
 
+  test "profile can be recreated for same user after soft delete" do
+    examiner = create_user_with_role(Role::EXAMINER)
+    ExaminerProfile.create!(user: examiner, display_name: "Examiner").destroy
+
+    recreated = ExaminerProfile.create!(user: examiner, display_name: "Examiner Again")
+
+    assert recreated.persisted?
+  end
+
   private
 
   def create_evaluation_target

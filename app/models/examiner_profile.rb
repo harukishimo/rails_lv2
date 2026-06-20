@@ -6,7 +6,7 @@ class ExaminerProfile < ApplicationRecord
   has_many :evaluation_targets, through: :examiner_skill_capabilities
 
   validates :display_name, presence: true
-  validates :user_id, uniqueness: true
+  validates :user_id, uniqueness: { conditions: -> { where(deleted_at: nil) } }
   validate :user_has_examiner_role
 
   scope :active, -> { where(active: true) }

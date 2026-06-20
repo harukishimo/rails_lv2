@@ -22,6 +22,16 @@ class ExaminerSkillCapabilityTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:evaluation_target_id], "has already been taken"
   end
 
+  test "capability can be recreated for same profile and target after soft delete" do
+    profile = create_examiner_profile
+    target = create_evaluation_target
+    ExaminerSkillCapability.create!(examiner_profile: profile, evaluation_target: target).destroy
+
+    recreated = ExaminerSkillCapability.create!(examiner_profile: profile, evaluation_target: target)
+
+    assert recreated.persisted?
+  end
+
   test "requires active evaluation target" do
     profile = create_examiner_profile
     target = create_evaluation_target(active: false)
