@@ -66,7 +66,7 @@ roles/user_roles、Pundit policy、対応可能評価スキル制御の土台を
 ## Implementation Notes
 
 - 認証基盤のUserを前提にする
-- roles/user_roles等のDB schema変更はRidgepoleの `db/Schemafile` で管理する
+- roles/user_roles等のDB schema変更はRidgepoleの `db/schemas/tables/*.schema` で1 table 1 fileとして管理する
 - 認可漏れは評価官から深掘りされやすいため、policy specを必須にする
 - 対応可能評価スキルの詳細は受験対象マスタIssue以降で拡張する
 

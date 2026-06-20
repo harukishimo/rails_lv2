@@ -118,7 +118,7 @@ TODO 7の [要件定義書](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/re
 | --- | --- | --- |
 | 画面認証 | `devise` | Web画面のsession認証、password hash、ログイン/ログアウトの土台に使う。業務固有の認可はPunditへ分離する |
 | JWT | `jwt` | access tokenのencode/decodeに使う。署名アルゴリズムは固定し、decode時に明示する |
-| DBスキーマ管理 | `ridgepole` | `db/Schemafile` をDB schemaの正とし、dry-run確認後にapplyする。データ移行は別タスクとして明示する |
+| DBスキーマ管理 | `ridgepole` | `db/Schemafile` をRidgepoleの入口とし、table定義は `db/schemas/tables/*.schema` に1 table 1 fileで管理する。dry-run確認後にapplyする。データ移行は別タスクとして明示する |
 | Markdown | `commonmarker` | GitHub Flavored Markdown寄りの表示に使う。HTML化後はRails sanitizerで許可タグだけに制限する |
 | Markdown代替 | `redcarpet` | `commonmarker` が環境制約で使いづらい場合の代替候補。使う場合もHTML escape/filterとsanitizeを併用する |
 | 論理削除 | `paranoia` | 業務テーブルは原則 `deleted_at` による論理削除に統一する |
@@ -178,11 +178,12 @@ TODO 7の [要件定義書](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/re
 
 ### DBスキーマ管理方針
 
-DBスキーマ管理はRails migration主体ではなく、`ridgepole` を採用する。`db/Schemafile` をスキーマ定義の正とし、実装IssueではSchemafileの変更、dry-run確認、apply結果をLoop Reportに残す。
+DBスキーマ管理はRails migration主体ではなく、`ridgepole` を採用する。`db/Schemafile` はRidgepoleの入口に限定し、table定義の正は `db/schemas/tables/*.schema` とする。実装Issueでは対象tableのschema file変更、dry-run確認、apply結果をLoop Reportに残す。
 
 方針:
 
-- DB schema変更は `db/Schemafile` に集約する
+- DB schema変更は `db/schemas/tables/*.schema` に1 table 1 fileで配置する
+- `db/Schemafile` にはtable定義を直接書かず、分割schema fileの読み込みだけを置く
 - 実行前に `bundle exec ridgepole --apply --dry-run` 相当で差分を確認する
 - 適用は `bundle exec ridgepole --apply` 相当で行う
 - destructive changeやlockを伴う変更は、Issueに `human-review` を付けて確認を止める
