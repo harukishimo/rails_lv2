@@ -27,6 +27,9 @@ FileUtils.chdir APP_ROOT do
   puts "\n== Applying Ridgepole schema =="
   system! "bundle exec ridgepole --config config/database.yml --env development --file db/Schemafile --apply"
 
+  puts "\n== Seeding database =="
+  system! "bin/rails db:seed"
+
   puts "\n== Removing old logs and tempfiles =="
   system! "bin/rails log:clear tmp:clear"
 

@@ -1,6 +1,8 @@
 module Api
   module V1
     class AuthController < BaseController
+      skip_after_action :verify_pundit_authorization
+
       before_action :authenticate_api_user!, only: :me
 
       def login

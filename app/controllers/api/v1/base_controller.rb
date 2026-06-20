@@ -1,6 +1,13 @@
 module Api
   module V1
     class BaseController < ActionController::API
+      include AuthorizationAuditLogging
+      include Pundit::Authorization
+
+      after_action :verify_pundit_authorization
+
+      rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
+
       private
 
       def authenticate_api_user!
@@ -21,6 +28,20 @@ module Api
 
       def render_unauthorized(code, message)
         render json: { error: { code: code, message: message } }, status: :unauthorized
+      end
+
+      def pundit_user
+        current_api_user
+      end
+
+      def user_not_authorized(exception)
+        log_authorization_denial(exception)
+
+        render json: { error: { code: "forbidden", message: "権限がありません" } }, status: :forbidden
+      end
+
+      def verify_pundit_authorization
+        action_name == "index" ? verify_policy_scoped : verify_authorized
       end
     end
   end

@@ -10,6 +10,10 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :admin do
+    resource :dashboard, only: :show, controller: :dashboard
+  end
+
   root "health#index"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
