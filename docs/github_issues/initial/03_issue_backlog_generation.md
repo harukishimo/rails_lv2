@@ -50,6 +50,7 @@
 - Dependency Plannerの初期整理をIssueコメントまたはdocsに残す
 - Traceability Reviewerで評価基準漏れを確認する
 - DB schema変更を含むIssueはRidgepole/Schemafile前提で分割する
+- 主要業務フローが一通り動いた後に実施する `[LE] 主要画面の最低限UI/UX整備` Issueを作成する
 
 ## Out of Scope
 
@@ -65,6 +66,7 @@
 - [ ] 作成Issueに `loop:ready` が付いていない
 - [ ] 主要Issueに評価基準IDが入っている
 - [ ] 主要Issueに依存関係が記載されている
+- [ ] `[LE] 主要画面の最低限UI/UX整備` Issueが作成され、主要業務フロー実装後の依存として定義されている
 - [ ] 評価基準の明らかな漏れがIssueコメントまたはdocsに記録されている
 
 ## Implementation Notes
@@ -73,6 +75,8 @@
 - 人間が確認してから個別Issueを `loop:ready` に変更する
 - GitHub CLIで作成する場合も、Organization access不要のfine-grained PATのみ使う
 - DB schema変更IssueのAcceptance Criteriaには、Schemafile変更、Ridgepole dry-run、Ridgepole applyまたは未実行理由を含める
+- UI/UX整備Issueは、受験者/評価官のナビゲーション、一覧/詳細/作成/編集/承認/却下の導線、ステータスバッジ、取消不可操作の注意喚起、フォームエラー、flash、空状態、デモで説明しやすい画面順をScopeに含める
+- UI/UX整備Issueでは、本格的なデザインシステム構築、過度な装飾、業務フローを変える大幅な画面仕様変更はOut of Scopeにする
 
 ## Tests / Verification
 
