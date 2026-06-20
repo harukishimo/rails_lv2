@@ -8,6 +8,8 @@
 
 TODO 16〜17でRailsアプリを実装・ローカル確認する前に、LoopEngineeringが何を入力にし、どの単位で実装し、どの形式で結果を返すかを定義する。
 
+PRで証拠を残す運用は [証拠駆動開発](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/evidence_driven_development.md) で定義する。
+
 ## リポジトリ
 
 GitHubリポジトリ:
@@ -181,7 +183,7 @@ PR本文には以下を含める。
 - 対応Issue
 - 実装内容
 - 実行テスト
-- 評価基準対応
+- Evidence Matrix
 - 人間確認が必要な点
 
 Issueを完了させるPRでは、本文に以下を含める。
@@ -189,6 +191,23 @@ Issueを完了させるPRでは、本文に以下を含める。
 ```text
 Closes #<issue-number>
 ```
+
+### Evidence Driven PR
+
+PRは、実装差分だけでなく「なぜ要件・評価基準を満たしたと言えるか」を示す証拠として扱う。
+
+すべての実装PRは、`.github/PULL_REQUEST_TEMPLATE.md` の `Evidence Matrix` を埋める。
+
+Evidence Matrixには最低限、以下を記載する。
+
+- 要件 / 評価基準ID
+- 証拠となるコード、設定、画面、Issue、Loop Report
+- 確認方法となるテスト、コマンド、手動確認手順
+- 未検証項目または残リスク
+
+「テストが通った」だけでは証拠として不十分とする。どの評価基準を、どのコード・テスト・画面・設定で担保したかをPR上で追える状態にする。
+
+高リスクIssueでは、Evidence Matrixに加えて、DB schema/Ridgepole、認証/認可、状態遷移、外部連携の判断内容を `Security / DB / State Transition Notes` に書く。
 
 ## Looperの作業手順
 
@@ -200,7 +219,7 @@ Closes #<issue-number>
 6. 対象テストを実行する
 7. 変更差分を自己レビューする
 8. IssueへLoop Reportをコメントする
-9. 完了していればPRを作成する
+9. 完了していればEvidence Matrixを埋めたPRを作成する
 10. 未完了なら次loop提案をIssueへ残す
 11. 人間判断が必要な場合のみ `human-review` を付けて停止する
 12. 判断不要かつ時間・依存関係に問題がなければ、次の `loop:ready` Issueへ進んでよい

@@ -16,6 +16,7 @@ LoopEngineeringの内側エージェント。
 
 確認観点:
 - IssueのAcceptance Criteriaを満たすテストがあるか
+- PR本文のEvidence Matrixで、要件/評価基準、証拠、確認方法、残リスクが対応しているか
 - model/request/policy/job/system testの不足がないか
 - 外部APIはmock/stubされているか
 - 認可漏れのテストがあるか
@@ -28,4 +29,5 @@ LoopEngineeringの内側エージェント。
 - Failed Tests:
 - Suggested Test Cases:
 - Evidence Notes:
+- Evidence Matrix Review:
 ```

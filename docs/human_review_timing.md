@@ -102,7 +102,8 @@ TODO 13の [LoopEngineering実行計画](/Users/haruki.shimo/Documents/ruby_stud
 PR確認では、以下を確認する。
 
 - Issue本文の受け入れ条件を満たしているか
-- PR本文にIssue番号、実装内容、テスト、評価基準対応があるか
+- PR本文にIssue番号、実装内容、テスト、Evidence Matrixがあるか
+- Evidence Matrixで、要件/評価基準ID、証拠、確認方法、残リスクが対応しているか
 - 重要なファイル差分が説明と一致しているか
 - 失敗テスト、未実行テスト、未解決TODOが残っていないか
 - 評価資料へ転用する証跡がIssue/PRに残っているか
@@ -112,6 +113,7 @@ PRをmergeしてよい条件:
 
 - 必須テストが通っている
 - 受け入れ条件を満たしている
+- Evidence Matrixで、評価基準を満たす根拠が追える
 - `human-review` の未解決事項がない
 - 評価基準との対応がIssueまたはPRに記録されている
 
