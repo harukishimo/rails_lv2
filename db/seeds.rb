@@ -8,10 +8,12 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-Role::CODES.each do |code|
-  Role.find_or_initialize_by(code: code).tap do |role|
-    role.name = Role::NAMES.fetch(code)
-    role.active = true
-    role.save!
+if ActiveRecord::Base.connection.data_source_exists?("roles")
+  Role::CODES.each do |code|
+    Role.find_or_initialize_by(code: code).tap do |role|
+      role.name = Role::NAMES.fetch(code)
+      role.active = true
+      role.save!
+    end
   end
 end
