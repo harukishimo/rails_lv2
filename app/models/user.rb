@@ -8,6 +8,11 @@ class User < ApplicationRecord
   has_many :exam_applications, foreign_key: :candidate_id, inverse_of: :candidate, dependent: :restrict_with_error
   has_many :review_comments, foreign_key: :examiner_id, inverse_of: :examiner, dependent: :restrict_with_error
   has_many :review_decisions, foreign_key: :examiner_id, inverse_of: :examiner, dependent: :restrict_with_error
+  has_many :assignment_overridden_interview_applications,
+           class_name: "InterviewApplication",
+           foreign_key: :assignment_overridden_by_id,
+           inverse_of: :assignment_overridden_by,
+           dependent: :restrict_with_error
 
   validates :name, presence: true
 

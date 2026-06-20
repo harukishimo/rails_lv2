@@ -15,9 +15,17 @@ Rails.application.routes.draw do
   end
 
   resources :exam_applications, only: %i[index show new create] do
+    resource :interview_application, only: %i[new create]
     resources :review_applications, only: %i[new create], shallow: true do
       patch :cancel, on: :member
     end
+  end
+  resources :interview_applications, only: :show do
+    resources :interview_schedules, only: :create
+  end
+  resources :interview_schedules, only: [] do
+    patch :approve, on: :member
+    patch :reject, on: :member
   end
   resources :review_applications, only: %i[show edit update] do
     resources :review_comments, only: :create

@@ -1,0 +1,29 @@
+create_table "interview_applications", force: :cascade do |t|
+  t.references "exam_application", null: false, index: false
+  t.integer "status", null: false, default: 0
+  t.references "assigned_examiner_profile", index: false
+  t.references "assignment_overridden_by", index: false
+  t.text "assignment_override_reason"
+  t.datetime "requested_at", null: false
+  t.integer "lock_version", null: false, default: 0
+  t.datetime "deleted_at"
+  t.timestamps null: false
+
+  t.index [ "assigned_examiner_profile_id", "status" ],
+          name: "index_interview_applications_on_assigned_examiner_and_status"
+  t.index [ "assignment_overridden_by_id" ],
+          name: "index_interview_applications_on_assignment_overridden_by"
+  t.index [ "deleted_at" ], name: "index_interview_applications_on_deleted_at"
+  t.index [ "exam_application_id" ],
+          name: "index_interview_applications_on_active_exam_application",
+          unique: true,
+          where: "deleted_at IS NULL"
+  t.index [ "status" ], name: "index_interview_applications_on_status"
+end
+
+add_foreign_key "interview_applications", "exam_applications",
+                column: "exam_application_id"
+add_foreign_key "interview_applications", "examiner_profiles",
+                column: "assigned_examiner_profile_id"
+add_foreign_key "interview_applications", "users",
+                column: "assignment_overridden_by_id"

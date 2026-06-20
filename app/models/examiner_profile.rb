@@ -7,6 +7,10 @@ class ExaminerProfile < ApplicationRecord
   belongs_to :user
   has_many :examiner_skill_capabilities, dependent: :destroy
   has_many :evaluation_targets, through: :examiner_skill_capabilities
+  has_many :interview_applications,
+           foreign_key: :assigned_examiner_profile_id,
+           inverse_of: :assigned_examiner_profile,
+           dependent: :restrict_with_error
 
   validates :display_name, presence: true
   validates :user_id, uniqueness: { conditions: -> { where(deleted_at: nil) } }
