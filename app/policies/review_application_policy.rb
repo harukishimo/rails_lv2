@@ -24,12 +24,37 @@ class ReviewApplicationPolicy < ApplicationPolicy
     end
 
     def evaluation_target_ids
-      user.examiner_profile&.examiner_skill_capabilities&.active&.pluck(:evaluation_target_id) || []
+      user.examiner_profile&.examiner_skill_capabilities&.reviewable&.pluck(:evaluation_target_id) || []
+    end
+  end
+
+  class QueueScope < Scope
+    def resolve
+      return scope.all if user.admin?
+      return scope.none unless review_queue_visible?
+
+      scope.joins(:exam_application)
+           .where(exam_applications: { evaluation_target_id: evaluation_target_ids })
+           .where.not(exam_applications: { candidate_id: user.id })
+    end
+
+    private
+
+    def review_queue_visible?
+      user.examiner? && user.examiner_profile&.active? && user.examiner_profile&.can_review?
+    end
+
+    def evaluation_target_ids
+      user.examiner_profile&.examiner_skill_capabilities&.reviewable&.pluck(:evaluation_target_id) || []
     end
   end
 
   def show?
     owner? || user.admin? || examiner_capable?
+  end
+
+  def queue?
+    user.admin? || (user.examiner? && user.examiner_profile&.active? && user.examiner_profile&.can_review?)
   end
 
   def create?

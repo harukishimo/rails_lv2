@@ -20,6 +20,12 @@ Rails.application.routes.draw do
       patch :cancel, on: :member
     end
   end
+  resources :evaluation_targets, only: :index
+  resources :user_qualifications, only: :index
+  namespace :examiner do
+    resources :review_queue, only: :index
+    resources :candidates, only: %i[index show]
+  end
   resources :interview_applications, only: :show do
     member do
       get :assignment
