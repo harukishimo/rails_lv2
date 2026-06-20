@@ -1,11 +1,15 @@
 create_table "examiner_skill_capabilities", force: :cascade do |t|
   t.references "examiner_profile", null: false, index: false
   t.references "evaluation_target", null: false, index: false
+  t.boolean "can_review", null: false, default: true
+  t.boolean "can_interview", null: false, default: true
   t.boolean "active", null: false, default: true
   t.datetime "deleted_at"
   t.timestamps null: false
 
   t.index [ "deleted_at" ], name: "index_examiner_skill_capabilities_on_deleted_at"
+  t.index [ "evaluation_target_id", "active", "can_interview" ],
+          name: "index_examiner_skill_capabilities_on_interview_target"
   t.index [ "evaluation_target_id", "active" ], name: "index_examiner_skill_capabilities_on_target_and_active"
   t.index [ "examiner_profile_id", "evaluation_target_id" ],
           name: "index_examiner_skill_capabilities_on_profile_and_target"

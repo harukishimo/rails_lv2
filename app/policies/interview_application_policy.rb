@@ -24,7 +24,7 @@ class InterviewApplicationPolicy < ApplicationPolicy
     end
 
     def evaluation_target_ids
-      user.examiner_profile&.examiner_skill_capabilities&.active&.pluck(:evaluation_target_id) || []
+      user.examiner_profile&.examiner_skill_capabilities&.interviewable&.pluck(:evaluation_target_id) || []
     end
   end
 
@@ -52,6 +52,14 @@ class InterviewApplicationPolicy < ApplicationPolicy
     approve_schedule?
   end
 
+  def assignment?
+    assign?
+  end
+
+  def assign?
+    (user.admin? || examiner_capable?) && record.assignable? && !self_interview?
+  end
+
   def cancel?
     false
   end
@@ -67,7 +75,7 @@ class InterviewApplicationPolicy < ApplicationPolicy
   end
 
   def examiner_capable?
-    user.examiner? && user.examiner_profile&.can_evaluate?(record.exam_application.evaluation_target)
+    user.examiner? && user.examiner_profile&.can_interview_for?(record.exam_application.evaluation_target)
   end
 
   def acceptable_exam_application?

@@ -21,6 +21,10 @@ Rails.application.routes.draw do
     end
   end
   resources :interview_applications, only: :show do
+    member do
+      get :assignment
+      patch :assignment, action: :assign
+    end
     resources :interview_schedules, only: :create
   end
   resources :interview_schedules, only: [] do
