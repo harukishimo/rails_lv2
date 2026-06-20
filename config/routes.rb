@@ -14,7 +14,12 @@ Rails.application.routes.draw do
     resource :dashboard, only: :show, controller: :dashboard
   end
 
-  resources :exam_applications, only: %i[index show new create]
+  resources :exam_applications, only: %i[index show new create] do
+    resources :review_applications, only: %i[new create], shallow: true do
+      patch :cancel, on: :member
+    end
+  end
+  resources :review_applications, only: %i[show edit update]
 
   root "health#index"
 

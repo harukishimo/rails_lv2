@@ -16,6 +16,8 @@ gem "sqlite3", ">= 2.1"
 gem "ridgepole", "~> 3.2", require: false
 # Use deleted_at-based logical deletion for business tables.
 gem "paranoia", "~> 3.1"
+# Render GitHub Flavored Markdown-like review comments before sanitizing HTML.
+gem "commonmarker", "~> 2.8"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]

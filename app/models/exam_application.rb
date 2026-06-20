@@ -30,7 +30,7 @@ class ExamApplication < ApplicationRecord
   belongs_to :candidate, class_name: "User"
   belongs_to :evaluation_target
 
-  has_many :review_applications
+  has_many :review_applications, dependent: :restrict_with_error
   has_one :interview_application
   has_one :user_qualification
 
