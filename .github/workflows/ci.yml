@@ -36,5 +36,8 @@ jobs:
       - name: Ridgepole dry-run
         run: bundle exec ridgepole --config config/database.yml --env test --file db/Schemafile --apply --dry-run
 
+      - name: Ridgepole apply
+        run: bundle exec ridgepole --config config/database.yml --env test --file db/Schemafile --apply
+
       - name: Rails tests
         run: bin/rails test
