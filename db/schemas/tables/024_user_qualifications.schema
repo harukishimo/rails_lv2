@@ -1,0 +1,32 @@
+create_table "user_qualifications", force: :cascade do |t|
+  t.references "user", null: false, index: false
+  t.references "evaluation_target", null: false, index: false
+  t.references "exam_application", null: false, index: false
+  t.date "acquired_on", null: false
+  t.references "granted_by", null: false, index: false
+  t.datetime "revoked_at"
+  t.datetime "deleted_at"
+  t.timestamps null: false
+
+  t.index [ "deleted_at" ], name: "index_user_qualifications_on_deleted_at"
+  t.index [ "evaluation_target_id" ], name: "index_user_qualifications_on_evaluation_target_id"
+  t.index [ "exam_application_id" ],
+          name: "index_user_qualifications_on_exam_application_id",
+          unique: true,
+          where: "deleted_at IS NULL"
+  t.index [ "granted_by_id" ], name: "index_user_qualifications_on_granted_by_id"
+  t.index [ "user_id", "evaluation_target_id" ],
+          name: "index_user_qualifications_on_active_user_and_target",
+          unique: true,
+          where: "deleted_at IS NULL AND revoked_at IS NULL"
+  t.index [ "user_id", "acquired_on" ], name: "index_user_qualifications_on_user_and_acquired_on"
+end
+
+add_foreign_key "user_qualifications", "users",
+                column: "user_id"
+add_foreign_key "user_qualifications", "evaluation_targets",
+                column: "evaluation_target_id"
+add_foreign_key "user_qualifications", "exam_applications",
+                column: "exam_application_id"
+add_foreign_key "user_qualifications", "users",
+                column: "granted_by_id"
