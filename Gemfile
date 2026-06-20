@@ -14,6 +14,8 @@ gem "propshaft"
 gem "sqlite3", ">= 2.1"
 # Manage database schema from db/Schemafile instead of Rails migrations.
 gem "ridgepole", "~> 3.2", require: false
+# Use deleted_at-based logical deletion for business tables.
+gem "paranoia", "~> 3.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]

@@ -202,6 +202,8 @@ GEM
     orm_adapter (0.5.0)
     ostruct (0.6.3)
     parallel (1.28.0)
+    paranoia (3.1.0)
+      activerecord (>= 7, < 8.2)
     parser (3.3.11.1)
       ast (~> 2.4.1)
       racc
@@ -394,6 +396,7 @@ DEPENDENCIES
   jbuilder
   jwt (~> 3.1)
   kamal
+  paranoia (~> 3.1)
   propshaft
   puma (>= 5.0)
   pundit (~> 2.5)

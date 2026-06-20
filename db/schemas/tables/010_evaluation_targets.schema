@@ -1,0 +1,22 @@
+create_table "evaluation_targets", force: :cascade do |t|
+  t.references "skill_area", null: false, index: false
+  t.references "programming_language", null: false, index: false
+  t.references "framework", null: true, index: false
+  t.references "skill_level", null: false, index: false
+  t.string "external_knowledge_url"
+  t.string "external_knowledge_key"
+  t.text "description"
+  t.string "version", null: false
+  t.integer "display_order", null: false, default: 0
+  t.boolean "active", null: false, default: true
+  t.integer "lock_version", null: false, default: 0
+  t.datetime "deleted_at"
+  t.timestamps null: false
+
+  t.index [ "active", "display_order" ], name: "index_evaluation_targets_on_active_and_display_order"
+  t.index [ "deleted_at" ], name: "index_evaluation_targets_on_deleted_at"
+  t.index [ "programming_language_id", "skill_level_id" ],
+          name: "index_evaluation_targets_on_language_and_level"
+  t.index [ "programming_language_id", "framework_id", "skill_level_id", "version" ],
+          name: "index_evaluation_targets_on_identity"
+end
