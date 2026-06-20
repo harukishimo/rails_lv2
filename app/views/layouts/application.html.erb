@@ -23,14 +23,42 @@
   </head>
 
   <body>
-    <% if notice.present? %>
-      <p class="notice"><%= notice %></p>
-    <% end %>
+    <header class="app-header">
+      <div class="app-header__inner">
+        <%= link_to "Skill Evidence Hub", root_path, class: "app-header__brand" %>
+        <% if user_signed_in? %>
+          <nav class="app-nav" aria-label="Primary navigation">
+            <%= nav_link "受験対象", evaluation_targets_path %>
+            <%= nav_link "受験表明", exam_applications_path %>
+            <%= nav_link "取得資格", user_qualifications_path %>
+            <% if policy(ReviewApplication).queue? %>
+              <%= nav_link "レビューキュー", examiner_review_queue_index_path %>
+            <% end %>
+            <% if policy(User).candidate_index? %>
+              <%= nav_link "受験者検索", examiner_candidates_path %>
+            <% end %>
+            <% if current_user.admin? %>
+              <%= nav_link "管理", admin_dashboard_path %>
+            <% end %>
+          </nav>
+          <div class="app-header__user">
+            <span><%= current_user.name %></span>
+            <%= button_to "ログアウト", destroy_user_session_path, method: :delete, class: "link-button" %>
+          </div>
+        <% end %>
+      </div>
+    </header>
 
-    <% if alert.present? %>
-      <p class="alert"><%= alert %></p>
-    <% end %>
+    <main class="app-main">
+      <% if notice.present? %>
+        <p class="flash flash--notice"><%= notice %></p>
+      <% end %>
 
-    <%= yield %>
+      <% if alert.present? %>
+        <p class="flash flash--alert"><%= alert %></p>
+      <% end %>
+
+      <%= yield %>
+    </main>
   </body>
 </html>
