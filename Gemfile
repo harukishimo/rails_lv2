@@ -6,6 +6,8 @@ gem "rails", "~> 8.1.3"
 gem "devise", ">= 5.0.4", "< 6.0"
 # Encode/decode API access tokens explicitly.
 gem "jwt", "~> 3.1"
+# Centralize authorization policies for roles and examiner capabilities.
+gem "pundit", "~> 2.5"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use sqlite3 as the database for Active Record
