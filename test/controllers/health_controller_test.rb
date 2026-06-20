@@ -1,8 +1,8 @@
 require "test_helper"
 
 class HealthControllerTest < ActionDispatch::IntegrationTest
-  test "root responds successfully" do
-    get root_url
+  test "app health page responds successfully" do
+    get app_health_url
 
     assert_response :success
     assert_includes response.body, "SkillEvidenceHub"
