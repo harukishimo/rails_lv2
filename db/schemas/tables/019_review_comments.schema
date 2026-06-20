@@ -1,0 +1,18 @@
+create_table "review_comments", force: :cascade do |t|
+  t.references "review_application", null: false, index: false
+  t.references "examiner", null: false, index: false
+  t.text "body_markdown", null: false
+  t.text "rendered_body_html"
+  t.integer "lock_version", null: false, default: 0
+  t.datetime "deleted_at"
+  t.timestamps null: false
+
+  t.index [ "deleted_at" ], name: "index_review_comments_on_deleted_at"
+  t.index [ "examiner_id", "created_at" ], name: "index_review_comments_on_examiner_and_created_at"
+  t.index [ "review_application_id", "created_at" ], name: "index_review_comments_on_review_application_and_created_at"
+end
+
+add_foreign_key "review_comments", "review_applications",
+                column: "review_application_id"
+add_foreign_key "review_comments", "users",
+                column: "examiner_id"

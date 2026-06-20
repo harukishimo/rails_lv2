@@ -18,6 +18,8 @@ class ReviewApplication < ApplicationRecord
   belongs_to :exam_application
   belongs_to :decided_by, class_name: "User", optional: true
   has_many :submissions, dependent: :restrict_with_error
+  has_many :review_comments, dependent: :restrict_with_error
+  has_many :review_decisions, dependent: :restrict_with_error
 
   accepts_nested_attributes_for :submissions
 
@@ -45,6 +47,18 @@ class ReviewApplication < ApplicationRecord
 
   def cancelable?
     editable?
+  end
+
+  def commentable?
+    !closed_for_review? && !exam_application.closed_for_business?
+  end
+
+  def decidable?
+    submitted? && !exam_application.closed_for_business?
+  end
+
+  def closed_for_review?
+    canceled? || approved? || rejected?
   end
 
   def display_name

@@ -19,7 +19,11 @@ Rails.application.routes.draw do
       patch :cancel, on: :member
     end
   end
-  resources :review_applications, only: %i[show edit update]
+  resources :review_applications, only: %i[show edit update] do
+    resources :review_comments, only: :create
+    resources :review_decisions, only: :create
+  end
+  resources :review_comments, only: :update
 
   root "health#index"
 

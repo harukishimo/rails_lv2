@@ -2,14 +2,34 @@ class ReviewApplicationPolicy < ApplicationPolicy
   class Scope < Scope
     def resolve
       return scope.all if user.admin?
-      return scope.joins(:exam_application).where(exam_applications: { candidate_id: user.id }) if user.candidate?
 
-      scope.none
+      visible_scope = scope.none
+      visible_scope = visible_scope.or(scope.where(id: candidate_review_ids)) if user.candidate?
+      visible_scope = visible_scope.or(scope.where(id: examiner_review_ids)) if user.examiner?
+      visible_scope
+    end
+
+    private
+
+    def candidate_review_ids
+      scope.joins(:exam_application)
+           .where(exam_applications: { candidate_id: user.id })
+           .select(:id)
+    end
+
+    def examiner_review_ids
+      scope.joins(:exam_application)
+           .where(exam_applications: { evaluation_target_id: evaluation_target_ids })
+           .select(:id)
+    end
+
+    def evaluation_target_ids
+      user.examiner_profile&.examiner_skill_capabilities&.active&.pluck(:evaluation_target_id) || []
     end
   end
 
   def show?
-    owner? || user.admin?
+    owner? || user.admin? || examiner_capable?
   end
 
   def create?
@@ -32,10 +52,26 @@ class ReviewApplicationPolicy < ApplicationPolicy
     (owner? || user.admin?) && record.cancelable?
   end
 
+  def comment?
+    (user.admin? || examiner_capable?) && record.commentable? && !self_review?
+  end
+
+  def decide?
+    (user.admin? || examiner_capable?) && record.decidable? && !self_review?
+  end
+
   private
 
   def owner?
     user.candidate? && record.exam_application.candidate_id == user.id
+  end
+
+  def self_review?
+    record.exam_application.candidate_id == user.id
+  end
+
+  def examiner_capable?
+    user.examiner? && user.examiner_profile&.can_evaluate?(record.exam_application.evaluation_target)
   end
 
   def reviewable_exam_application?

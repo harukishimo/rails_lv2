@@ -14,7 +14,7 @@ module ReviewApplications
       review_application.with_lock do
         raise_not_editable! unless review_application.editable?
 
-        review_application.update!(review_attributes)
+        review_application.update!(review_attributes.merge(resubmission_attributes))
         review_application
       end
     end
@@ -25,6 +25,15 @@ module ReviewApplications
 
     def review_attributes
       attributes.slice(:appeal_markdown, :submissions_attributes)
+    end
+
+    def resubmission_attributes
+      return {} unless review_application.returned?
+
+      {
+        status: :submitted,
+        submitted_at: Time.current
+      }
     end
 
     def raise_not_editable!
