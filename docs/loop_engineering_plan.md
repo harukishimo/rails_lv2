@@ -81,23 +81,25 @@ Issueには最低限、以下を含める。
 
 各loop完了時に、LooperはIssueへコメントする。
 
+Loop Reportは日本語で書く。コマンド名、ファイルパス、ラベル名、エラー本文、評価基準IDなどの固有表現は原文のまま扱う。
+
 コメント形式:
 
 ```markdown
 ## Loop Report
 
 - Loop:
-- Duration:
-- Branch:
-- Completed:
-- Tests:
-- Failed/Skipped Tests:
-- Evaluation Criteria Covered:
-- Files Changed:
-- Remaining Work:
-- Blockers:
-- Next Loop Proposal:
-- Human Review Needed:
+- 所要時間:
+- ブランチ:
+- 完了したこと:
+- 実行テスト:
+- 失敗/未実行テスト:
+- 対応した評価基準:
+- 変更ファイル:
+- 残作業:
+- ブロッカー:
+- 次loop提案:
+- 人間レビュー要否:
 ```
 
 Issueコメントは、実装後にTODO 18の評価資料へ流用できる証跡として扱う。

@@ -94,7 +94,7 @@ GitHub IssueをLoopEngineeringの入力として読み、1回の起動につき1
 - 高リスクIssueでは docs/human_review_timing.md の確認条件を守る。
 - Issue本文、最新コメント、関連docsを読んでから作業する。
 - 1回の起動で進めるのは1 loop分だけにする。
-- 作業後はIssueへLoop Reportを残す。
+- 作業後はIssueへ日本語のLoop Reportを残す。コマンド名、ファイルパス、ラベル名、エラー本文、評価基準IDなどの固有表現は原文のまま扱う。
 - 要件差分、DB変更、認可方針変更、状態遷移変更、評価基準未達の恐れがある場合は作業を止め、Issueに `human-review` を付ける。
 
 出力:
@@ -102,7 +102,7 @@ GitHub IssueをLoopEngineeringの入力として読み、1回の起動につき1
 - 起動したAgent
 - 実施内容
 - 実行テスト
-- Loop Report
+- Loop Report（日本語）
 - 次に必要なAction
 - Human Review Needed
 ```
