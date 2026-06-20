@@ -38,6 +38,21 @@ bundle exec ridgepole --config config/database.yml --env development --file db/S
 bin/rails test
 ```
 
+## Quality Gates
+
+Run the same core checks locally before opening or updating a pull request:
+
+```sh
+bin/rubocop
+bin/rails test
+bin/bundler-audit check --update
+bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
+bundle exec ridgepole --config config/database.yml --env test --file db/Schemafile --apply --dry-run
+bin/ci
+```
+
+GitHub Actions runs the initial CI workflow defined in `.github/workflows/ci.yml`.
+
 ## Notes
 
 - Rails migrations are not the primary application schema workflow.
