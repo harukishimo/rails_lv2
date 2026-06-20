@@ -6,6 +6,6 @@ create_table "skill_levels", force: :cascade do |t|
   t.timestamps null: false
 
   t.index [ "active", "numeric_level" ], name: "index_skill_levels_on_active_and_numeric_level"
-  t.index [ "code" ], name: "index_skill_levels_on_code", unique: true
+  t.index [ "code" ], name: "index_skill_levels_on_code"
   t.index [ "deleted_at" ], name: "index_skill_levels_on_deleted_at"
 end

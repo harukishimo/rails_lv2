@@ -13,6 +13,7 @@ class EvaluationMasterTest < ActiveSupport::TestCase
 
     assert_not SkillArea.exists?(area.id)
     assert SkillArea.with_deleted.exists?(area.id)
+    assert SkillArea.create!(name: name, display_order: 3)
   end
 
   test "programming language name is unique" do
@@ -22,6 +23,9 @@ class EvaluationMasterTest < ActiveSupport::TestCase
 
     assert_not duplicate.valid?
     assert_includes duplicate.errors[:name], "has already been taken"
+
+    ProgrammingLanguage.find_by!(name: name).destroy
+    assert ProgrammingLanguage.create!(name: name)
   end
 
   test "framework name is unique per programming language" do
@@ -35,6 +39,9 @@ class EvaluationMasterTest < ActiveSupport::TestCase
     assert_not duplicate.valid?
     assert_includes duplicate.errors[:name], "has already been taken"
     assert same_name_for_other_language.valid?
+
+    Framework.find_by!(name: "Web", programming_language: ruby).destroy
+    assert Framework.create!(name: "Web", programming_language: ruby)
   end
 
   test "skill level requires positive numeric level" do
@@ -42,5 +49,12 @@ class EvaluationMasterTest < ActiveSupport::TestCase
 
     assert_not level.valid?
     assert_includes level.errors[:numeric_level], "must be greater than 0"
+  end
+
+  test "skill level code can be reused after soft delete" do
+    code = "Lv#{rand(1000..9999)}"
+    SkillLevel.create!(code: code, numeric_level: 2).destroy
+
+    assert SkillLevel.create!(code: code, numeric_level: 2)
   end
 end

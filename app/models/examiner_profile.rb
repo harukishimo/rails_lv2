@@ -1,4 +1,6 @@
 class ExaminerProfile < ApplicationRecord
+  acts_as_paranoid
+
   belongs_to :user
   has_many :examiner_skill_capabilities, dependent: :destroy
   has_many :evaluation_targets, through: :examiner_skill_capabilities

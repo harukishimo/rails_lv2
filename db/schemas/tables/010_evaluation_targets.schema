@@ -18,6 +18,5 @@ create_table "evaluation_targets", force: :cascade do |t|
   t.index [ "programming_language_id", "skill_level_id" ],
           name: "index_evaluation_targets_on_language_and_level"
   t.index [ "programming_language_id", "framework_id", "skill_level_id", "version" ],
-          name: "index_evaluation_targets_on_identity",
-          unique: true
+          name: "index_evaluation_targets_on_identity"
 end

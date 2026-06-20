@@ -58,6 +58,21 @@ class EvaluationTargetTest < ActiveSupport::TestCase
     assert EvaluationTarget.with_deleted.exists?(target.id)
   end
 
+  test "identity can be reused after soft delete" do
+    target = create_evaluation_target
+    target.destroy
+
+    recreated = build_evaluation_target(
+      skill_area: target.skill_area,
+      programming_language: target.programming_language,
+      framework: target.framework,
+      skill_level: target.skill_level,
+      version: target.version
+    )
+
+    assert recreated.save
+  end
+
   private
 
   def build_evaluation_target(attributes = {})

@@ -7,5 +7,5 @@ create_table "skill_areas", force: :cascade do |t|
 
   t.index [ "active", "display_order" ], name: "index_skill_areas_on_active_and_display_order"
   t.index [ "deleted_at" ], name: "index_skill_areas_on_deleted_at"
-  t.index [ "name" ], name: "index_skill_areas_on_name", unique: true
+  t.index [ "name" ], name: "index_skill_areas_on_name"
 end

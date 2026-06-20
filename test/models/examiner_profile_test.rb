@@ -30,6 +30,20 @@ class ExaminerProfileTest < ActiveSupport::TestCase
     assert_not profile.can_evaluate?(target)
   end
 
+  test "destroy soft deletes profile and capabilities" do
+    examiner = create_user_with_role(Role::EXAMINER)
+    profile = ExaminerProfile.create!(user: examiner, display_name: "Examiner")
+    target = create_evaluation_target
+    capability = ExaminerSkillCapability.create!(examiner_profile: profile, evaluation_target: target)
+
+    profile.destroy
+
+    assert_not ExaminerProfile.exists?(profile.id)
+    assert ExaminerProfile.with_deleted.exists?(profile.id)
+    assert_not ExaminerSkillCapability.exists?(capability.id)
+    assert ExaminerSkillCapability.with_deleted.exists?(capability.id)
+  end
+
   private
 
   def create_evaluation_target

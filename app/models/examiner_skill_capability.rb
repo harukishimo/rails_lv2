@@ -1,4 +1,6 @@
 class ExaminerSkillCapability < ApplicationRecord
+  acts_as_paranoid
+
   belongs_to :examiner_profile
   belongs_to :evaluation_target
 

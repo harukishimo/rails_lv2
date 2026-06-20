@@ -6,5 +6,5 @@ create_table "programming_languages", force: :cascade do |t|
 
   t.index [ "active", "name" ], name: "index_programming_languages_on_active_and_name"
   t.index [ "deleted_at" ], name: "index_programming_languages_on_deleted_at"
-  t.index [ "name" ], name: "index_programming_languages_on_name", unique: true
+  t.index [ "name" ], name: "index_programming_languages_on_name"
 end
