@@ -15,7 +15,7 @@ class Submission < ApplicationRecord
 
   validates :title, presence: true, length: { maximum: 255 }
   validates :note, length: { maximum: 10_000 }
-  validates :github_url, github_repository_url: true, if: :github_repository?
+  validates :github_url, github_url: true, if: :github_repository?
   validate :github_url_required_for_repository
   validate :file_required_for_file_submission
   validate :file_size_within_limit

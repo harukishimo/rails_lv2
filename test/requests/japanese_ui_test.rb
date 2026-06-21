@@ -14,7 +14,7 @@ class JapaneseUiTest < ActionDispatch::IntegrationTest
     get exam_applications_path
 
     assert_response :success
-    assert_includes response.body, application.display_name
+    assert_includes response.body, "受験ID: #{application.id}"
     assert_includes response.body, "受験表明済み"
     assert_not_includes response.body, ">declared<"
   end

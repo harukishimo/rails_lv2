@@ -36,11 +36,17 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     exam_application = create_declared_exam_application(candidate: candidate)
     sign_in_as(candidate)
 
+    get new_exam_application_interview_application_path(exam_application)
+
+    assert_redirected_to exam_application_path(exam_application)
+    follow_redirect!
+    assert_includes response.body, "面談応募は評価官が許可すると作成できます"
+
     assert_no_difference -> { InterviewApplication.count } do
       post exam_application_interview_application_path(exam_application)
     end
 
-    assert_response :forbidden
+    assert_redirected_to exam_application_path(exam_application)
   end
 
   test "candidate cannot create interview application without existing own exam application" do
@@ -85,13 +91,14 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
     assign_interview_application(interview_application)
+    starts_at = future_quarter_hour(days: 2)
     sign_in_as(candidate)
 
     assert_difference -> { InterviewSchedule.count }, 1 do
       post interview_application_interview_schedules_path(interview_application), params: {
         interview_schedule: {
-          starts_at: 2.days.from_now,
-          ends_at: 2.days.from_now + 30.minutes
+          starts_at: starts_at,
+          ends_at: starts_at + 30.minutes
         }
       }
     end
@@ -105,13 +112,14 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     candidate = create_user_with_role(Role::CANDIDATE)
     other_candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: other_candidate)
+    starts_at = future_quarter_hour(days: 2)
     sign_in_as(candidate)
 
     assert_no_difference -> { InterviewSchedule.count } do
       post interview_application_interview_schedules_path(interview_application), params: {
         interview_schedule: {
-          starts_at: 2.days.from_now,
-          ends_at: 2.days.from_now + 30.minutes
+          starts_at: starts_at,
+          ends_at: starts_at + 30.minutes
         }
       }
     end
@@ -123,7 +131,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
     assign_interview_application(interview_application)
-    starts_at = 2.days.from_now.change(hour: 10, min: 0, sec: 0)
+    starts_at = future_quarter_hour(days: 2)
     ends_at = starts_at + 30.minutes
     sign_in_as(candidate)
 
@@ -162,13 +170,14 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
     assign_interview_application(interview_application)
+    starts_at = future_quarter_hour(days: 2, hour: 11)
     sign_in_as(candidate)
 
     assert_no_difference -> { InterviewSchedule.count } do
       post interview_application_interview_schedules_path(interview_application), params: {
         interview_schedule: {
-          starts_at: 2.days.from_now + 1.hour,
-          ends_at: 2.days.from_now
+          starts_at: starts_at,
+          ends_at: starts_at - 1.hour
         }
       }
     end
@@ -181,13 +190,14 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
     assign_interview_application(interview_application)
+    starts_at = future_quarter_hour(days: 2)
     sign_in_as(candidate)
 
     assert_no_difference -> { InterviewSchedule.count } do
       post interview_application_interview_schedules_path(interview_application), params: {
         interview_schedule: {
-          starts_at: 2.days.from_now,
-          ends_at: 2.days.from_now + 30.minutes,
+          starts_at: starts_at,
+          ends_at: starts_at + 30.minutes,
           timezone: "Bad/Zone"
         }
       }
@@ -195,6 +205,27 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, "タイムゾーンは不正な値です"
+  end
+
+  test "candidate cannot create schedule outside 15 minute increments" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    interview_application = create_interview_application(candidate: candidate)
+    assign_interview_application(interview_application)
+    starts_at = future_quarter_hour(days: 2, min: 10)
+    sign_in_as(candidate)
+
+    assert_no_difference -> { InterviewSchedule.count } do
+      post interview_application_interview_schedules_path(interview_application), params: {
+        interview_schedule: {
+          starts_at: starts_at,
+          ends_at: starts_at + 30.minutes
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "開始日時は15分単位で指定してください"
+    assert_includes response.body, "終了日時は15分単位で指定してください"
   end
 
   test "capable examiner can approve requested schedule" do
@@ -297,14 +328,19 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
 
   def create_schedule(interview_application)
     assign_interview_application(interview_application)
+    starts_at = future_quarter_hour(days: 3)
     InterviewSchedules::CreateService.call(
       interview_application: interview_application,
       actor: interview_application.exam_application.candidate,
       attributes: {
-        starts_at: 3.days.from_now,
-        ends_at: 3.days.from_now + 30.minutes
+        starts_at: starts_at,
+        ends_at: starts_at + 30.minutes
       }
     )
+  end
+
+  def future_quarter_hour(days:, hour: 10, min: 0)
+    Time.zone.local(Date.current.year, Date.current.month, Date.current.day, hour, min, 0) + days.days
   end
 
   def assign_interview_application(interview_application)

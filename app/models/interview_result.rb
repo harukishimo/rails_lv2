@@ -34,6 +34,6 @@ class InterviewResult < ApplicationRecord
   end
 
   def assigned_examiner?
-    interview_application&.assigned_examiner_profile&.user_id == examiner_id
+    interview_application&.assigned_examiner_profiles&.any? { |profile| profile.user_id == examiner_id }
   end
 end

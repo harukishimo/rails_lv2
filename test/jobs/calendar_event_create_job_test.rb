@@ -16,7 +16,7 @@ class CalendarEventCreateJobTest < ActiveJob::TestCase
   test "creates calendar event through job and marks schedule idempotently" do
     schedule, examiner = create_approved_schedule
 
-    assert_enqueued_with(job: SlackDeliveryJob) do
+    assert_no_enqueued_jobs only: SlackDeliveryJob do
       CalendarEventCreateJob.perform_now(schedule.id, actor_id: examiner.id)
     end
 
@@ -41,6 +41,19 @@ class CalendarEventCreateJobTest < ActiveJob::TestCase
     assert_equal 1, client.calls
     assert schedule.reload.calendar_created?
     assert_equal "calendar-1", schedule.google_calendar_event_id
+  end
+
+  test "calendar payload includes candidate and both assigned examiners" do
+    schedule, examiner, secondary_examiner = create_approved_schedule(with_secondary: true)
+    client = CountingCalendarClient.new
+    CalendarEventCreateJob.client_factory = -> { client }
+
+    CalendarEventCreateJob.perform_now(schedule.id, actor_id: examiner.id)
+
+    attendee_emails = client.payloads.first.fetch(:attendees).map { |attendee| attendee.fetch(:email) }
+    assert_includes attendee_emails, schedule.interview_application.exam_application.candidate.email
+    assert_includes attendee_emails, examiner.email
+    assert_includes attendee_emails, secondary_examiner.email
   end
 
   test "treats google calendar conflict as existing deterministic event" do
@@ -137,14 +150,16 @@ class CalendarEventCreateJobTest < ActiveJob::TestCase
   private
 
   class CountingCalendarClient
-    attr_reader :calls
+    attr_reader :calls, :payloads
 
     def initialize
       @calls = 0
+      @payloads = []
     end
 
     def create_event(payload:)
       @calls += 1
+      @payloads << payload
       Integrations::Response.new(status: 200, body: "ok", external_id: "calendar-#{calls}")
     end
   end
@@ -159,7 +174,7 @@ class CalendarEventCreateJobTest < ActiveJob::TestCase
     end
   end
 
-  def create_approved_schedule
+  def create_approved_schedule(with_secondary: false)
     candidate = create_user_with_role(Role::CANDIDATE)
     exam_application = ExamApplications::CreateService.call(
       candidate: candidate,
@@ -173,22 +188,29 @@ class CalendarEventCreateJobTest < ActiveJob::TestCase
       actor: candidate
     )
     examiner = create_examiner_for(exam_application.evaluation_target)
+    secondary_examiner = create_examiner_for(exam_application.evaluation_target) if with_secondary
     InterviewApplications::AssignExaminerService.call(
       interview_application: interview_application,
       actor: examiner,
-      examiner_profile: examiner.examiner_profile
+      examiner_profile: examiner.examiner_profile,
+      secondary_examiner_profile: secondary_examiner&.examiner_profile
     )
+    starts_at = future_quarter_hour(days: 2)
     schedule = InterviewSchedules::CreateService.call(
       interview_application: interview_application,
       actor: candidate,
       attributes: {
-        starts_at: 2.days.from_now,
-        ends_at: 2.days.from_now + 30.minutes
+        starts_at: starts_at,
+        ends_at: starts_at + 30.minutes
       }
     )
     InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
 
-    [ schedule.reload, examiner ]
+    [ schedule.reload, examiner, secondary_examiner ]
+  end
+
+  def future_quarter_hour(days:, hour: 10, min: 0)
+    Time.zone.local(Date.current.year, Date.current.month, Date.current.day, hour, min, 0) + days.days
   end
 
   def create_examiner_for(evaluation_target)

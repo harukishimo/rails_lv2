@@ -30,7 +30,7 @@ class ReviewDecisionServiceTest < ActiveSupport::TestCase
     examiner = create_examiner_for(review_application.exam_application.evaluation_target)
 
     decision = nil
-    assert_enqueued_with(job: SlackDeliveryJob) do
+    assert_no_enqueued_jobs only: SlackDeliveryJob do
       assert_difference -> { StatusChangeEvent.where(subject: review_application).count }, 1 do
         decision = ReviewDecisions::CreateService.call(
           review_application: review_application,
@@ -74,7 +74,7 @@ class ReviewDecisionServiceTest < ActiveSupport::TestCase
     examiner = create_examiner_for(review_application.exam_application.evaluation_target)
 
     decision = nil
-    assert_enqueued_with(job: SlackDeliveryJob) do
+    assert_no_enqueued_jobs only: SlackDeliveryJob do
       assert_difference -> { StatusChangeEvent.where(subject: review_application).count }, 1 do
         decision = ReviewDecisions::CreateService.call(
           review_application: review_application,

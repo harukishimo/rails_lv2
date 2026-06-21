@@ -12,6 +12,9 @@
     <% if policy(@interview_application).assignment? %>
       <%= link_to "面談評価官を割り振る", assignment_interview_application_path(@interview_application), class: button_classes %>
     <% end %>
+    <% if policy(@interview_application).decide_result? %>
+      <%= link_to "面談結果を登録", "#interview-result", class: button_classes %>
+    <% end %>
   </div>
 </div>
 
@@ -21,7 +24,7 @@
   <dt>受験者</dt>
   <dd><%= @interview_application.exam_application.candidate.name %></dd>
   <dt>受験対象</dt>
-  <dd><%= @interview_application.exam_application.evaluation_target.display_name %></dd>
+  <dd><%= evaluation_target_compact_name(@interview_application.exam_application.evaluation_target) %></dd>
   <dt>面接官</dt>
   <dd><%= @interview_application.assigned_examiner_name %></dd>
 </dl>
@@ -53,11 +56,11 @@
       <%= form_with model: [@interview_application, @interview_schedule] do |form| %>
         <div class="<%= ui_class(:field) %>">
           <%= form.label :starts_at, "開始日時" %>
-          <%= form.datetime_field :starts_at %>
+          <%= form.datetime_field :starts_at, step: 15.minutes %>
         </div>
         <div class="<%= ui_class(:field) %>">
           <%= form.label :ends_at, "終了日時" %>
-          <%= form.datetime_field :ends_at %>
+          <%= form.datetime_field :ends_at, step: 15.minutes %>
         </div>
         <div class="<%= ui_class(:field) %>">
           <%= form.label :timezone, "タイムゾーン" %>
@@ -70,17 +73,17 @@
     <% end %>
   </div>
 
-  <div class="<%= ui_class(:panel) %>">
+  <div id="interview-result" class="<%= ui_class(:panel) %>">
     <h2>面談結果</h2>
-    <% if @interview_application.interview_result.present? && @interview_application.interview_result.persisted? %>
-      <p><%= status_badge(@interview_application.interview_result.result) %></p>
-      <div><%= sanitize(@interview_application.interview_result.rendered_comment_html) %></div>
+    <% if @persisted_interview_result.present? %>
+      <p><%= status_badge(@persisted_interview_result.result) %></p>
+      <div><%= sanitize(@persisted_interview_result.rendered_comment_html) %></div>
     <% else %>
       <%= empty_state("面談結果はまだ登録されていません。") %>
     <% end %>
 
     <% if policy(@interview_application).decide_result? %>
-      <%= form_with model: [@interview_application, @interview_result] do |form| %>
+      <%= form_with model: @interview_result, url: interview_application_interview_result_path(@interview_application) do |form| %>
         <div class="<%= ui_class(:field) %>">
           <%= form.label :result, "判定" %>
           <%= form.select :result, enum_options_for(InterviewResult, :result) %>

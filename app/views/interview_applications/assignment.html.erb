@@ -9,19 +9,31 @@
 <%= error_summary(@interview_application) %>
 
 <div class="<%= ui_class(:panel) %>">
-  自動提案された評価官ID: <%= @suggested_examiner&.id || "-" %><br>
-  自動提案された評価官: <%= @suggested_examiner&.display_name || "候補なし" %>
+  <p>面談対応数が少ない評価官を自動提案し、下記リストの初期値に設定しています。</p>
+  <p class="<%= ui_class(:muted_text) %>">
+    自動提案:
+    <%= @suggested_examiners.map(&:display_name).presence&.join(" / ") || "候補なし" %>
+  </p>
 </div>
 
 <div class="<%= ui_class(:panel) %>">
   <%= form_with model: @interview_application, url: assignment_interview_application_path(@interview_application), method: :patch do |form| %>
     <div class="<%= ui_class(:field) %>">
-      <%= form.label :assigned_examiner_profile_id, "面談評価官" %>
+      <%= form.label :assigned_examiner_profile_id, "面談評価官1" %>
       <%= form.collection_select :assigned_examiner_profile_id,
                                  @examiner_profiles,
                                  :id,
                                  :display_name,
-                                 selected: @suggested_examiner&.id,
+                                 selected: @selected_primary_examiner_id,
+                                 prompt: "選択してください" %>
+    </div>
+    <div class="<%= ui_class(:field) %>">
+      <%= form.label :secondary_assigned_examiner_profile_id, "面談評価官2" %>
+      <%= form.collection_select :secondary_assigned_examiner_profile_id,
+                                 @examiner_profiles,
+                                 :id,
+                                 :display_name,
+                                 selected: @selected_secondary_examiner_id,
                                  prompt: "選択してください" %>
     </div>
     <div class="<%= ui_class(:field) %>">

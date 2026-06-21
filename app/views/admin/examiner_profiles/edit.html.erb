@@ -45,11 +45,15 @@
     <section>
       <h2>対応可能な受験対象</h2>
       <p class="<%= ui_class(:page_description) %>">対象ごとにレビュー対応可、面談対応可を設定します。</p>
+      <%= hidden_field_tag "examiner_profile[review_evaluation_target_ids][]", "" %>
+      <%= hidden_field_tag "examiner_profile[interview_evaluation_target_ids][]", "" %>
       <div class="<%= ui_class(:table_wrap) %>">
         <table>
           <thead>
             <tr>
-              <th>受験対象</th>
+              <th>種別</th>
+              <th>言語・FW</th>
+              <th>Lv</th>
               <th>レビュー可</th>
               <th>面談可</th>
             </tr>
@@ -59,7 +63,9 @@
             <% interview_ids = @examiner_profile.examiner_skill_capabilities.select(&:can_interview?).map(&:evaluation_target_id) %>
             <% @evaluation_targets.each do |target| %>
               <tr>
-                <td><%= target.display_name %></td>
+                <td><%= evaluation_target_area_label(target) %></td>
+                <td><%= evaluation_target_technology_label(target) %></td>
+                <td><%= evaluation_target_level_label(target) %></td>
                 <td>
                   <%= check_box_tag "examiner_profile[review_evaluation_target_ids][]",
                                     target.id,

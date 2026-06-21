@@ -41,10 +41,18 @@ module Search
       params[key].presence
     end
 
+    def array_param(key)
+      Array.wrap(params[key]).reject(&:blank?)
+    end
+
     def enum_value(model, key, value)
       return if value.blank?
 
       value if model.public_send(key.to_s.pluralize).key?(value)
+    end
+
+    def enum_values(model, key, values)
+      Array.wrap(values).filter_map { |value| enum_value(model, key, value) }.uniq
     end
 
     def escaped_like(value)

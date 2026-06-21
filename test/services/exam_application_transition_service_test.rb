@@ -13,6 +13,16 @@ class ExamApplicationTransitionServiceTest < ActiveSupport::TestCase
     assert application.review_approved?
   end
 
+  test "permits interview directly from declared application" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    application = create_declared_application(candidate: candidate)
+
+    ExamApplications::TransitionService.new(application, actor: candidate).permit_interview!
+
+    assert application.review_approved?
+    assert application.interview_permitted?
+  end
+
   test "rejects invalid transition" do
     candidate = create_user_with_role(Role::CANDIDATE)
     application = create_declared_application(candidate: candidate)

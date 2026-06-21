@@ -26,9 +26,29 @@ class SlackDeliveryJobTest < ActiveJob::TestCase
     assert delivery.delivery_succeeded?
     assert_equal "default", delivery.webhook_name
     assert_equal "review_application_submitted", delivery.payload.fetch("event_type")
+    assert_includes delivery.payload.fetch("text"), "[SkillEvidenceHub] レビュー提出"
+    assert_includes delivery.payload.fetch("text"), "受験を下書きから受験表明済みへ変更しました"
     assert_equal 200, delivery.response_code
     assert_equal 0, delivery.retry_count
     assert_equal [ "review_application_submitted" ], client.payloads.map { |payload| payload.fetch("event_type") }
+  end
+
+  test "renders interview confirmed message for slack channel" do
+    event = create_interview_confirmed_event
+    client = SuccessSlackClient.new
+    SlackDeliveryJob.client_factory = ->(webhook_name:) { client }
+
+    SlackDeliveryJob.perform_now(event.id)
+
+    delivery = slack_delivery_for(event)
+    assert delivery.delivery_succeeded?
+    assert_equal <<~TEXT.chomp, delivery.payload.fetch("text")
+      面談が確定しました！
+      受験者：佐藤 候補
+      言語：Rails
+      lv : 2
+      試験官: 試験官1、試験官2
+    TEXT
   end
 
   test "does not send again when delivery already succeeded" do
@@ -160,6 +180,32 @@ class SlackDeliveryJobTest < ActiveJob::TestCase
       message: "Review application submitted",
       target_path: "/exam_applications/#{exam_application.id}",
       metadata: metadata.fetch(:exam_application_id, nil) ? metadata : metadata.merge(exam_application_id: exam_application.id)
+    )
+  end
+
+  def create_interview_confirmed_event
+    candidate = create_user_with_role(Role::CANDIDATE)
+    exam_application = ExamApplications::CreateService.call(
+      candidate: candidate,
+      evaluation_period: create_evaluation_period,
+      evaluation_target: create_evaluation_target,
+      actor: candidate
+    )
+
+    StatusChangeEvent.create!(
+      subject: exam_application,
+      actor: candidate,
+      from_status: nil,
+      to_status: "interview_confirmed",
+      event_type: "interview_confirmed",
+      message: "面談が確定しました！",
+      target_path: "/interview_applications/1",
+      metadata: {
+        candidate_name: "佐藤 候補",
+        skill_name: "Rails",
+        skill_level: 2,
+        examiner_names: [ "試験官1", "試験官2" ]
+      }
     )
   end
 

@@ -7,6 +7,7 @@ class InterviewApplicationsController < ApplicationController
                                :interview_schedules,
                                :interview_result,
                                :assigned_examiner_profile,
+                               :secondary_assigned_examiner_profile,
                                exam_application: [
                                  :candidate,
                                  { evaluation_target: %i[skill_area programming_language framework skill_level] }
@@ -15,17 +16,22 @@ class InterviewApplicationsController < ApplicationController
                              .find(params[:id])
     authorize @interview_application
     @interview_schedule = @interview_application.interview_schedules.build
-    @interview_result = InterviewResult.new(interview_application: @interview_application)
+    @persisted_interview_result = @interview_application.interview_result
+    @interview_result = @persisted_interview_result || InterviewResult.new(interview_application: @interview_application)
   end
 
   def new
     @exam_application = policy_scope(ExamApplication).find(params[:exam_application_id])
+    return redirect_unpermitted_interview_application if interview_application_not_yet_permitted_for_owner?
+
     @interview_application = InterviewApplication.new(exam_application: @exam_application)
     authorize @interview_application
   end
 
   def create
     @exam_application = policy_scope(ExamApplication).find(params[:exam_application_id])
+    return redirect_unpermitted_interview_application if interview_application_not_yet_permitted_for_owner?
+
     @interview_application = InterviewApplication.new(exam_application: @exam_application)
     authorize @interview_application
 
@@ -55,6 +61,7 @@ class InterviewApplicationsController < ApplicationController
       interview_application: @interview_application,
       actor: current_user,
       examiner_profile: selected_examiner_profile,
+      secondary_examiner_profile: selected_secondary_examiner_profile,
       reason: assignment_params[:assignment_override_reason]
     )
 
@@ -68,8 +75,20 @@ class InterviewApplicationsController < ApplicationController
 
   private
 
+  def interview_application_not_yet_permitted_for_owner?
+    current_user.candidate? &&
+      @exam_application.candidate_id == current_user.id &&
+      !InterviewApplication.exists?(exam_application_id: @exam_application.id) &&
+      !@exam_application.interview_permitted?
+  end
+
+  def redirect_unpermitted_interview_application
+    authorize @exam_application, :show?
+    redirect_to exam_application_path(@exam_application), alert: "面談応募は評価官が許可すると作成できます"
+  end
+
   def prepare_assignment_options
-    @suggested_examiner = ExaminerSuggestionService.call(interview_application: @interview_application)
+    @suggested_examiners = ExaminerSuggestionService.call(interview_application: @interview_application, limit: 2)
     @examiner_profiles = ExaminerProfile.available_for_interviews
                                        .joins(:examiner_skill_capabilities)
                                        .where(examiner_skill_capabilities: {
@@ -78,14 +97,25 @@ class InterviewApplicationsController < ApplicationController
                                          can_interview: true
                                        })
                                        .distinct
+                                       .order(:display_name, :id)
+    @selected_primary_examiner_id = @interview_application.assigned_examiner_profile_id || @suggested_examiners.first&.id
+    @selected_secondary_examiner_id = @interview_application.secondary_assigned_examiner_profile_id || @suggested_examiners.second&.id
   end
 
   def selected_examiner_profile
     ExaminerProfile.find_by(id: assignment_params[:assigned_examiner_profile_id])
   end
 
+  def selected_secondary_examiner_profile
+    ExaminerProfile.find_by(id: assignment_params[:secondary_assigned_examiner_profile_id])
+  end
+
   def assignment_params
-    params.require(:interview_application).permit(:assigned_examiner_profile_id, :assignment_override_reason)
+    params.require(:interview_application).permit(
+      :assigned_examiner_profile_id,
+      :secondary_assigned_examiner_profile_id,
+      :assignment_override_reason
+    )
   end
 
   def render_validation_errors(record)

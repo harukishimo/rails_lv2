@@ -11,6 +11,11 @@ class ExaminerProfile < ApplicationRecord
            foreign_key: :assigned_examiner_profile_id,
            inverse_of: :assigned_examiner_profile,
            dependent: :restrict_with_error
+  has_many :secondary_interview_applications,
+           class_name: "InterviewApplication",
+           foreign_key: :secondary_assigned_examiner_profile_id,
+           inverse_of: :secondary_assigned_examiner_profile,
+           dependent: :restrict_with_error
 
   validates :display_name, presence: true
   validates :monthly_interview_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }

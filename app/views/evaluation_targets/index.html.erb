@@ -1,7 +1,7 @@
 <div class="<%= ui_class(:page_header) %>">
   <div>
     <h1 class="<%= ui_class(:page_title) %>">受験対象</h1>
-    <p class="<%= ui_class(:page_description) %>">言語、フレームワーク、Lv、外部ナレッジ参照を検索します。</p>
+    <p class="<%= ui_class(:page_description) %>">言語・カテゴリ、Lvを検索します。</p>
   </div>
 </div>
 
@@ -10,10 +10,12 @@
     <%= form.label :keyword, "キーワード" %>
     <%= form.search_field :keyword, value: params[:keyword] %>
   </div>
-  <div class="<%= ui_class(:field) %>">
-    <%= form.label :active, "有効状態" %>
-    <%= form.select :active, options_for_select([["すべて", ""], ["有効", "true"], ["無効", "false"]], params[:active]) %>
-  </div>
+  <% if current_user.admin? %>
+    <div class="<%= ui_class(:field) %>">
+      <%= form.label :active, "有効状態" %>
+      <%= form.select :active, options_for_select([["すべて", ""], ["有効", "true"], ["無効", "false"]], params[:active]) %>
+    </div>
+  <% end %>
   <%= form.submit "検索" %>
 <% end %>
 
@@ -22,17 +24,23 @@
     <table>
       <thead>
         <tr>
-          <th>受験対象</th>
-          <th>状態</th>
-          <th>外部キー</th>
+          <th>言語・カテゴリ</th>
+          <th>Lv</th>
+          <% if current_user.admin? %>
+            <th>状態</th>
+            <th>外部キー</th>
+          <% end %>
         </tr>
       </thead>
       <tbody>
         <% @evaluation_targets.each do |target| %>
           <tr>
-            <td>target=<%= target.id %> <%= target.display_name %></td>
-            <td><%= status_badge(target.active? ? "active" : "inactive") %></td>
-            <td>external_key=<%= target.external_knowledge_key %></td>
+            <td><%= evaluation_target_language_label(target) %></td>
+            <td><%= evaluation_target_level_label(target) %></td>
+            <% if current_user.admin? %>
+              <td><%= status_badge(target.active? ? "active" : "inactive") %></td>
+              <td><%= target.external_knowledge_key %></td>
+            <% end %>
           </tr>
         <% end %>
       </tbody>

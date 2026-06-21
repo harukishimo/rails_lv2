@@ -11,8 +11,8 @@
     <%= form.search_field :keyword, value: params[:keyword] %>
   </div>
   <div class="<%= ui_class(:field) %>">
-    <%= form.label :status, "受験状態" %>
-    <%= form.select :status, options_for_select(enum_options_for(ExamApplication, :status), params[:status]), include_blank: "すべて" %>
+    <%= form.label :statuses, "受験状態" %>
+    <%= status_filter_checkboxes(ExamApplication) %>
   </div>
   <%= form.submit "検索" %>
 <% end %>
@@ -31,7 +31,7 @@
       <tbody>
         <% @candidates.each do |candidate| %>
           <tr>
-            <td>受験者ID: <%= candidate.id %> <%= candidate.name %>&lt;<%= candidate.email %>&gt;</td>
+            <td><%= candidate.name %>&lt;<%= candidate.email %>&gt;</td>
             <td><%= visible_exam_applications(candidate).size %></td>
             <td><%= visible_qualifications(candidate).size %></td>
             <td><%= link_to "詳細", examiner_candidate_path(candidate), class: button_classes(:secondary) %></td>

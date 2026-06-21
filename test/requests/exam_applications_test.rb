@@ -59,7 +59,7 @@ class ExamApplicationsTest < ActionDispatch::IntegrationTest
     get exam_applications_path
 
     assert_response :success
-    assert_includes response.body, application.display_name
+    assert_includes response.body, "受験ID: #{application.id}"
 
     get exam_application_path(application)
 
@@ -67,6 +67,61 @@ class ExamApplicationsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, application.display_name
     assert_includes response.body, "状態変更履歴"
     assert_includes response.body, "受験表明"
+    assert_not_includes response.body, "面談応募へ進む"
+    assert_includes response.body, "面談応募は評価官が許可すると作成できます"
+  end
+
+  test "capable examiner can permit interview from exam application detail" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    application = ExamApplications::CreateService.call(
+      candidate: candidate,
+      evaluation_period: create_evaluation_period,
+      evaluation_target: create_evaluation_target,
+      actor: candidate
+    )
+    examiner = create_examiner_for(application.evaluation_target)
+    sign_in_as(examiner)
+
+    get exam_application_path(application)
+
+    assert_response :success
+    assert_includes response.body, "面談を許可する"
+
+    assert_difference -> { StatusChangeEvent.where(subject: application).count }, 1 do
+      patch permit_interview_exam_application_path(application)
+    end
+
+    assert_redirected_to exam_application_path(application)
+    assert application.reload.interview_permitted?
+
+    delete destroy_user_session_path
+    sign_in_as(candidate)
+    get exam_application_path(application)
+
+    assert_response :success
+    assert_includes response.body, "面談応募へ進む"
+    assert_not_includes response.body, "面談を許可する"
+  end
+
+  test "incapable examiner cannot see or permit exam application" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    application = ExamApplications::CreateService.call(
+      candidate: candidate,
+      evaluation_period: create_evaluation_period,
+      evaluation_target: create_evaluation_target,
+      actor: candidate
+    )
+    examiner = create_examiner_for(create_evaluation_target)
+    sign_in_as(examiner)
+
+    get exam_application_path(application)
+
+    assert_response :not_found
+
+    patch permit_interview_exam_application_path(application)
+
+    assert_response :not_found
+    assert application.reload.declared?
   end
 
   test "candidate cannot see another candidate exam application" do
@@ -123,6 +178,13 @@ class ExamApplicationsTest < ActionDispatch::IntegrationTest
       external_knowledge_key: "ruby_on_rails_lv2_#{SecureRandom.hex(4)}",
       version: "2026.06-#{SecureRandom.hex(4)}"
     }.merge(attributes))
+  end
+
+  def create_examiner_for(evaluation_target)
+    examiner = create_user_with_role(Role::EXAMINER)
+    profile = ExaminerProfile.create!(user: examiner, display_name: "Examiner #{SecureRandom.hex(4)}")
+    ExaminerSkillCapability.create!(examiner_profile: profile, evaluation_target: evaluation_target)
+    examiner
   end
 
   def create_user_with_role(code)

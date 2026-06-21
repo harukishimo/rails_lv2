@@ -13,7 +13,7 @@ class ReviewApplicationTest < ActiveSupport::TestCase
     exam_application = create_declared_exam_application(candidate: candidate)
 
     review_application = nil
-    assert_enqueued_with(job: SlackDeliveryJob) do
+    assert_no_enqueued_jobs only: SlackDeliveryJob do
       assert_difference -> { StatusChangeEvent.where(subject_type: "ReviewApplication").count }, 1 do
         review_application = ReviewApplications::CreateService.call(
           exam_application: exam_application,

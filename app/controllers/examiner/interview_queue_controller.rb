@@ -1,12 +1,12 @@
 module Examiner
-  class ReviewQueueController < ApplicationController
+  class InterviewQueueController < ApplicationController
     before_action :authenticate_user!
 
     def index
-      authorize ReviewApplication, :queue?
+      authorize InterviewApplication, :queue?
       skip_policy_scope
 
-      @review_applications = Search::ReviewQueueSearch.new(queue_scope, search_params).relation
+      @interview_applications = Search::InterviewQueueSearch.new(queue_scope, search_params).relation
     end
 
     private
@@ -17,7 +17,6 @@ module Examiner
         :evaluation_target_id,
         :candidate_keyword,
         :keyword,
-        :comment_keyword,
         :page,
         :per_page,
         statuses: []
@@ -25,7 +24,7 @@ module Examiner
     end
 
     def queue_scope
-      ReviewApplicationPolicy::QueueScope.new(current_user, ReviewApplication.all).resolve
+      InterviewApplicationPolicy::QueueScope.new(current_user, InterviewApplication.all).resolve
     end
   end
 end

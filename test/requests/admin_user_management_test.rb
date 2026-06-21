@@ -148,6 +148,89 @@ class AdminUserManagementTest < ActionDispatch::IntegrationTest
     assert profile.can_interview_for?(other_target)
   end
 
+  test "admin can remove examiner capabilities from evaluation targets" do
+    admin = create_user_with_role(Role::ADMIN)
+    examiner = create_user_with_role(Role::EXAMINER)
+    profile = ExaminerProfile.create!(
+      user: examiner,
+      display_name: "Changing Examiner",
+      active: true,
+      can_review: true,
+      can_interview: true
+    )
+    removed_target = create_evaluation_target
+    kept_target = create_evaluation_target
+    ExaminerSkillCapability.create!(
+      examiner_profile: profile,
+      evaluation_target: removed_target,
+      active: true,
+      can_review: true,
+      can_interview: true
+    )
+
+    sign_in_as(admin)
+    patch admin_examiner_profile_path(profile), params: {
+      examiner_profile: {
+        display_name: "Changing Examiner",
+        active: "1",
+        can_review: "1",
+        can_interview: "1",
+        monthly_interview_count: "0",
+        max_monthly_interviews: "6",
+        review_evaluation_target_ids: [ kept_target.id ],
+        interview_evaluation_target_ids: [ "" ]
+      }
+    }
+
+    assert_redirected_to admin_examiner_profiles_path
+    profile.reload
+    assert_not profile.can_evaluate?(removed_target)
+    assert_not profile.can_interview_for?(removed_target)
+    assert profile.can_evaluate?(kept_target)
+    assert_not profile.can_interview_for?(kept_target)
+  end
+
+  test "admin can update capabilities when stale inactive target capability exists" do
+    admin = create_user_with_role(Role::ADMIN)
+    examiner = create_user_with_role(Role::EXAMINER)
+    profile = ExaminerProfile.create!(
+      user: examiner,
+      display_name: "Stale Capability Examiner",
+      active: true,
+      can_review: true,
+      can_interview: true
+    )
+    stale_target = create_evaluation_target
+    new_target = create_evaluation_target
+    stale_capability = ExaminerSkillCapability.create!(
+      examiner_profile: profile,
+      evaluation_target: stale_target,
+      active: true,
+      can_review: true,
+      can_interview: true
+    )
+    stale_target.update!(active: false)
+
+    sign_in_as(admin)
+    patch admin_examiner_profile_path(profile), params: {
+      examiner_profile: {
+        display_name: "Stale Capability Examiner",
+        active: "1",
+        can_review: "1",
+        can_interview: "1",
+        monthly_interview_count: "0",
+        max_monthly_interviews: "6",
+        review_evaluation_target_ids: [ new_target.id ],
+        interview_evaluation_target_ids: [ new_target.id ]
+      }
+    }
+
+    assert_redirected_to admin_examiner_profiles_path
+    assert_not stale_capability.reload.active?
+    assert profile.reload.can_evaluate?(new_target)
+    assert profile.can_interview_for?(new_target)
+  end
+
   test "admin can search examiners by assigned evaluation target" do
     admin = create_user_with_role(Role::ADMIN)
     target = create_evaluation_target

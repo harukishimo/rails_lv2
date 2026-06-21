@@ -1,0 +1,41 @@
+<div class="<%= ui_class(:page_header) %>">
+  <div>
+    <h1 class="<%= ui_class(:page_title) %>">通知</h1>
+    <p class="<%= ui_class(:page_description) %>">受験、レビュー依頼、面談応募の状態変更を確認します。</p>
+  </div>
+</div>
+
+<% if @status_change_events.any? %>
+  <div class="<%= ui_class(:table_wrap) %>">
+    <table>
+      <thead>
+        <tr>
+          <th>日時</th>
+          <th>種別</th>
+          <th>状態</th>
+          <th>内容</th>
+          <th>操作者</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @status_change_events.each do |event| %>
+          <tr>
+            <td><%= l(event.created_at, format: :long) %></td>
+            <td><%= status_badge(event.event_type, label: event.localized_event_type) %></td>
+            <td><%= event.localized_transition %></td>
+            <td><%= event.localized_message %></td>
+            <td><%= event.actor&.name || "システム" %></td>
+            <td>
+              <% if event.target_path.present? %>
+                <%= link_to "対象を見る", event.target_path, class: button_classes(:secondary) %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= empty_state("通知はまだありません。") %>
+<% end %>

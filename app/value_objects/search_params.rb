@@ -20,6 +20,16 @@ class SearchParams < Struct.new(:context, :values, :unknown_keys, :allowed_keys,
       per_page
       result
       status
+      statuses
+    ],
+    interview_queue: %i[
+      candidate_keyword
+      evaluation_target_id
+      keyword
+      page
+      per_page
+      status
+      statuses
     ],
     review_queue: %i[
       candidate_keyword
@@ -29,6 +39,7 @@ class SearchParams < Struct.new(:context, :values, :unknown_keys, :allowed_keys,
       page
       per_page
       status
+      statuses
     ],
     examiner_candidate: %i[
       evaluation_target_id
@@ -36,6 +47,7 @@ class SearchParams < Struct.new(:context, :values, :unknown_keys, :allowed_keys,
       page
       per_page
       status
+      statuses
     ],
     user_qualification: %i[
       acquired_on_from

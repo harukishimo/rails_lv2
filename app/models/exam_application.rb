@@ -54,11 +54,19 @@ class ExamApplication < ApplicationRecord
   scope :recent, -> { order(created_at: :desc, id: :desc) }
 
   def display_name
-    "#{evaluation_target.display_name} / #{evaluation_period.name} / attempt #{attempt_number}"
+    "#{evaluation_target.display_name} / #{evaluation_period.name} / #{attempt_number}回目"
   end
 
   def closed_for_business?
     closed?
+  end
+
+  def interview_permitted?
+    review_approved?
+  end
+
+  def permit_interview?
+    declared?
   end
 
   private

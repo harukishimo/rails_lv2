@@ -96,12 +96,12 @@ module Integrations
       def attendee_emails
         [
           exam_application.candidate.email,
-          assigned_examiner_user&.email
+          *assigned_examiner_users.map(&:email)
         ].compact
       end
 
-      def assigned_examiner_user
-        interview_application.assigned_examiner_profile&.user
+      def assigned_examiner_users
+        interview_application.assigned_examiner_profiles.map(&:user)
       end
 
       def interview_application

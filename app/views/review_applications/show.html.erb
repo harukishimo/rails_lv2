@@ -28,7 +28,7 @@
   <dt>受験者</dt>
   <dd><%= @review_application.exam_application.candidate.name %></dd>
   <dt>受験対象</dt>
-  <dd><%= @review_application.exam_application.evaluation_target.display_name %></dd>
+  <dd><%= evaluation_target_compact_name(@review_application.exam_application.evaluation_target) %></dd>
   <dt>アピール</dt>
   <dd><%= sanitize(@review_application.rendered_appeal_html) %></dd>
 </dl>

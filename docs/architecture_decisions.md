@@ -55,7 +55,7 @@
 | レビュー申請 | `app/services/review_applications/*` | 作成、更新、取消、状態変更記録を名前空間で分離 |
 | 面談応募 | `app/services/interview_applications/*`, `app/services/interview_schedules/*` | 面談作成、評価官割当、日程作成/承認/却下を分離 |
 | 資格反映 | `app/services/qualification_grant_service.rb` | 合格判定、資格作成、受験クローズを同一transactionに集約 |
-| 外部連携 | `app/services/integrations/slack/*`, `app/services/integrations/calendar/*` | Faraday実clientとmock clientを同じinterfaceで扱う |
+| 外部連携 | `app/services/integrations/slack/*` | Faraday実clientとmock clientを同じinterfaceで扱う。Google Calendar登録は現行フローでは使用しない |
 | 検索 | `app/queries/search/*`, `app/value_objects/search_params.rb` | Controllerから検索条件の組立を分離し、未知パラメータを拒否 |
 | 帳票 | `app/services/exporters/*` | CSV/XLSX renderingと帳票種別を分離 |
 
@@ -63,7 +63,6 @@
 
 | 対象 | DI / 差し替え箇所 | テスト |
 | --- | --- | --- |
-| Calendar | `CalendarEventCreateJob.client_factory` | `test/jobs/calendar_event_create_job_test.rb` |
 | Slack | `SlackDeliveryJob.client_factory` | `test/jobs/slack_delivery_job_test.rb` |
 | Export | `Exporters::ReportFactory` | `test/services/exporters_report_factory_test.rb` |
 | Search | `SearchParams` + query object | `test/value_objects/search_params_test.rb`, `test/requests/search_and_queue_test.rb` |

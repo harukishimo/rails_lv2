@@ -3,13 +3,7 @@ require "test_helper"
 class EvaluationLifecycleTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
 
-  setup do
-    @original_calendar_client_factory = CalendarEventCreateJob.client_factory
-    CalendarEventCreateJob.client_factory = -> { Integrations::Calendar::MockClient.new }
-  end
-
   teardown do
-    CalendarEventCreateJob.client_factory = @original_calendar_client_factory
     clear_enqueued_jobs
     clear_performed_jobs
   end
@@ -57,22 +51,25 @@ class EvaluationLifecycleTest < ActiveSupport::TestCase
       actor: examiner,
       examiner_profile: examiner.examiner_profile
     )
+    starts_at = future_quarter_hour(days: 2)
     schedule = InterviewSchedules::CreateService.call(
       interview_application: interview_application,
       actor: candidate,
       attributes: {
-        starts_at: 2.days.from_now,
-        ends_at: 2.days.from_now + 30.minutes
+        starts_at: starts_at,
+        ends_at: starts_at + 30.minutes
       }
     )
 
-    assert_enqueued_with(job: CalendarEventCreateJob) do
-      InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
+    assert_no_enqueued_jobs only: CalendarEventCreateJob do
+      assert_enqueued_with(job: SlackDeliveryJob) do
+        InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
+      end
     end
     perform_enqueued_jobs
 
-    assert schedule.reload.calendar_created?
-    assert interview_application.reload.calendar_created?
+    assert schedule.reload.approved?
+    assert interview_application.reload.scheduled?
 
     result = QualificationGrantService.call(
       interview_application: interview_application,
@@ -90,10 +87,14 @@ class EvaluationLifecycleTest < ActiveSupport::TestCase
     )
     assert_equal examiner, qualification.granted_by
     assert StatusChangeEvent.where(subject: review_application).exists?(to_status: "approved")
-    assert StatusChangeEvent.where(subject: interview_application).exists?(to_status: "calendar_created")
+    assert StatusChangeEvent.where(subject: interview_application).exists?(event_type: "interview_confirmed")
   end
 
   private
+
+  def future_quarter_hour(days:, hour: 10, min: 0)
+    Time.zone.local(Date.current.year, Date.current.month, Date.current.day, hour, min, 0) + days.days
+  end
 
   def create_evaluation_period
     EvaluationPeriod.create!(

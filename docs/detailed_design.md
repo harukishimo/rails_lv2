@@ -46,7 +46,7 @@ TODO 7の [要件定義書](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/re
 | レビュー依頼作成/編集 | 提出物とアピールコメントを登録する | ファイル添付、GitHub URL、Markdownコメント入力、取消 |
 | レビュー依頼詳細 | レビュー状態とコメントを確認する | 差し戻し対応、再提出 |
 | 面談応募作成 | 評価面談を申し込む | 希望日時入力、取消不可の注意喚起、応募 |
-| 面談詳細 | 面談日程と結果を確認する | Calendar登録状況、結果確認 |
+| 面談詳細 | 面談日程と結果を確認する | Slack通知状況、結果確認 |
 | 取得資格一覧 | 合格済みの資格を確認する | 取得日、対象言語/Lv、根拠受験の確認 |
 
 ### 評価官画面
@@ -78,7 +78,7 @@ TODO 7の [要件定義書](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/re
 | 取得資格管理 | 合格後の資格反映を確認する | 一覧、検索、根拠受験確認 |
 | 監査ログ | 重要操作を追跡する | 操作種別検索、対象検索 |
 | 帳票出力 | CSV/Excel/PDFを出力する | 受験対象、レビュー結果、提出状況、取得資格の出力 |
-| 外部連携設定 | Slack/Google Calendar設定を確認する | mock/実連携の切替、接続確認 |
+| 外部連携設定 | Slack通知設定を確認する | mock/実連携の切替、接続確認 |
 
 ### API/開発補助画面
 
@@ -102,7 +102,7 @@ TODO 7の [要件定義書](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/re
 | 面談応募 | 受験表明に紐づく面談申込 | `InterviewApplication` |
 | 評価官自動フィルイン | 面談対応数が少ない評価官を割り振りフォームの初期値として表示する。未確定時はDB保存しない | `ExaminerSuggestionService` |
 | 面談割り振り変更 | 対象評価官が指定評価官を確定する | `InterviewAssignmentService` |
-| Calendar連携 | 承認済み面談をGoogle Calendarへ登録 | `CalendarEventCreateJob`, `CalendarClient` |
+| 面談確定Slack通知 | 承認済み面談を対応チャンネルへ通知する。Google Calendar登録は行わない | `InterviewSchedules::ApproveService`, `SlackDeliveryJob` |
 | 合格判定 | 面談後に合格/不合格を登録 | `InterviewResult` |
 | 取得資格反映 | 合格時にユーザー資格へ反映し受験をクローズ | `QualificationGrantService` |
 | ステータス変更イベント | ReviewApplication/InterviewApplication等の状態変更履歴を保存する | `StatusChangeEvent` |
@@ -589,9 +589,9 @@ Index:
 | starts_at | datetime | NOT NULL |
 | ends_at | datetime | NOT NULL |
 | timezone | string | default Asia/Tokyo |
-| status | integer | enum: requested/approved/rejected/calendar_created |
-| google_calendar_event_id | string | nullable |
-| calendar_error_message | text | nullable |
+| status | integer | enum: requested/approved/rejected/calendar_created。`calendar_created` は旧Calendar連携用で現行フローでは使用しない |
+| google_calendar_event_id | string | nullable。旧Calendar連携用で現行フローでは使用しない |
+| calendar_error_message | text | nullable。旧Calendar連携用で現行フローでは使用しない |
 | created_at / updated_at | datetime |  |
 
 #### interview_results
@@ -843,7 +843,7 @@ JWT access tokenのencode/decodeは `jwt` gemを使う。`refresh_tokens` はJWT
 - 過去日時は不可
 - タイムゾーンは `Asia/Tokyo` を初期値にする
 - 承認済み日程の変更は監査ログ必須
-- Calendar作成済みの場合、再作成は冪等性キーで二重登録を防止する
+- 日程承認後のSlack通知は、送信履歴で二重送信や失敗内容を追跡する
 
 ### InterviewResult / UserQualification
 
@@ -862,8 +862,8 @@ JWT access tokenのencode/decodeは `jwt` gemを使う。`refresh_tokens` はJWT
 | `AuthorizationFailureError` | 認可失敗を明示的に扱う場合 |
 | `ImportError` | CSV/Excel取込全体の失敗 |
 | `ImportRowError` | CSV/Excel行単位エラー |
-| `ExternalIntegrationError` | Slack/Calendar等の外部連携失敗 |
-| `CalendarEventCreationError` | Calendar予定作成失敗 |
+| `ExternalIntegrationError` | Slack等の外部連携失敗 |
+| `CalendarEventCreationError` | 旧Calendar予定作成失敗。現行の通常フローでは使用しない |
 | `SlackDeliveryError` | Slack送信失敗 |
 | `QualificationGrantError` | 資格反映失敗 |
 
@@ -907,10 +907,10 @@ HTTP status:
 
 ### 外部連携エラー
 
-- Slack/Calendarは専用clientに閉じ込める
+- Slack等の外部連携は専用clientに閉じ込める
 - timeout、5xxは `retry_on` で指数バックオフする
 - 4xxは原則 `discard_on` とし、設定不備として管理者に通知する
-- Calendar作成は `interview_schedule_id` を冪等性キーとして二重登録を防ぐ
+- Slack送信は `slack_deliveries` で送信結果を追跡する
 - 失敗内容は `slack_deliveries` または対象レコードのエラーカラムに保存する
 
 ## テスト方針
@@ -924,7 +924,7 @@ HTTP status:
 | policy test | Pundit policy | 管理者/受験者/評価官/対応外評価官 |
 | request test | 画面/APIのHTTP動作 | 認証、認可、正常/異常レスポンス |
 | system test | 主要ユーザーフロー | 受験表明から資格反映まで |
-| job test | Slack送信、Calendar、取込、帳票 | retry、冪等性、失敗時状態 |
+| job test | Slack送信、取込、帳票 | retry、冪等性、失敗時状態 |
 | query test | N+1、検索、index | includes/preload、EXPLAIN確認 |
 | security test | OWASP観点 | 認可漏れ、SQL injection回避、XSS対策 |
 | soft delete test | 論理削除 | deleted_at、通常検索からの除外、with_deleted、関連参照 |
@@ -944,8 +944,8 @@ HTTP status:
 11. 面談応募後、受験者側には面接官未定と表示される
 12. 割り振り画面で面談対応数が少ない評価官が初期フィルインされる
 13. 対象評価官が面談対応評価官を確定できる
-14. 希望日時承認後にCalendar作成jobが起動する
-15. Calendar連携失敗時に再実行できる
+14. 希望日時承認後にSlack面談確定通知が送信される
+15. Slack通知失敗時に失敗履歴を確認できる
 16. 面談後の合格判定で取得資格が作成され、受験がクローズされる
 17. 不合格判定後は新しい受験表明から再受験できる
 18. 資格反映transactionが失敗した場合、受験クローズもrollbackされる

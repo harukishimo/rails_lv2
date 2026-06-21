@@ -14,7 +14,7 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "レビューキュー"
   end
 
-  test "examiner navigation includes review queue and candidate search" do
+  test "examiner navigation includes exam applications, review queue, and candidate search" do
     target = create_evaluation_target
     examiner = create_examiner_for(target)
     sign_in_as(examiner)
@@ -23,7 +23,10 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "レビューキュー"
+    assert_includes response.body, "面談キュー"
     assert_includes response.body, "受験者検索"
+    assert_includes response.body, "受験表明"
+    assert_not_includes response.body, "取得資格"
   end
 
   test "examiner without review capability does not see review queue navigation" do
@@ -51,7 +54,7 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "受験表明済み"
-    assert_includes response.body, application.display_name
+    assert_includes response.body, "受験ID: #{application.id}"
 
     get exam_application_path(application)
 

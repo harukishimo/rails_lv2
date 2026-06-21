@@ -1,15 +1,18 @@
 class ExaminerSuggestionService
-  def self.call(interview_application:)
-    new(interview_application: interview_application).call
+  def self.call(interview_application:, limit: 1)
+    new(interview_application: interview_application, limit: limit).call
   end
 
-  def initialize(interview_application:)
+  def initialize(interview_application:, limit: 1)
     @interview_application = interview_application
+    @limit = limit
     @workload_cache = ExaminerWorkloadCache.new
   end
 
   def call
-    candidates.first
+    return candidates.first if limit == 1
+
+    candidates.first(limit)
   end
 
   def candidates
@@ -18,7 +21,7 @@ class ExaminerSuggestionService
 
   private
 
-  attr_reader :interview_application, :workload_cache
+  attr_reader :interview_application, :limit, :workload_cache
 
   def candidate_scope
     ExaminerProfile.available_for_interviews

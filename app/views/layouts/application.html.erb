@@ -27,11 +27,19 @@
         <%= link_to "Skill Evidence Hub", root_path, class: ui_class(:app_brand) %>
         <% if user_signed_in? %>
           <nav class="<%= ui_class(:app_nav) %>" aria-label="Primary navigation">
-            <%= nav_link "受験対象", evaluation_targets_path %>
-            <%= nav_link "受験表明", exam_applications_path %>
-            <%= nav_link "取得資格", user_qualifications_path %>
+            <% if current_user.candidate? || current_user.admin? %>
+              <%= nav_link "受験対象", evaluation_targets_path %>
+              <%= nav_link "受験表明", exam_applications_path %>
+              <%= nav_link "取得資格", user_qualifications_path %>
+            <% elsif current_user.examiner? %>
+              <%= nav_link "受験表明", exam_applications_path %>
+            <% end %>
+            <%= nav_link "通知", notifications_path %>
             <% if policy(ReviewApplication).queue? %>
               <%= nav_link "レビューキュー", examiner_review_queue_index_path %>
+            <% end %>
+            <% if policy(InterviewApplication).queue? %>
+              <%= nav_link "面談キュー", examiner_interview_queue_index_path %>
             <% end %>
             <% if policy(User).candidate_index? %>
               <%= nav_link "受験者検索", examiner_candidates_path %>

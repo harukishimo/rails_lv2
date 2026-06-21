@@ -1,6 +1,6 @@
 module Search
-  class ReviewQueueSearch < BaseSearch
-    DEFAULT_EXCLUDED_STATUSES = %w[approved rejected canceled].freeze
+  class InterviewQueueSearch < BaseSearch
+    DEFAULT_EXCLUDED_STATUSES = %w[completed].freeze
 
     def relation
       paginate(filtered_scope.recent)
@@ -10,9 +10,9 @@ module Search
 
     def filtered_scope
       relation = scope.includes(
-        :submissions,
-        :review_comments,
-        :review_decisions,
+        :assigned_examiner_profile,
+        :secondary_assigned_examiner_profile,
+        :interview_schedules,
         exam_application: [
           :candidate,
           :evaluation_period,
@@ -23,7 +23,6 @@ module Search
       relation = relation.joins(:exam_application).where(exam_applications: { evaluation_target_id: param(:evaluation_target_id) }) if param(:evaluation_target_id)
       relation = relation.joins(:exam_application).where(exam_applications: { candidate_id: matching_candidate_ids }) if param(:candidate_keyword)
       relation = relation.joins(:exam_application).where(exam_applications: { evaluation_target_id: matching_target_ids }) if param(:keyword)
-      relation = relation.joins(:review_comments).where("review_comments.body_markdown LIKE ?", escaped_like(param(:comment_keyword))).distinct if param(:comment_keyword)
       relation
     end
 
@@ -32,12 +31,12 @@ module Search
       return relation.where(status: selected_statuses) if selected_statuses.any?
       return relation if status_filter_requested?
 
-      relation.where.not(status: ReviewApplication.statuses.values_at(*DEFAULT_EXCLUDED_STATUSES))
+      relation.where.not(status: InterviewApplication.statuses.values_at(*DEFAULT_EXCLUDED_STATUSES))
     end
 
     def selected_status_values
-      values = enum_values(ReviewApplication, :status, array_param(:statuses))
-      values.presence || Array.wrap(enum_value(ReviewApplication, :status, param(:status))).compact
+      values = enum_values(InterviewApplication, :status, array_param(:statuses))
+      values.presence || Array.wrap(enum_value(InterviewApplication, :status, param(:status))).compact
     end
 
     def status_filter_requested?

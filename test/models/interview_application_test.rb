@@ -37,8 +37,8 @@ class InterviewApplicationTest < ActiveSupport::TestCase
       InterviewApplications::CreateService.call(exam_application: reviewing, actor: candidate)
     end
 
-    assert_includes declared_error.record.errors[:exam_application], "must be review approved"
-    assert_includes reviewing_error.record.errors[:exam_application], "must be review approved"
+    assert_includes declared_error.record.errors[:exam_application], "must be permitted for interview"
+    assert_includes reviewing_error.record.errors[:exam_application], "must be permitted for interview"
   end
 
   test "allows review approved exam application" do
@@ -63,7 +63,7 @@ class InterviewApplicationTest < ActiveSupport::TestCase
       InterviewApplications::CreateService.call(exam_application: exam_application, actor: candidate)
     end
 
-    assert_includes error.record.errors[:exam_application], "must be review approved"
+    assert_includes error.record.errors[:exam_application], "must be permitted for interview"
   end
 
   test "prevents duplicate interview application for one exam application" do
@@ -101,11 +101,11 @@ class InterviewApplicationTest < ActiveSupport::TestCase
     end
   end
 
-  test "accepts result only after calendar event is created" do
+  test "accepts result after interview schedule is approved" do
     scheduled = InterviewApplication.new(status: :scheduled)
     calendar_created = InterviewApplication.new(status: :calendar_created)
 
-    assert_not scheduled.result_decidable?
+    assert scheduled.result_decidable?
     assert calendar_created.result_decidable?
   end
 

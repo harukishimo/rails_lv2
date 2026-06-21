@@ -18,6 +18,8 @@ class InterviewSchedule < ApplicationRecord
   validate :timezone_must_be_known
   validate :starts_at_must_be_before_ends_at
   validate :starts_at_must_be_future
+  validate :starts_at_must_be_quarter_hour
+  validate :ends_at_must_be_quarter_hour
 
   before_validation :assign_default_timezone
 
@@ -53,6 +55,26 @@ class InterviewSchedule < ApplicationRecord
     return if starts_at > Time.current
 
     errors.add(:starts_at, :future)
+  end
+
+  def starts_at_must_be_quarter_hour
+    return if starts_at.blank? || quarter_hour?(starts_at)
+
+    errors.add(:starts_at, :quarter_hour)
+  end
+
+  def ends_at_must_be_quarter_hour
+    return if ends_at.blank? || quarter_hour?(ends_at)
+
+    errors.add(:ends_at, :quarter_hour)
+  end
+
+  def quarter_hour?(time)
+    zone = Time.find_zone(timezone.presence || DEFAULT_TIMEZONE)
+    return true if zone.blank?
+
+    local_time = time.in_time_zone(zone)
+    local_time.min.in?([ 0, 15, 30, 45 ]) && local_time.sec.zero?
   end
 
   def timezone_must_be_known

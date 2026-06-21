@@ -1,8 +1,20 @@
 require "test_helper"
 
 class InterviewResultsTest < ActionDispatch::IntegrationTest
+  test "assigned examiner sees result form when interview schedule is approved" do
+    interview_application, examiner = create_scheduled_interview_application
+    sign_in_as(examiner)
+
+    get interview_application_path(interview_application)
+
+    assert_response :success
+    assert interview_application.reload.scheduled?
+    assert_includes response.body, "面談結果を登録"
+    assert_includes response.body, "判定"
+  end
+
   test "assigned examiner can register passed interview result" do
-    interview_application, examiner = create_calendar_created_interview_application
+    interview_application, examiner = create_scheduled_interview_application
     sign_in_as(examiner)
 
     assert_difference -> { InterviewResult.count }, 1 do
@@ -20,10 +32,50 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
     assert interview_application.reload.completed?
     assert interview_application.exam_application.reload.closed?
     assert interview_application.exam_application.result_passed?
+
+    follow_redirect!
+    assert_response :success
+    assert_includes response.body, "面談結果"
+    assert_includes response.body, "合格"
+    assert_includes response.body, "passed"
+    assert_not_includes response.body, "面談結果はまだ登録されていません。"
+
+    qualification = UserQualification.find_by!(
+      user: interview_application.exam_application.candidate,
+      evaluation_target: interview_application.exam_application.evaluation_target
+    )
+    sign_in_as(interview_application.exam_application.candidate)
+    get user_qualifications_path
+
+    assert_response :success
+    assert_includes response.body, qualification.user.name
+    assert_includes response.body, qualification.evaluation_target.programming_language.name
+    assert_includes response.body, qualification.evaluation_target.skill_level.code
+  end
+
+  test "secondary assigned examiner can register passed interview result" do
+    interview_application, _primary_examiner, secondary_examiner = create_scheduled_interview_application(with_secondary: true)
+    sign_in_as(secondary_examiner)
+
+    assert_difference -> { InterviewResult.count }, 1 do
+      assert_difference -> { UserQualification.count }, 1 do
+        post interview_application_interview_result_path(interview_application), params: {
+          interview_result: {
+            result: "passed",
+            comment_markdown: "passed by secondary examiner"
+          }
+        }
+      end
+    end
+
+    assert_redirected_to interview_application_path(interview_application)
+    assert interview_application.reload.completed?
+    assert interview_application.exam_application.reload.closed?
+    assert interview_application.exam_application.result_passed?
   end
 
   test "assigned examiner can register failed result without qualification" do
-    interview_application, examiner = create_calendar_created_interview_application
+    interview_application, examiner = create_scheduled_interview_application
     sign_in_as(examiner)
 
     assert_difference -> { InterviewResult.count }, 1 do
@@ -44,7 +96,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "candidate cannot register interview result" do
-    interview_application, = create_calendar_created_interview_application
+    interview_application, = create_scheduled_interview_application
     candidate = interview_application.exam_application.candidate
     sign_in_as(candidate)
 
@@ -59,7 +111,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "unassigned capable examiner cannot register interview result" do
-    interview_application, = create_calendar_created_interview_application
+    interview_application, = create_scheduled_interview_application
     other_examiner = create_examiner_for(interview_application.exam_application.evaluation_target)
     sign_in_as(other_examiner)
 
@@ -74,7 +126,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "admin can register interview result for another candidate" do
-    interview_application, = create_calendar_created_interview_application
+    interview_application, = create_scheduled_interview_application
     admin = create_user_with_role(Role::ADMIN)
     sign_in_as(admin)
 
@@ -91,7 +143,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "admin candidate cannot register own interview result" do
-    interview_application, = create_calendar_created_interview_application
+    interview_application, = create_scheduled_interview_application
     candidate = interview_application.exam_application.candidate
     add_role(candidate, Role::ADMIN)
     sign_in_as(candidate)
@@ -107,7 +159,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "missing result returns validation error" do
-    interview_application, examiner = create_calendar_created_interview_application
+    interview_application, examiner = create_scheduled_interview_application
     sign_in_as(examiner)
 
     post interview_application_interview_result_path(interview_application), params: {
@@ -121,7 +173,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "assigned examiner cannot register duplicate interview result" do
-    interview_application, examiner = create_calendar_created_interview_application
+    interview_application, examiner = create_scheduled_interview_application
     QualificationGrantService.call(
       interview_application: interview_application,
       examiner: examiner,
@@ -141,7 +193,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
 
   private
 
-  def create_calendar_created_interview_application
+  def create_scheduled_interview_application(with_secondary: false)
     candidate = create_user_with_role(Role::CANDIDATE)
     exam_application = ExamApplications::CreateService.call(
       candidate: candidate,
@@ -155,23 +207,29 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
       actor: candidate
     )
     examiner = create_examiner_for(exam_application.evaluation_target)
+    secondary_examiner = create_examiner_for(exam_application.evaluation_target) if with_secondary
     InterviewApplications::AssignExaminerService.call(
       interview_application: interview_application,
       actor: examiner,
-      examiner_profile: examiner.examiner_profile
+      examiner_profile: examiner.examiner_profile,
+      secondary_examiner_profile: secondary_examiner&.examiner_profile
     )
+    starts_at = future_quarter_hour(days: 1)
     schedule = InterviewSchedules::CreateService.call(
       interview_application: interview_application,
       actor: candidate,
       attributes: {
-        starts_at: 1.day.from_now,
-        ends_at: 1.day.from_now + 30.minutes
+        starts_at: starts_at,
+        ends_at: starts_at + 30.minutes
       }
     )
     InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
-    CalendarEventCreateJob.perform_now(schedule.id, actor_id: examiner.id)
 
-    [ interview_application.reload, examiner ]
+    [ interview_application.reload, examiner, secondary_examiner ]
+  end
+
+  def future_quarter_hour(days:, hour: 10, min: 0)
+    Time.zone.local(Date.current.year, Date.current.month, Date.current.day, hour, min, 0) + days.days
   end
 
   def create_examiner_for(evaluation_target)

@@ -26,7 +26,7 @@
 | [#14](https://github.com/harukishimo/rails_lv2/issues/14) | 面談評価官割当 | R-02, R-03, R-28, B-15 |
 | [#15](https://github.com/harukishimo/rails_lv2/issues/15) | 合格判定・資格反映 | R-03, R-07, R-26, B-15 |
 | [#16](https://github.com/harukishimo/rails_lv2/issues/16) | 状態変更イベント・監査ログ | R-26, R-36 |
-| [#17](https://github.com/harukishimo/rails_lv2/issues/17) | Slack・Google Calendar連携 | R-08, R-09, R-10, R-34, R-35, B-05 |
+| [#17](https://github.com/harukishimo/rails_lv2/issues/17) | Slack通知連携（Google Calendarは通常フローから廃止） | R-08, R-09, R-10, R-34, R-35, B-05 |
 | [#18](https://github.com/harukishimo/rails_lv2/issues/18) | 検索・一覧・評価官キュー | R-28, R-33, B-15 |
 | [#20](https://github.com/harukishimo/rails_lv2/issues/20) | 受験対象取込・帳票出力 | R-05, R-15, R-16, R-23 |
 | [#23](https://github.com/harukishimo/rails_lv2/issues/23) | 横断テスト・品質保証 | R-07, R-25, R-28, R-37, B-08, B-14, B-15 |
@@ -47,14 +47,14 @@
 | R-04 | `ReviewApplications::CreateService`, `EvaluationTargets::Importer`, `Integrations::Calendar::EventPayload` | service/value object tests | なし | #26 | strong |
 | R-05 | `EvaluationTargets::Importer#build_result`, transaction blocks | `test/services/evaluation_target_importer_test.rb` | 管理者取込画面 | #20 | strong |
 | R-06 | dashboard/view helper/search result assembly | `test/requests/dashboard_test.rb`, `test/helpers/application_helper_test.rb` | ダッシュボード | #18, #33 | moderate |
-| R-07 | `QualificationGrantService`, `CalendarEventCreateJob`, integration errors | `test/services/qualification_grant_service_test.rb`, `test/jobs/calendar_event_create_job_test.rb` | 面談結果、Calendar失敗表示 | #15, #17, #23 | strong |
+| R-07 | `QualificationGrantService`, `SlackDeliveryJob`, integration errors | `test/services/qualification_grant_service_test.rb`, `test/jobs/slack_delivery_job_test.rb` | 面談結果、面談確定Slack通知 | #15, #17, #23 | strong |
 | R-08 | `Integrations::*::ClientFactory`, `Exporters::ReportFactory` | `test/services/integrations/client_factory_test.rb`, `test/services/exporters_report_factory_test.rb` | 外部連携設定、帳票出力 | #17, #20 | strong |
 | R-09 | `Integrations::BaseClient`, `Exporters::BaseReport` | `test/services/integrations/client_factory_test.rb`, `test/services/exporters_report_factory_test.rb` | なし | #17, #20 | moderate |
-| R-10 | Slack/Calendar mock/faraday clients with same interface | job tests | 状態変更後の送信履歴 | #17 | strong |
+| R-10 | Slack mock/faraday clients with same interface | job tests | 状態変更後の送信履歴、面談確定通知 | #17 | strong |
 | R-11 | transition services, `closed_for_business?`, model methods | transition/model tests | 受験表明詳細 | #10, #15 | strong |
 | R-12 | `RestoreDuplicateGuard`, controller concerns, Pundit policies | model/policy/controller tests | 管理画面 | #6, #9 | moderate |
 | R-13 | `SearchParams`, `EvaluationTargets::ImportRow`, `EventPayload::Payload` | value object tests | なし | #26 | strong |
-| R-14 | `InterviewSchedule`, `EvaluationPeriod`, Calendar payload | `test/models/interview_schedule_test.rb`, `test/models/evaluation_period_test.rb`, job tests | 面談日程 | #13, #17 | strong |
+| R-14 | `InterviewSchedule`, `EvaluationPeriod`, Slack notification payload | `test/models/interview_schedule_test.rb`, `test/models/evaluation_period_test.rb`, job tests | 面談日程 | #13, #17 | strong |
 | R-15 | CSV/XLSX import with streaming and size checks | `test/services/evaluation_target_importer_test.rb` | 受験対象取込 | #20 | strong |
 | R-16 | `Exporters::*`, `caxlsx`, CSV renderer | `test/services/exporters_report_factory_test.rb`, request export tests | 管理者帳票出力 | #20 | strong |
 | R-17 | `GithubRepositoryUrlValidator`, markdown/file validations | `test/models/submission_test.rb`, review request tests | レビュー依頼フォーム | #11 | strong |
@@ -74,8 +74,8 @@
 | R-31 | Devise, JWT, refresh token | `test/requests/devise_sessions_test.rb`, `test/requests/api_v1_auth_test.rb`, `test/services/jwt_token_test.rb` | ログイン/API | #5 | strong |
 | R-32 | Pundit policies and role tables | policy/request tests | 管理/評価官/受験者画面 | #6, #32 | strong |
 | R-33 | search query objects and allowlist params | search request/value object tests | 受験対象検索、受験者検索、レビューキュー | #18, #26 | strong |
-| R-34 | ActiveJob Slack/Calendar, import/export boundaries | job tests | 状態変更後の外部連携 | #17, #20 | strong |
-| R-35 | Faraday clients, timeout/retry, WebMock | job/client tests | Slack/Calendar連携 | #17 | strong |
+| R-34 | ActiveJob Slack, import/export boundaries | job tests | 状態変更後の外部連携 | #17, #20 | strong |
+| R-35 | Faraday clients, timeout/retry, WebMock | job/client tests | Slack通知連携 | #17 | strong |
 | R-36 | `AuditLog`, authorization audit concern, log filtering | audit/controller/request tests | 監査ログ/認可失敗 | #16 | moderate |
 | R-37 | `bin/ci`, model/request/policy/job/integration tests | `bin/ci` | なし | #23 | strong |
 | R-38 | Rails app foundation, setup scripts, health/root | `bin/setup`, `bin/dev`, health tests | root/health/login | #2, #3 | strong |

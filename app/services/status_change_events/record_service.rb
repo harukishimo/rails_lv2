@@ -1,6 +1,16 @@
 module StatusChangeEvents
   class RecordService
-    def self.call(subject:, actor:, from_status:, to_status:, event_type:, message:, target_path:, metadata: {})
+    def self.call(
+      subject:,
+      actor:,
+      from_status:,
+      to_status:,
+      event_type:,
+      message:,
+      target_path:,
+      metadata: {},
+      deliver_to_slack: false
+    )
       new(
         subject: subject,
         actor: actor,
@@ -9,11 +19,22 @@ module StatusChangeEvents
         event_type: event_type,
         message: message,
         target_path: target_path,
-        metadata: metadata
+        metadata: metadata,
+        deliver_to_slack: deliver_to_slack
       ).call
     end
 
-    def initialize(subject:, actor:, from_status:, to_status:, event_type:, message:, target_path:, metadata: {})
+    def initialize(
+      subject:,
+      actor:,
+      from_status:,
+      to_status:,
+      event_type:,
+      message:,
+      target_path:,
+      metadata: {},
+      deliver_to_slack: false
+    )
       @subject = subject
       @actor = actor
       @from_status = from_status
@@ -22,6 +43,7 @@ module StatusChangeEvents
       @message = message
       @target_path = target_path
       @metadata = metadata
+      @deliver_to_slack = deliver_to_slack
     end
 
     def call
@@ -36,13 +58,17 @@ module StatusChangeEvents
         metadata: sanitized_metadata
       ).tap do |status_change_event|
         record_audit_log(status_change_event)
-        SlackDeliveryJob.perform_later(status_change_event.id) if defined?(SlackDeliveryJob)
+        SlackDeliveryJob.perform_later(status_change_event.id) if deliver_to_slack? && defined?(SlackDeliveryJob)
       end
     end
 
     private
 
     attr_reader :subject, :actor, :from_status, :to_status, :event_type, :message, :target_path, :metadata
+
+    def deliver_to_slack?
+      @deliver_to_slack
+    end
 
     def sanitized_metadata
       return metadata unless defined?(Integrations::SecretRedactor)

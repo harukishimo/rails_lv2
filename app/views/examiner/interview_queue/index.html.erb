@@ -1,0 +1,57 @@
+<div class="<%= ui_class(:page_header) %>">
+  <div>
+    <h1 class="<%= ui_class(:page_title) %>">面談キュー</h1>
+    <p class="<%= ui_class(:page_description) %>">対応可能な面談応募だけを表示します。</p>
+  </div>
+</div>
+
+<%= form_with url: examiner_interview_queue_index_path, method: :get, class: ui_class(:toolbar) do |form| %>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :statuses, "ステータス" %>
+    <%= status_filter_checkboxes(InterviewApplication) %>
+  </div>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :keyword, "受験対象" %>
+    <%= form.search_field :keyword, value: params[:keyword] %>
+  </div>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :candidate_keyword, "受験者" %>
+    <%= form.search_field :candidate_keyword, value: params[:candidate_keyword] %>
+  </div>
+  <%= form.submit "検索" %>
+<% end %>
+
+<% if @interview_applications.any? %>
+  <div class="<%= ui_class(:table_wrap) %>">
+    <table>
+      <thead>
+        <tr>
+          <th>受験者</th>
+          <th>言語・カテゴリ</th>
+          <th>Lv</th>
+          <th>状態</th>
+          <th>面談評価官</th>
+          <th>希望日時数</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @interview_applications.each do |interview_application| %>
+          <% exam_application = interview_application.exam_application %>
+          <% target = exam_application.evaluation_target %>
+          <tr>
+            <td><%= exam_application.candidate.name %>&lt;<%= exam_application.candidate.email %>&gt;</td>
+            <td><%= evaluation_target_language_label(target) %></td>
+            <td><%= evaluation_target_level_label(target) %></td>
+            <td><%= status_badge(interview_application.status) %></td>
+            <td><%= interview_application.assigned_examiner_name %></td>
+            <td><%= interview_application.interview_schedules.size %></td>
+            <td><%= link_to "詳細", interview_application_path(interview_application), class: button_classes(:secondary) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= empty_state("対応可能な面談応募はありません。") %>
+<% end %>

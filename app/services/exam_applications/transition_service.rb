@@ -4,7 +4,7 @@ module ExamApplications
 
     ALLOWED_TRANSITIONS = {
       "draft" => %w[declared canceled],
-      "declared" => %w[reviewing interview_requested canceled closed],
+      "declared" => %w[reviewing review_approved canceled closed],
       "reviewing" => %w[review_approved canceled closed],
       "review_approved" => %w[interview_requested canceled closed],
       "interview_requested" => %w[interview_scheduled closed],
@@ -15,9 +15,10 @@ module ExamApplications
       "closed" => []
     }.freeze
 
-    def initialize(exam_application, actor:)
+    def initialize(exam_application, actor:, deliver_to_slack: false)
       @exam_application = exam_application
       @actor = actor
+      @deliver_to_slack = deliver_to_slack
     end
 
     def declare!
@@ -29,6 +30,10 @@ module ExamApplications
     end
 
     def approve_review!
+      transition_to!(:review_approved)
+    end
+
+    def permit_interview!
       transition_to!(:review_approved)
     end
 
@@ -58,7 +63,7 @@ module ExamApplications
 
     private
 
-    attr_reader :exam_application, :actor
+    attr_reader :exam_application, :actor, :deliver_to_slack
 
     def transition_to!(next_status, attributes = {})
       next_status = next_status.to_s
@@ -72,7 +77,8 @@ module ExamApplications
           exam_application: exam_application,
           actor: actor,
           previous_status: previous_status,
-          next_status: next_status
+          next_status: next_status,
+          deliver_to_slack: deliver_to_slack
         )
       end
 

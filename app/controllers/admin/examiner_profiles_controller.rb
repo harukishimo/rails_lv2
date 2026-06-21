@@ -104,7 +104,7 @@ module Admin
             can_interview: selected_interview_target_ids.include?(capability.evaluation_target_id)
           )
         else
-          capability.update!(active: false, can_review: false, can_interview: false)
+          deactivate_capability!(capability)
         end
       end
 
@@ -117,6 +117,13 @@ module Admin
           can_interview: selected_interview_target_ids.include?(target_id)
         )
       end
+    end
+
+    def deactivate_capability!(capability)
+      capability.active = false
+      capability.can_review = false
+      capability.can_interview = false
+      capability.save!(validate: capability.evaluation_target&.active?)
     end
   end
 end

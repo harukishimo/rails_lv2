@@ -16,7 +16,7 @@
   <dt>受験者</dt>
   <dd><%= @exam_application.candidate.name %>&lt;<%= @exam_application.candidate.email %>&gt;</dd>
   <dt>受験対象</dt>
-  <dd><%= @exam_application.evaluation_target.display_name %></dd>
+  <dd><%= evaluation_target_compact_name(@exam_application.evaluation_target) %></dd>
   <dt>評価期</dt>
   <dd><%= @exam_application.evaluation_period.name %></dd>
 </dl>
@@ -28,9 +28,14 @@
       <%= link_to "レビュー依頼を作成", new_exam_application_review_application_path(@exam_application), class: button_classes %>
       <% if @exam_application.interview_application.present? %>
         <%= link_to "面談応募を確認", interview_application_path(@exam_application.interview_application), class: button_classes(:secondary) %>
-      <% else %>
+      <% elsif @exam_application.interview_permitted? %>
         <%= link_to "面談応募へ進む", new_exam_application_interview_application_path(@exam_application), class: button_classes(:secondary) %>
+      <% else %>
+        <p class="<%= ui_class(:muted_text) %>">面談応募は評価官が許可すると作成できます。</p>
       <% end %>
+    <% end %>
+    <% if policy(@exam_application).permit_interview? %>
+      <%= button_to "面談を許可する", permit_interview_exam_application_path(@exam_application), method: :patch, class: button_classes %>
     <% end %>
   </div>
 </div>
@@ -65,7 +70,7 @@
   <div class="<%= ui_class(:panel) %>">
     <h2>取得資格</h2>
     <% if @exam_application.user_qualification.present? %>
-      <p><%= @exam_application.user_qualification.evaluation_target.display_name %> / <%= @exam_application.user_qualification.acquired_on %></p>
+      <p><%= evaluation_target_compact_name(@exam_application.user_qualification.evaluation_target) %> / <%= @exam_application.user_qualification.acquired_on %></p>
     <% else %>
       <%= empty_state("合格判定後に取得資格へ反映されます。") %>
     <% end %>

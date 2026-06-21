@@ -13,6 +13,18 @@ class SubmissionTest < ActiveSupport::TestCase
     assert submission.valid?
   end
 
+  test "accepts github pull request URL" do
+    review_application = create_review_application
+
+    submission = review_application.submissions.build(
+      kind: :github_repository,
+      title: "Pull request",
+      github_url: "https://github.com/harukishimo/rails_lv2/pull/38"
+    )
+
+    assert submission.valid?
+  end
+
   test "rejects non github repository URL" do
     review_application = create_review_application
 
@@ -23,10 +35,10 @@ class SubmissionTest < ActiveSupport::TestCase
     )
 
     assert_not submission.valid?
-    assert_includes submission.errors[:github_url], "must be a GitHub repository URL"
+    assert_includes submission.errors[:github_url], "must be a GitHub URL"
   end
 
-  test "rejects github repository URL with query string" do
+  test "accepts github URL with query string" do
     review_application = create_review_application
 
     submission = review_application.submissions.build(
@@ -35,11 +47,10 @@ class SubmissionTest < ActiveSupport::TestCase
       github_url: "https://github.com/harukishimo/rails_lv2?tab=readme"
     )
 
-    assert_not submission.valid?
-    assert_includes submission.errors[:github_url], "must be a GitHub repository URL"
+    assert submission.valid?
   end
 
-  test "rejects github repository URL with fragment" do
+  test "accepts github URL with fragment" do
     review_application = create_review_application
 
     submission = review_application.submissions.build(
@@ -48,8 +59,20 @@ class SubmissionTest < ActiveSupport::TestCase
       github_url: "https://github.com/harukishimo/rails_lv2#readme"
     )
 
+    assert submission.valid?
+  end
+
+  test "rejects github root URL" do
+    review_application = create_review_application
+
+    submission = review_application.submissions.build(
+      kind: :github_repository,
+      title: "Repository",
+      github_url: "https://github.com/"
+    )
+
     assert_not submission.valid?
-    assert_includes submission.errors[:github_url], "must be a GitHub repository URL"
+    assert_includes submission.errors[:github_url], "must be a GitHub URL"
   end
 
   test "accepts file submission with attachment" do

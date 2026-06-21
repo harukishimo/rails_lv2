@@ -6,14 +6,15 @@ module InterviewApplications
       "requested" => %w[examiner_assigned schedule_requested],
       "examiner_assigned" => %w[schedule_requested],
       "schedule_requested" => %w[scheduled],
-      "scheduled" => %w[calendar_created],
+      "scheduled" => %w[calendar_created completed],
       "calendar_created" => %w[completed],
       "completed" => []
     }.freeze
 
-    def initialize(interview_application, actor:)
+    def initialize(interview_application, actor:, deliver_to_slack: false)
       @interview_application = interview_application
       @actor = actor
+      @deliver_to_slack = deliver_to_slack
     end
 
     def request_schedule!
@@ -34,7 +35,7 @@ module InterviewApplications
 
     private
 
-    attr_reader :interview_application, :actor
+    attr_reader :interview_application, :actor, :deliver_to_slack
 
     def transition_to!(next_status)
       next_status = next_status.to_s
@@ -47,7 +48,8 @@ module InterviewApplications
         interview_application: interview_application,
         actor: actor,
         previous_status: previous_status,
-        next_status: next_status
+        next_status: next_status,
+        deliver_to_slack: deliver_to_slack
       )
       interview_application
     end

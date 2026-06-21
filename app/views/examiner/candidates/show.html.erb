@@ -8,7 +8,7 @@
 
 <dl class="<%= ui_class(:detail_list) %>">
   <dt>受験者</dt>
-  <dd><%= candidate_line(@candidate) %></dd>
+  <dd><%= @candidate.name %>&lt;<%= @candidate.email %>&gt;</dd>
   <dt>表示対象受験数</dt>
   <dd><%= visible_exam_applications(@candidate).size %></dd>
   <dt>表示対象資格数</dt>
@@ -19,11 +19,26 @@
   <div class="<%= ui_class(:panel) %>">
     <h2>取得資格</h2>
     <% if visible_qualifications(@candidate).any? %>
-      <ul>
-        <% visible_qualifications(@candidate).each do |qualification| %>
-          <li>取得資格ID: <%= qualification.id %> <%= qualification.evaluation_target.display_name %> 取得日: <%= l(qualification.acquired_on) %></li>
-        <% end %>
-      </ul>
+      <div class="<%= ui_class(:table_wrap) %>">
+        <table>
+          <thead>
+            <tr>
+              <th>言語・カテゴリ</th>
+              <th>Lv</th>
+              <th>取得日</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% visible_qualifications(@candidate).each do |qualification| %>
+              <tr>
+                <td><%= evaluation_target_language_label(qualification.evaluation_target) %></td>
+                <td><%= evaluation_target_level_label(qualification.evaluation_target) %></td>
+                <td><%= l(qualification.acquired_on) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     <% else %>
       <%= empty_state("表示できる取得資格はありません。") %>
     <% end %>
@@ -32,11 +47,30 @@
   <div class="<%= ui_class(:panel) %>">
     <h2>受験履歴</h2>
     <% if visible_exam_applications(@candidate).any? %>
-      <ul>
-        <% visible_exam_applications(@candidate).each do |exam_application| %>
-          <li>受験ID: <%= exam_application.id %> <%= status_badge(exam_application.status) %> <%= exam_application.evaluation_target.display_name %></li>
-        <% end %>
-      </ul>
+      <div class="<%= ui_class(:table_wrap) %>">
+        <table>
+          <thead>
+            <tr>
+              <th>言語・カテゴリ</th>
+              <th>Lv</th>
+              <th>状態</th>
+              <th>結果</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% visible_exam_applications(@candidate).each do |exam_application| %>
+              <tr>
+                <td><%= evaluation_target_language_label(exam_application.evaluation_target) %></td>
+                <td><%= evaluation_target_level_label(exam_application.evaluation_target) %></td>
+                <td><%= status_badge(exam_application.status) %></td>
+                <td><%= status_badge(exam_application.result) %></td>
+                <td><%= link_to "詳細", exam_application_path(exam_application), class: link_button_classes %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     <% else %>
       <%= empty_state("表示できる受験履歴はありません。") %>
     <% end %>

@@ -27,12 +27,20 @@ class DemoSeedTest < ActiveSupport::TestCase
     assert examiner.examiner?
     assert candidate.valid_password?("password123")
 
-    assert_equal [ "Design", "Front End", "Infra", "Test & QA", "プロジェクトマネージャ", "要件定義" ].sort,
+    assert_equal [ "クラウド", "バックエンド", "フロントエンド", "プロジェクトマネージャ", "要件定義", "試験・QA" ].sort,
                  SkillArea.active.pluck(:name).sort
-    assert_equal [ "Go", "Java", "Next", "PHP", "Python", "Ruby", "Vue", "言語なし" ].sort,
+    assert_equal [ "Go", "Java", "Next", "Node", "PHP", "Ruby", "Vue", "言語なし" ].sort,
                  ProgrammingLanguage.active.pluck(:name).sort
     assert_equal [ "Lv1", "Lv2", "Lv3" ], SkillLevel.active.order(:numeric_level).pluck(:code)
-    assert_equal 55, EvaluationTarget.active.count
+    assert_equal 22, EvaluationTarget.active.count
+    assert_not EvaluationTarget.active.joins(:skill_area, :programming_language)
+                               .exists?(skill_areas: { name: "フロントエンド" }, programming_languages: { name: "Ruby" })
+    assert_not EvaluationTarget.active.joins(:skill_area, :programming_language)
+                               .exists?(skill_areas: { name: "バックエンド" }, programming_languages: { name: "Next" })
+    assert EvaluationTarget.active.joins(:skill_area, :programming_language)
+                           .exists?(skill_areas: { name: "バックエンド" }, programming_languages: { name: "Ruby" })
+    assert EvaluationTarget.active.joins(:skill_area, :programming_language)
+                           .exists?(skill_areas: { name: "フロントエンド" }, programming_languages: { name: "Next" })
     assert_equal [ "2025 下期", "2026 上期", "2026 下期", "2027 上期", "2027 下期" ].sort,
                  EvaluationPeriod.where(name: [ "2025 下期", "2026 上期", "2026 下期", "2027 上期", "2027 下期" ])
                                  .pluck(:name)
@@ -40,7 +48,7 @@ class DemoSeedTest < ActiveSupport::TestCase
     assert_not EvaluationPeriod.find_by!(name: "2025 下期").active?
 
     assert_equal 8, User.joins(:roles).where(roles: { code: Role::CANDIDATE }).where("users.email LIKE ?", "candidate%@example.com").distinct.count
-    assert_equal 4, User.joins(:roles).where(roles: { code: Role::EXAMINER }).where("users.email LIKE ?", "examiner%@example.com").distinct.count
+    assert_equal 27, User.joins(:roles).where(roles: { code: Role::EXAMINER }).where("users.email LIKE ?", "examiner%@example.com").distinct.count
     assert examiner.examiner_profile.can_evaluate?(EvaluationTarget.find_by!(external_knowledge_key: "ruby_on_rails_lv2"))
     assert ReviewApplication.submitted.joins(:exam_application).where(exam_applications: { candidate_id: candidate.id }).exists?
     assert ReviewApplication.returned.exists?

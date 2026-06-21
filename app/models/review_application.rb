@@ -64,7 +64,7 @@ class ReviewApplication < ApplicationRecord
   end
 
   def display_name
-    "Review ##{sequence_number} for #{exam_application.display_name}"
+    "レビュー ##{sequence_number} / #{exam_application.display_name}"
   end
 
   private
