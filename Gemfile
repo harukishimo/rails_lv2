@@ -18,6 +18,12 @@ gem "ridgepole", "~> 3.2", require: false
 gem "paranoia", "~> 3.1"
 # Render GitHub Flavored Markdown-like review comments before sanitizing HTML.
 gem "commonmarker", "~> 2.8"
+# Parse and generate CSV imports/exports explicitly on Ruby 3.4+.
+gem "csv", "~> 3.3"
+# Read evaluation target workbooks for admin imports.
+gem "roo", "~> 2.10"
+# Generate workbook exports for admin reports.
+gem "caxlsx", "~> 4.4"
 # Use explicit HTTP clients for Slack and Google Calendar integrations.
 gem "faraday", "~> 2.14"
 # Use the Puma web server [https://github.com/puma/puma]

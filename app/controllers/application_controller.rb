@@ -20,6 +20,7 @@ class ApplicationController < ActionController::Base
     respond_to do |format|
       format.html { render plain: "Forbidden", status: :forbidden }
       format.json { render json: { error: { code: "forbidden", message: "権限がありません" } }, status: :forbidden }
+      format.any { render plain: "Forbidden", status: :forbidden }
     end
   end
 
