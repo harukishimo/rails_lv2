@@ -59,7 +59,23 @@ class AdminImportExportTest < ActionDispatch::IntegrationTest
     get new_admin_evaluation_target_import_path
     assert_response :forbidden
 
+    with_csv_upload("skill_area,programming_language,skill_level,external_knowledge_key,version\n") do |file|
+      post preview_admin_evaluation_target_import_path, params: { file: file }
+    end
+    assert_response :forbidden
+
+    with_csv_upload("skill_area,programming_language,skill_level,external_knowledge_key,version\n") do |file|
+      post import_admin_evaluation_target_import_path, params: { file: file }
+    end
+    assert_response :forbidden
+
     get admin_exports_path
+    assert_response :forbidden
+
+    get admin_export_path("evaluation_targets", format: :csv)
+    assert_response :forbidden
+
+    get admin_export_path("evaluation_targets", format: :xlsx)
     assert_response :forbidden
   end
 

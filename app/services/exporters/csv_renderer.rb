@@ -8,14 +8,25 @@ module Exporters
       new(report).call
     end
 
+    def self.stream(report)
+      new(report).stream
+    end
+
     def initialize(report)
       @report = report
     end
 
     def call
-      CSV.generate(headers: report.headers, write_headers: true) do |csv|
+      body = +""
+      stream.each { |chunk| body << chunk }
+      body
+    end
+
+    def stream
+      Enumerator.new do |yielder|
+        yielder << CSV.generate_line(report.headers)
         report.each_row do |row|
-          csv << row.map { |value| CellSanitizer.call(value) }
+          yielder << CSV.generate_line(row.map { |value| CellSanitizer.call(value) })
         end
       end
     end

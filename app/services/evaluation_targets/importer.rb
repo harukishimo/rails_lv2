@@ -1,5 +1,6 @@
 require "csv"
 require "roo"
+require "rexml/document"
 require "zip"
 
 module EvaluationTargets
@@ -9,7 +10,27 @@ module EvaluationTargets
     MAX_FILE_SIZE = 5.megabytes
     SAMPLE_BYTES = 4.kilobytes
     IMPORT_BATCH_SIZE = 100
+    DISPLAY_ROW_LIMIT = 200
+    MAX_IMPORT_ROWS = 5_000
+    MAX_IMPORT_COLUMNS = 40
+    MAX_XLSX_ENTRIES = 200
+    MAX_XLSX_UNCOMPRESSED_SIZE = 20.megabytes
+    MAX_XLSX_COMPRESSION_RATIO = 100
     XSLX_MAGIC = "PK".b
+    REQUIRED_XLSX_ENTRIES = %w[
+      [Content_Types].xml
+      _rels/.rels
+      xl/_rels/workbook.xml.rels
+      xl/workbook.xml
+    ].freeze
+    ALLOWED_XLSX_ENTRY_PREFIXES = %w[
+      _rels/
+      docProps/
+      xl/
+    ].freeze
+    ALLOWED_XLSX_ENTRY_NAMES = [
+      "[Content_Types].xml"
+    ].freeze
     CSV_CONTENT_TYPES = %w[
       application/csv
       application/octet-stream
@@ -77,25 +98,22 @@ module EvaluationTargets
       end
     end
 
-    Result = Struct.new(:mode, :rows, keyword_init: true) do
-      def processed_count
-        rows.size
-      end
-
-      def created_count
-        rows.count { |row| row.status == :created }
-      end
-
-      def updated_count
-        rows.count { |row| row.status == :updated }
-      end
-
-      def failed_count
-        rows.count { |row| row.errors.present? }
-      end
-
+    Result = Struct.new(
+      :mode,
+      :rows,
+      :processed_count,
+      :created_count,
+      :updated_count,
+      :failed_count,
+      :truncated_count,
+      keyword_init: true
+    ) do
       def success?
         failed_count.zero?
+      end
+
+      def truncated?
+        truncated_count.positive?
       end
     end
 
@@ -115,14 +133,16 @@ module EvaluationTargets
       validate_file!
       build_result(mode: :preview) { |row| preview_row(row) }
     rescue *parse_errors => e
-      raise UnsupportedFileError, "ファイルを読み取れません: #{e.message}"
+      handle_parse_error(e)
     end
 
     def import
       validate_file!
-      build_result(mode: :import) { |row| import_row(row) }
+      EvaluationTarget.transaction do
+        build_result(mode: :import) { |row| import_row(row) }
+      end
     rescue *parse_errors => e
-      raise UnsupportedFileError, "ファイルを読み取れません: #{e.message}"
+      handle_parse_error(e)
     end
 
     private
@@ -171,13 +191,79 @@ module EvaluationTargets
     end
 
     def validate_xlsx_content!
-      return if file_sample(bytes: 2) == XSLX_MAGIC
+      raise UnsupportedFileError, "XLSXファイルを読み取れません" unless file_sample(bytes: 2) == XSLX_MAGIC
+
+      Zip::File.open(path) do |zip_file|
+        entries = zip_file.entries
+        names = entries.map(&:name)
+        validate_xlsx_entries!(entries, names)
+        validate_xlsx_relationships!(zip_file, names)
+      end
+    rescue Zip::Error, REXML::ParseException
+      raise UnsupportedFileError, "XLSXファイルを読み取れません"
+    end
+
+    def validate_xlsx_entries!(entries, names)
+      raise UnsupportedFileError, "XLSXファイルを読み取れません" unless (REQUIRED_XLSX_ENTRIES - names).empty?
+      raise UnsupportedFileError, "XLSXファイルの内容が大きすぎます" if entries.size > MAX_XLSX_ENTRIES
+
+      uncompressed_size = 0
+      compressed_size = 0
+      entries.each do |entry|
+        raise UnsupportedFileError, "XLSXファイルを読み取れません" unless allowed_xlsx_entry?(entry.name)
+        next if entry.directory?
+
+        uncompressed_size += entry.size.to_i
+        compressed_size += entry.compressed_size.to_i
+      end
+
+      raise UnsupportedFileError, "XLSXファイルの内容が大きすぎます" if uncompressed_size > MAX_XLSX_UNCOMPRESSED_SIZE
+      return if compressed_size.positive? && (uncompressed_size / compressed_size.to_f) <= MAX_XLSX_COMPRESSION_RATIO
 
       raise UnsupportedFileError, "XLSXファイルを読み取れません"
     end
 
+    def validate_xlsx_relationships!(zip_file, names)
+      package_relationships = relationship_targets(zip_file.read("_rels/.rels"), base_path: "")
+      raise UnsupportedFileError, "XLSXファイルを読み取れません" unless package_relationships.include?("xl/workbook.xml")
+
+      workbook_relationships = relationship_targets(zip_file.read("xl/_rels/workbook.xml.rels"), base_path: "xl")
+      worksheet_targets = workbook_relationships.select { |target| target.start_with?("xl/worksheets/") }
+      raise UnsupportedFileError, "XLSXファイルを読み取れません" if worksheet_targets.blank?
+      raise UnsupportedFileError, "XLSXファイルを読み取れません" unless worksheet_targets.all? { |target| names.include?(target) }
+    end
+
+    def relationship_targets(xml, base_path:)
+      document = REXML::Document.new(xml)
+      targets = []
+      REXML::XPath.each(document, "//*[local-name()='Relationship']") do |relationship|
+        target = relationship.attributes["Target"].to_s
+        next if target.blank? || target.match?(/\A[a-z][a-z0-9+\-.]*:/i)
+
+        targets << normalize_xlsx_relationship_target(base_path, target)
+      end
+      targets
+    end
+
+    def normalize_xlsx_relationship_target(base_path, target)
+      parts = [ base_path, target ].reject(&:blank?).join("/").split("/")
+      normalized = []
+      parts.each do |part|
+        next if part == "."
+        return "" if part == ".."
+
+        normalized << part
+      end
+      normalized.join("/")
+    end
+
     def each_csv_row
+      headers = CSV.open(path, "r:bom|utf-8", &:first)
+      ensure_column_limit!(headers&.size.to_i)
+
       CSV.foreach(path, headers: true, encoding: "bom|utf-8").with_index(2) do |csv_row, row_number|
+        ensure_row_limit!(row_number - 1)
+        ensure_column_limit!(csv_row.fields.size)
         yield build_row(row_number, csv_row.to_h)
       end
     end
@@ -185,20 +271,41 @@ module EvaluationTargets
     def each_xlsx_row
       workbook = Roo::Spreadsheet.open(path, extension: :xlsx)
       headers = streamed_xlsx_values(workbook.each_row_streaming(max_rows: 1, pad_cells: true).first)
+      ensure_column_limit!(headers.size)
 
       workbook.each_row_streaming(offset: 1, pad_cells: true).with_index(2) do |row, row_number|
-        yield build_row(row_number, headers.zip(streamed_xlsx_values(row)).to_h)
+        values = streamed_xlsx_values(row)
+        ensure_row_limit!(row_number - 1)
+        ensure_column_limit!(values.size)
+        yield build_row(row_number, headers.zip(values).to_h)
       end
     end
 
     def build_result(mode:)
       rows = []
+      processed_count = 0
+      created_count = 0
+      updated_count = 0
+      failed_count = 0
       each_import_row.each_slice(IMPORT_BATCH_SIZE) do |batch|
         batch.each do |row|
-          rows << yield(row)
+          row_result = yield(row)
+          processed_count += 1
+          created_count += 1 if row_result.status == :created
+          updated_count += 1 if row_result.status == :updated
+          failed_count += 1 if row_result.errors.present?
+          rows << row_result if rows.size < DISPLAY_ROW_LIMIT
         end
       end
-      Result.new(mode: mode, rows: rows)
+      Result.new(
+        mode: mode,
+        rows: rows,
+        processed_count: processed_count,
+        created_count: created_count,
+        updated_count: updated_count,
+        failed_count: failed_count,
+        truncated_count: [ processed_count - rows.size, 0 ].max
+      )
     end
 
     def build_row(row_number, raw_attributes)
@@ -402,6 +509,26 @@ module EvaluationTargets
       Array(row).map { |cell| cell.respond_to?(:value) ? cell.value : cell }
     end
 
+    def ensure_row_limit!(row_count)
+      return if row_count <= MAX_IMPORT_ROWS
+
+      raise UnsupportedFileError, "取込行数は#{MAX_IMPORT_ROWS}行以下にしてください"
+    end
+
+    def ensure_column_limit!(column_count)
+      return if column_count <= MAX_IMPORT_COLUMNS
+
+      raise UnsupportedFileError, "取込列数は#{MAX_IMPORT_COLUMNS}列以下にしてください"
+    end
+
+    def allowed_xlsx_entry?(name)
+      return false if name.start_with?("/")
+      return false if name.split("/").include?("..")
+      return true if ALLOWED_XLSX_ENTRY_NAMES.include?(name)
+
+      ALLOWED_XLSX_ENTRY_PREFIXES.any? { |prefix| name.start_with?(prefix) }
+    end
+
     def path
       file.respond_to?(:path) ? file.path : file.to_s
     end
@@ -433,6 +560,17 @@ module EvaluationTargets
         Zip::Error,
         ArgumentError
       ]
+    end
+
+    def handle_parse_error(error)
+      Rails.logger.warn(
+        {
+          event: "evaluation_target_import.parse_failed",
+          error_class: error.class.name,
+          error_message: Integrations::SecretRedactor.call(error.message)
+        }.to_json
+      )
+      raise UnsupportedFileError, "ファイルを読み取れません。CSV/XLSX形式と文字コードを確認してください"
     end
   end
 end

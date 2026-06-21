@@ -15,7 +15,11 @@ module Exporters
       "xlsx" => XlsxRenderer
     }.freeze
 
-    Export = Struct.new(:report, :format, :filename, :content_type, :body, keyword_init: true)
+    Export = Struct.new(:report, :format, :filename, :content_type, :body, :path, keyword_init: true) do
+      def file?
+        path.present?
+      end
+    end
 
     def self.reports
       REPORTS.values.map(&:new)
@@ -34,6 +38,20 @@ module Exporters
       )
     end
 
+    def self.download(report_key:, format:)
+      report = build_report(report_key)
+      renderer = renderer_for(format)
+
+      Export.new(
+        report: report,
+        format: format,
+        filename: report.filename(format),
+        content_type: renderer::CONTENT_TYPE,
+        body: download_body(renderer, report),
+        path: download_path(renderer, report)
+      )
+    end
+
     def self.build_report(report_key)
       REPORTS.fetch(report_key).new
     rescue KeyError
@@ -47,5 +65,15 @@ module Exporters
       raise UnknownFormatError, "unknown export format: #{format}"
     end
     private_class_method :renderer_for
+
+    def self.download_body(renderer, report)
+      renderer.stream(report) if renderer.respond_to?(:stream)
+    end
+    private_class_method :download_body
+
+    def self.download_path(renderer, report)
+      renderer.write_file(report) if renderer.respond_to?(:write_file)
+    end
+    private_class_method :download_path
   end
 end

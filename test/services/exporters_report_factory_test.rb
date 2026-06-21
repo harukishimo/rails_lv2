@@ -1,5 +1,6 @@
 require "test_helper"
 require "csv"
+require "fileutils"
 require "tempfile"
 require "roo"
 
@@ -20,6 +21,31 @@ class ExportersReportFactoryTest < ActiveSupport::TestCase
     assert_includes export.filename, "evaluation_targets-"
     assert_includes export.body, "技術領域"
     assert_includes export.body, "'=Ruby"
+  end
+
+  test "prepares csv downloads as an enumerable stream" do
+    create_evaluation_target(language_name: "Ruby #{SecureRandom.hex(4)}")
+
+    export = Exporters::ReportFactory.download(report_key: "evaluation_targets", format: "csv")
+
+    assert_nil export.path
+    assert_respond_to export.body, :each
+    chunks = export.body.to_a
+    assert chunks.first.include?("技術領域")
+    assert chunks.size > 1
+  end
+
+  test "prepares xlsx downloads as a generated file path" do
+    create_evaluation_target(language_name: "Ruby #{SecureRandom.hex(4)}")
+
+    export = Exporters::ReportFactory.download(report_key: "evaluation_targets", format: "xlsx")
+
+    assert export.file?
+    assert_nil export.body
+    assert File.exist?(export.path)
+    assert File.binread(export.path, 2).start_with?("PK")
+  ensure
+    FileUtils.rm_f(export&.path)
   end
 
   test "sanitizes formulas after whitespace and control characters" do

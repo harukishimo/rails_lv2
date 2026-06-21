@@ -62,6 +62,12 @@
       </div>
     </dl>
 
+    <% if @result.truncated? %>
+      <div class="<%= ui_class(:warning_box) %>">
+        表示件数を先頭<%= @result.rows.size %>件に制限しています。非表示の行数: <%= @result.truncated_count %>
+      </div>
+    <% end %>
+
     <div class="<%= ui_class(:table_wrap) %>">
       <table>
         <thead>

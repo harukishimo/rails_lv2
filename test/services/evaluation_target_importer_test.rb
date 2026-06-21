@@ -1,6 +1,7 @@
 require "test_helper"
 require "tempfile"
 require "caxlsx"
+require "zip"
 
 class EvaluationTargetImporterTest < ActiveSupport::TestCase
   UploadedFile = Struct.new(:path, :original_filename, keyword_init: true)
@@ -54,6 +55,20 @@ class EvaluationTargetImporterTest < ActiveSupport::TestCase
     end
   end
 
+  test "limits retained display rows while processing large csv imports" do
+    token = SecureRandom.hex(4)
+
+    with_upload("many-targets.csv", csv_content(valid_rows: EvaluationTargets::Importer::DISPLAY_ROW_LIMIT + 5, token: token)) do |file|
+      result = EvaluationTargets::Importer.import(file: file)
+
+      assert result.success?
+      assert result.truncated?
+      assert_equal EvaluationTargets::Importer::DISPLAY_ROW_LIMIT + 5, result.processed_count
+      assert_equal EvaluationTargets::Importer::DISPLAY_ROW_LIMIT, result.rows.size
+      assert_equal 5, result.truncated_count
+    end
+  end
+
   test "import updates existing target identity instead of duplicating it" do
     token = SecureRandom.hex(4)
     before_count = EvaluationTarget.count
@@ -90,6 +105,74 @@ class EvaluationTargetImporterTest < ActiveSupport::TestCase
       end
 
       assert_equal "XLSXファイルを読み取れません", error.message
+    end
+  end
+
+  test "rejects xlsx files missing required ooxml entries before roo parsing" do
+    Tempfile.create([ "invalid-ooxml", ".xlsx" ]) do |file|
+      Zip::File.open(file.path, create: true) do |zip|
+        zip.get_output_stream("[Content_Types].xml") { |entry| entry.write("xml") }
+      end
+
+      upload = UploadedFile.new(path: file.path, original_filename: "invalid.xlsx")
+      error = assert_raises(EvaluationTargets::Importer::UnsupportedFileError) do
+        EvaluationTargets::Importer.preview(file: upload)
+      end
+
+      assert_equal "XLSXファイルを読み取れません", error.message
+    end
+  end
+
+  test "rejects xlsx files with missing referenced worksheet before roo parsing" do
+    Tempfile.create([ "invalid-worksheet", ".xlsx" ]) do |file|
+      Zip::File.open(file.path, create: true) do |zip|
+        zip.get_output_stream("[Content_Types].xml") { |entry| entry.write("xml") }
+        zip.get_output_stream("_rels/.rels") do |entry|
+          entry.write(relationships_xml("rId1" => "xl/workbook.xml"))
+        end
+        zip.get_output_stream("xl/workbook.xml") { |entry| entry.write("xml") }
+        zip.get_output_stream("xl/_rels/workbook.xml.rels") do |entry|
+          entry.write(relationships_xml("rId1" => "worksheets/missing.xml"))
+        end
+      end
+
+      upload = UploadedFile.new(path: file.path, original_filename: "invalid.xlsx")
+      error = assert_raises(EvaluationTargets::Importer::UnsupportedFileError) do
+        EvaluationTargets::Importer.preview(file: upload)
+      end
+
+      assert_equal "XLSXファイルを読み取れません", error.message
+    end
+  end
+
+  test "rejects csv data rows that exceed the column limit" do
+    headers = (1..EvaluationTargets::Importer::MAX_IMPORT_COLUMNS).map { |index| "column#{index}" }
+    values = (1..EvaluationTargets::Importer::MAX_IMPORT_COLUMNS + 1).map { |index| "value#{index}" }
+
+    with_upload("too-many-columns.csv", "#{headers.join(',')}\n#{values.join(',')}\n") do |file|
+      error = assert_raises(EvaluationTargets::Importer::UnsupportedFileError) do
+        EvaluationTargets::Importer.preview(file: file)
+      end
+
+      assert_equal "取込列数は#{EvaluationTargets::Importer::MAX_IMPORT_COLUMNS}列以下にしてください", error.message
+    end
+  end
+
+  test "rolls back imported rows when later csv parsing fails" do
+    token = SecureRandom.hex(4)
+    content = [
+      "skill_area,programming_language,framework,skill_level,skill_level_numeric_level,external_knowledge_key,version",
+      "Backend #{token},Ruby #{token},Rails #{token},Lv2,2,rails_lv2_#{token},2026.06",
+      "\"broken"
+    ].join("\n")
+
+    with_upload("broken-late.csv", content) do |file|
+      error = assert_raises(EvaluationTargets::Importer::UnsupportedFileError) do
+        EvaluationTargets::Importer.import(file: file)
+      end
+
+      assert_equal "ファイルを読み取れません。CSV/XLSX形式と文字コードを確認してください", error.message
+      assert_nil EvaluationTarget.find_by(external_knowledge_key: "rails_lv2_#{token}")
     end
   end
 
@@ -138,5 +221,12 @@ class EvaluationTargetImporterTest < ActiveSupport::TestCase
       package.serialize(file.path)
       yield UploadedFile.new(path: file.path, original_filename: filename)
     end
+  end
+
+  def relationships_xml(targets)
+    relationships = targets.map do |id, target|
+      %(<Relationship Id="#{id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="#{target}"/>)
+    end.join
+    %(<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">#{relationships}</Relationships>)
   end
 end
