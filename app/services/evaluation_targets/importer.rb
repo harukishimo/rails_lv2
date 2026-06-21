@@ -8,6 +8,7 @@ module EvaluationTargets
 
     MAX_FILE_SIZE = 5.megabytes
     SAMPLE_BYTES = 4.kilobytes
+    IMPORT_BATCH_SIZE = 100
     XSLX_MAGIC = "PK".b
     CSV_CONTENT_TYPES = %w[
       application/csv
@@ -112,14 +113,14 @@ module EvaluationTargets
 
     def preview
       validate_file!
-      Result.new(mode: :preview, rows: each_import_row.map { |row| preview_row(row) })
+      build_result(mode: :preview) { |row| preview_row(row) }
     rescue *parse_errors => e
       raise UnsupportedFileError, "ファイルを読み取れません: #{e.message}"
     end
 
     def import
       validate_file!
-      Result.new(mode: :import, rows: each_import_row.map { |row| import_row(row) })
+      build_result(mode: :import) { |row| import_row(row) }
     rescue *parse_errors => e
       raise UnsupportedFileError, "ファイルを読み取れません: #{e.message}"
     end
@@ -183,12 +184,21 @@ module EvaluationTargets
 
     def each_xlsx_row
       workbook = Roo::Spreadsheet.open(path, extension: :xlsx)
-      sheet = workbook.sheet(0)
-      headers = sheet.row(1)
+      headers = streamed_xlsx_values(workbook.each_row_streaming(max_rows: 1, pad_cells: true).first)
 
-      2.upto(sheet.last_row || 1) do |row_number|
-        yield build_row(row_number, headers.zip(sheet.row(row_number)).to_h)
+      workbook.each_row_streaming(offset: 1, pad_cells: true).with_index(2) do |row, row_number|
+        yield build_row(row_number, headers.zip(streamed_xlsx_values(row)).to_h)
       end
+    end
+
+    def build_result(mode:)
+      rows = []
+      each_import_row.each_slice(IMPORT_BATCH_SIZE) do |batch|
+        batch.each do |row|
+          rows << yield(row)
+        end
+      end
+      Result.new(mode: mode, rows: rows)
     end
 
     def build_row(row_number, raw_attributes)
@@ -386,6 +396,10 @@ module EvaluationTargets
 
     def normalize_value(value)
       value.to_s.strip.presence
+    end
+
+    def streamed_xlsx_values(row)
+      Array(row).map { |cell| cell.respond_to?(:value) ? cell.value : cell }
     end
 
     def path
