@@ -1,0 +1,66 @@
+<section class="<%= ui_class(:page_header) %>">
+  <div>
+    <p class="<%= ui_class(:eyebrow) %>">Admin</p>
+    <h1 class="<%= ui_class(:page_title) %>">評価官管理</h1>
+    <p class="<%= ui_class(:page_description) %>">評価官の対応可能な受験対象を確認・編集します。</p>
+  </div>
+  <div class="<%= ui_class(:header_actions) %>">
+    <%= link_to "ユーザー管理", admin_users_path, class: button_classes(:secondary) %>
+    <%= link_to "管理へ戻る", admin_dashboard_path, class: button_classes(:secondary) %>
+  </div>
+</section>
+
+<%= form_with url: admin_examiner_profiles_path, method: :get, class: ui_class(:toolbar) do |form| %>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :keyword, "氏名・メール" %>
+    <%= form.search_field :keyword, value: params[:keyword] %>
+  </div>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :evaluation_target_id, "対応受験対象" %>
+    <%= form.collection_select :evaluation_target_id,
+                               @evaluation_targets,
+                               :id,
+                               :display_name,
+                               { include_blank: "すべて", selected: params[:evaluation_target_id] } %>
+  </div>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :active, "有効状態" %>
+    <%= form.select :active, options_for_select([["すべて", ""], ["有効", "true"], ["無効", "false"]], params[:active]) %>
+  </div>
+  <%= form.submit "検索" %>
+<% end %>
+
+<% if @examiner_profiles.any? %>
+  <div class="<%= ui_class(:table_wrap) %>">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>表示名</th>
+          <th>メール</th>
+          <th>状態</th>
+          <th>レビュー可</th>
+          <th>面談可</th>
+          <th>対応対象</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @examiner_profiles.each do |profile| %>
+          <tr>
+            <td><%= profile.id %></td>
+            <td><%= profile.display_name %></td>
+            <td><%= profile.user.email %></td>
+            <td><%= status_badge(profile.active? ? "active" : "inactive", label: profile.active? ? "有効" : "無効") %></td>
+            <td><%= profile.can_review? ? "可" : "不可" %></td>
+            <td><%= profile.can_interview? ? "可" : "不可" %></td>
+            <td><%= profile.examiner_skill_capabilities.active.count %>件</td>
+            <td><%= link_to "編集", edit_admin_examiner_profile_path(profile), class: button_classes(:secondary) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= empty_state("条件に一致する評価官はありません") %>
+<% end %>

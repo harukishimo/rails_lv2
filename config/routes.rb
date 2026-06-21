@@ -12,6 +12,8 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resource :dashboard, only: :show, controller: :dashboard
+    resources :users, except: :destroy
+    resources :examiner_profiles, only: %i[index edit update]
     resource :evaluation_target_import, only: :new, controller: :evaluation_target_imports do
       post :preview
       post :import, action: :create

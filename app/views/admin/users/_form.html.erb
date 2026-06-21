@@ -1,0 +1,45 @@
+<%= error_summary(user) %>
+
+<%= form_with model: [:admin, user], class: ui_class(:auth_form) do |form| %>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :name, "氏名" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :email, "メールアドレス" %>
+    <%= form.email_field :email %>
+  </div>
+
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :password, user.persisted? ? "パスワード（変更時のみ）" : "パスワード" %>
+    <%= form.password_field :password, autocomplete: "new-password" %>
+  </div>
+
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :password_confirmation, "パスワード確認" %>
+    <%= form.password_field :password_confirmation, autocomplete: "new-password" %>
+  </div>
+
+  <div class="<%= ui_class(:field) %>">
+    <span>ロール</span>
+    <div class="flex flex-wrap gap-3">
+      <% roles.each do |role| %>
+        <label class="<%= ui_class(:checkbox_field) %>">
+          <%= check_box_tag "user[role_codes][]", role.code, user.roles.any? { |assigned| assigned.code == role.code } %>
+          <span><%= role.name %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <label class="<%= ui_class(:checkbox_field) %>">
+    <%= form.check_box :active %>
+    <span>有効</span>
+  </label>
+
+  <div class="<%= ui_class(:form_actions) %>">
+    <%= form.submit user.persisted? ? "ユーザーを更新" : "ユーザーを作成", class: button_classes %>
+    <%= link_to "一覧へ戻る", admin_users_path, class: button_classes(:secondary) %>
+  </div>
+<% end %>

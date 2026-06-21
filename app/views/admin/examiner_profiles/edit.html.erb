@@ -1,0 +1,87 @@
+<section class="<%= ui_class(:page_header) %>">
+  <div>
+    <p class="<%= ui_class(:eyebrow) %>">Admin</p>
+    <h1 class="<%= ui_class(:page_title) %>">評価官プロフィール編集</h1>
+    <p class="<%= ui_class(:page_description) %>"><%= @examiner_profile.user.name %> / <%= @examiner_profile.user.email %></p>
+  </div>
+  <%= link_to "一覧へ戻る", admin_examiner_profiles_path, class: button_classes(:secondary) %>
+</section>
+
+<section class="<%= ui_class(:panel) %>">
+  <%= error_summary(@examiner_profile) %>
+
+  <%= form_with model: [:admin, @examiner_profile], class: ui_class(:auth_form) do |form| %>
+    <div class="<%= ui_class(:field) %>">
+      <%= form.label :display_name, "表示名" %>
+      <%= form.text_field :display_name %>
+    </div>
+
+    <div class="flex flex-wrap gap-4">
+      <label class="<%= ui_class(:checkbox_field) %>">
+        <%= form.check_box :active %>
+        <span>有効</span>
+      </label>
+      <label class="<%= ui_class(:checkbox_field) %>">
+        <%= form.check_box :can_review %>
+        <span>レビュー対応可</span>
+      </label>
+      <label class="<%= ui_class(:checkbox_field) %>">
+        <%= form.check_box :can_interview %>
+        <span>面談対応可</span>
+      </label>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="<%= ui_class(:field) %>">
+        <%= form.label :monthly_interview_count, "今月の面談対応数" %>
+        <%= form.number_field :monthly_interview_count, min: 0 %>
+      </div>
+      <div class="<%= ui_class(:field) %>">
+        <%= form.label :max_monthly_interviews, "月間面談上限" %>
+        <%= form.number_field :max_monthly_interviews, min: 1 %>
+      </div>
+    </div>
+
+    <section>
+      <h2>対応可能な受験対象</h2>
+      <p class="<%= ui_class(:page_description) %>">対象ごとにレビュー対応可、面談対応可を設定します。</p>
+      <div class="<%= ui_class(:table_wrap) %>">
+        <table>
+          <thead>
+            <tr>
+              <th>受験対象</th>
+              <th>レビュー可</th>
+              <th>面談可</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% review_ids = @examiner_profile.examiner_skill_capabilities.select(&:can_review?).map(&:evaluation_target_id) %>
+            <% interview_ids = @examiner_profile.examiner_skill_capabilities.select(&:can_interview?).map(&:evaluation_target_id) %>
+            <% @evaluation_targets.each do |target| %>
+              <tr>
+                <td><%= target.display_name %></td>
+                <td>
+                  <%= check_box_tag "examiner_profile[review_evaluation_target_ids][]",
+                                    target.id,
+                                    review_ids.include?(target.id),
+                                    id: "review_target_#{target.id}" %>
+                </td>
+                <td>
+                  <%= check_box_tag "examiner_profile[interview_evaluation_target_ids][]",
+                                    target.id,
+                                    interview_ids.include?(target.id),
+                                    id: "interview_target_#{target.id}" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="<%= ui_class(:form_actions) %>">
+      <%= form.submit "評価官プロフィールを更新", class: button_classes %>
+      <%= link_to "一覧へ戻る", admin_examiner_profiles_path, class: button_classes(:secondary) %>
+    </div>
+  <% end %>
+</section>

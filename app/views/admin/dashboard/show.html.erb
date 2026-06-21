@@ -7,6 +7,18 @@
 
 <section class="<%= ui_class(:dashboard_grid) %>">
   <article class="<%= ui_class(:panel) %>">
+    <h2>ユーザー管理</h2>
+    <p>受験者、評価官、管理者のユーザー作成とロール設定を行います。</p>
+    <%= link_to "ユーザー管理を開く", admin_users_path, class: button_classes %>
+  </article>
+
+  <article class="<%= ui_class(:panel) %>">
+    <h2>評価官管理</h2>
+    <p>評価官の検索、プロフィール編集、対応可能な受験対象の付与を行います。</p>
+    <%= link_to "評価官管理を開く", admin_examiner_profiles_path, class: button_classes(:secondary) %>
+  </article>
+
+  <article class="<%= ui_class(:panel) %>">
     <h2>受験対象取込</h2>
     <p>CSV/XLSXから受験対象マスタをpreview/importします。</p>
     <%= link_to "取込を開く", new_admin_evaluation_target_import_path, class: button_classes %>
