@@ -1,20 +1,20 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title">取得資格</h1>
-    <p class="page-description">合格判定により反映された資格を確認します。</p>
+    <h1 class="<%= ui_class(:page_title) %>">取得資格</h1>
+    <p class="<%= ui_class(:page_description) %>">合格判定により反映された資格を確認します。</p>
   </div>
 </div>
 
-<%= form_with url: user_qualifications_path, method: :get, class: "toolbar" do |form| %>
-  <div class="field">
+<%= form_with url: user_qualifications_path, method: :get, class: ui_class(:toolbar) do |form| %>
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :user_keyword, "ユーザー" %>
     <%= form.search_field :user_keyword, value: params[:user_keyword] %>
   </div>
-  <div class="field">
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :acquired_on_from, "取得日From" %>
     <%= form.date_field :acquired_on_from, value: params[:acquired_on_from] %>
   </div>
-  <div class="field">
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :acquired_on_to, "取得日To" %>
     <%= form.date_field :acquired_on_to, value: params[:acquired_on_to] %>
   </div>
@@ -22,7 +22,7 @@
 <% end %>
 
 <% if @qualifications.any? %>
-  <div class="table-wrap">
+  <div class="<%= ui_class(:table_wrap) %>">
     <table>
       <thead>
         <tr>

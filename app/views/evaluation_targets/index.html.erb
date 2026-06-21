@@ -1,16 +1,16 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title">受験対象</h1>
-    <p class="page-description">言語、フレームワーク、Lv、外部ナレッジ参照を検索します。</p>
+    <h1 class="<%= ui_class(:page_title) %>">受験対象</h1>
+    <p class="<%= ui_class(:page_description) %>">言語、フレームワーク、Lv、外部ナレッジ参照を検索します。</p>
   </div>
 </div>
 
-<%= form_with url: evaluation_targets_path, method: :get, class: "toolbar" do |form| %>
-  <div class="field">
+<%= form_with url: evaluation_targets_path, method: :get, class: ui_class(:toolbar) do |form| %>
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :keyword, "キーワード" %>
     <%= form.search_field :keyword, value: params[:keyword] %>
   </div>
-  <div class="field">
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :active, "有効状態" %>
     <%= form.select :active, options_for_select([["すべて", ""], ["有効", "true"], ["無効", "false"]], params[:active]) %>
   </div>
@@ -18,7 +18,7 @@
 <% end %>
 
 <% if @evaluation_targets.any? %>
-  <div class="table-wrap">
+  <div class="<%= ui_class(:table_wrap) %>">
     <table>
       <thead>
         <tr>

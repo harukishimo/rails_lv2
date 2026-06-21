@@ -1,9 +1,9 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title">Edit <%= @review_application.display_name %></h1>
-    <p class="page-description">差し戻し後の再提出や提出物コメントの更新を行います。</p>
+    <h1 class="<%= ui_class(:page_title) %>">Edit <%= @review_application.display_name %></h1>
+    <p class="<%= ui_class(:page_description) %>">差し戻し後の再提出や提出物コメントの更新を行います。</p>
   </div>
-  <%= link_to "詳細へ戻る", review_application_path(@review_application), class: "button button--secondary" %>
+  <%= link_to "詳細へ戻る", review_application_path(@review_application), class: button_classes(:secondary) %>
 </div>
 
 <%= render "form", review_application: @review_application %>

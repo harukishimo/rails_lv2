@@ -1,55 +1,55 @@
-<section class="dashboard-hero">
+<section class="<%= ui_class(:dashboard_hero) %>">
   <div>
-    <p class="eyebrow">Skill Evidence Hub</p>
+    <p class="<%= ui_class(:eyebrow) %>">Skill Evidence Hub</p>
     <h1>評価スキル証跡ダッシュボード</h1>
     <p>受験表明、レビュー依頼、面談、取得資格までの進捗をここから確認します。</p>
   </div>
-  <div class="dashboard-identity">
+  <div class="<%= ui_class(:dashboard_identity) %>">
     <strong><%= current_user.name %></strong>
     <span><%= current_user.roles.active.order(:code).pluck(:name).join(" / ") %></span>
   </div>
 </section>
 
-<section class="dashboard-grid">
-  <article class="dashboard-card">
+<section class="<%= ui_class(:dashboard_grid) %>">
+  <article class="<%= ui_class(:panel) %>">
     <h2>受験者ワークフロー</h2>
     <p>受験対象を選択し、レビュー依頼と面談応募へ進みます。</p>
-    <div class="actions">
-      <%= link_to "受験対象を見る", evaluation_targets_path, class: "button button--primary" %>
-      <%= link_to "受験表明を見る", exam_applications_path, class: "button button--secondary" %>
+    <div class="<%= ui_class(:actions) %>">
+      <%= link_to "受験対象を見る", evaluation_targets_path, class: button_classes %>
+      <%= link_to "受験表明を見る", exam_applications_path, class: button_classes(:secondary) %>
     </div>
   </article>
 
   <% if policy(ReviewApplication).queue? %>
-    <article class="dashboard-card">
+    <article class="<%= ui_class(:panel) %>">
       <h2>評価官レビュー</h2>
       <p>対応可能スキルに紐づくレビュー依頼を確認します。</p>
-      <div class="actions">
-        <%= link_to "レビューキュー", examiner_review_queue_index_path, class: "button button--primary" %>
-        <%= link_to "受験者検索", examiner_candidates_path, class: "button button--secondary" %>
+      <div class="<%= ui_class(:actions) %>">
+        <%= link_to "レビューキュー", examiner_review_queue_index_path, class: button_classes %>
+        <%= link_to "受験者検索", examiner_candidates_path, class: button_classes(:secondary) %>
       </div>
     </article>
   <% end %>
 
   <% if current_user.admin? %>
-    <article class="dashboard-card">
+    <article class="<%= ui_class(:panel) %>">
       <h2>管理</h2>
       <p>評価対象、ユーザー、ロール、評価官マスタの管理入口です。</p>
-      <%= link_to "管理画面", admin_dashboard_path, class: "button button--primary" %>
+      <%= link_to "管理画面", admin_dashboard_path, class: button_classes %>
     </article>
   <% end %>
 </section>
 
-<section class="dashboard-section">
-  <div class="page-header">
+<section class="<%= ui_class(:panel) %>">
+  <div class="<%= ui_class(:page_header) %>">
     <div>
-      <h2 class="page-title">最近の受験表明</h2>
-      <p class="page-description">自分が確認できる受験単位の直近状況です。</p>
+      <h2 class="<%= ui_class(:page_title) %>">最近の受験表明</h2>
+      <p class="<%= ui_class(:page_description) %>">自分が確認できる受験単位の直近状況です。</p>
     </div>
   </div>
 
   <% if @exam_applications.any? %>
-    <div class="table-wrap">
+    <div class="<%= ui_class(:table_wrap) %>">
       <table>
         <thead>
           <tr>
@@ -81,15 +81,15 @@
 </section>
 
 <% if @review_queue.any? %>
-  <section class="dashboard-section">
-    <div class="page-header">
+  <section class="<%= ui_class(:panel) %>">
+    <div class="<%= ui_class(:page_header) %>">
       <div>
-        <h2 class="page-title">対応待ちレビュー</h2>
-        <p class="page-description">評価官として対応可能なレビュー依頼です。</p>
+        <h2 class="<%= ui_class(:page_title) %>">対応待ちレビュー</h2>
+        <p class="<%= ui_class(:page_description) %>">評価官として対応可能なレビュー依頼です。</p>
       </div>
     </div>
 
-    <div class="table-wrap">
+    <div class="<%= ui_class(:table_wrap) %>">
       <table>
         <thead>
           <tr>
@@ -114,16 +114,16 @@
   </section>
 <% end %>
 
-<section class="dashboard-section">
-  <div class="page-header">
+<section class="<%= ui_class(:panel) %>">
+  <div class="<%= ui_class(:page_header) %>">
     <div>
-      <h2 class="page-title">取得資格</h2>
-      <p class="page-description">合格判定から反映された取得資格です。</p>
+      <h2 class="<%= ui_class(:page_title) %>">取得資格</h2>
+      <p class="<%= ui_class(:page_description) %>">合格判定から反映された取得資格です。</p>
     </div>
   </div>
 
   <% if @qualifications.any? %>
-    <div class="table-wrap">
+    <div class="<%= ui_class(:table_wrap) %>">
       <table>
         <thead>
           <tr>
