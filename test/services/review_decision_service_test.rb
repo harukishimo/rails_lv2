@@ -1,6 +1,13 @@
 require "test_helper"
 
 class ReviewDecisionServiceTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
+  teardown do
+    clear_enqueued_jobs
+    clear_performed_jobs
+  end
+
   test "comment creation does not change review status" do
     candidate = create_user_with_role(Role::CANDIDATE)
     review_application = create_review_application(candidate: candidate)
@@ -22,15 +29,24 @@ class ReviewDecisionServiceTest < ActiveSupport::TestCase
     review_application = create_review_application(candidate: candidate)
     examiner = create_examiner_for(review_application.exam_application.evaluation_target)
 
-    decision = ReviewDecisions::CreateService.call(
-      review_application: review_application,
-      examiner: examiner,
-      attributes: { decision: "return_to_candidate", reason_markdown: "Please add tests" }
-    )
+    decision = nil
+    assert_enqueued_with(job: SlackDeliveryJob) do
+      assert_difference -> { StatusChangeEvent.where(subject: review_application).count }, 1 do
+        decision = ReviewDecisions::CreateService.call(
+          review_application: review_application,
+          examiner: examiner,
+          attributes: { decision: "return_to_candidate", reason_markdown: "Please add tests" }
+        )
+      end
+    end
 
     assert decision.decision_return_to_candidate?
     assert review_application.reload.returned?
     assert review_application.exam_application.reload.reviewing?
+    event = StatusChangeEvent.where(subject: review_application).order(:id).last
+    assert_equal "review_application_returned", event.event_type
+    assert_equal "submitted", event.from_status
+    assert_equal "returned", event.to_status
   end
 
   test "candidate update resubmits returned review application" do
@@ -57,17 +73,26 @@ class ReviewDecisionServiceTest < ActiveSupport::TestCase
     review_application = create_review_application(candidate: candidate)
     examiner = create_examiner_for(review_application.exam_application.evaluation_target)
 
-    decision = ReviewDecisions::CreateService.call(
-      review_application: review_application,
-      examiner: examiner,
-      attributes: { decision: "approve" }
-    )
+    decision = nil
+    assert_enqueued_with(job: SlackDeliveryJob) do
+      assert_difference -> { StatusChangeEvent.where(subject: review_application).count }, 1 do
+        decision = ReviewDecisions::CreateService.call(
+          review_application: review_application,
+          examiner: examiner,
+          attributes: { decision: "approve" }
+        )
+      end
+    end
 
     assert decision.decision_approve?
     assert review_application.reload.approved?
     assert_equal examiner, review_application.decided_by
     assert_not_nil review_application.decided_at
     assert review_application.exam_application.reload.review_approved?
+    event = StatusChangeEvent.where(subject: review_application).order(:id).last
+    assert_equal "review_application_approved", event.event_type
+    assert_equal "submitted", event.from_status
+    assert_equal "approved", event.to_status
   end
 
   test "reject decision requires reason and finalizes review application" do

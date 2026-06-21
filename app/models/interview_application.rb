@@ -56,7 +56,7 @@ class InterviewApplication < ApplicationRecord
   end
 
   def result_decidable?
-    (scheduled? || calendar_created?) && interview_result.blank?
+    calendar_created? && interview_result.blank?
   end
 
   private

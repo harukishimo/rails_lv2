@@ -10,7 +10,7 @@ module InterviewSchedules
     end
 
     def call
-      InterviewSchedule.transaction do
+      approved_schedule = InterviewSchedule.transaction do
         interview_application.with_lock do
           interview_schedule.lock!
           raise_not_approvable! unless interview_schedule.approvable?
@@ -21,6 +21,8 @@ module InterviewSchedules
           interview_schedule
         end
       end
+      CalendarEventCreateJob.perform_later(approved_schedule.id, actor_id: actor.id) if defined?(CalendarEventCreateJob)
+      approved_schedule
     end
 
     private

@@ -38,10 +38,17 @@ module ReviewDecisions
 
     def apply_decision!(decision)
       next_status = STATUS_BY_DECISION.fetch(decision.decision)
+      previous_status = review_application.status
       update_attributes = { status: next_status }
       update_attributes.merge!(decided_by: examiner, decided_at: decision.decided_at) if decision.decision_approve? || decision.decision_reject?
 
       review_application.update!(update_attributes)
+      ReviewApplications::StatusChangeRecorder.call(
+        review_application: review_application,
+        actor: examiner,
+        previous_status: previous_status,
+        next_status: next_status
+      )
       approve_exam_application! if decision.decision_approve?
     end
 
