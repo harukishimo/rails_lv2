@@ -1,8 +1,8 @@
 <% local_demo_enabled = Rails.configuration.x.local_demo_enabled %>
 
-<section class="auth-layout">
-  <div class="auth-panel">
-    <p class="eyebrow">Skill Evidence Hub</p>
+<section class="<%= ui_class(:auth_layout) %>">
+  <div class="<%= ui_class(:panel) %>">
+    <p class="<%= ui_class(:eyebrow) %>">Skill Evidence Hub</p>
     <h1>ログイン</h1>
     <% if local_demo_enabled %>
       <p>デモ用seedを投入すると、下記アカウントで主要ロールの画面を確認できます。</p>
@@ -10,32 +10,32 @@
       <p>社内評価基準レビューと評価面談の進行状況を確認します。</p>
     <% end %>
 
-    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "auth-form" }) do |form| %>
-      <div class="field">
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: ui_class(:auth_form) }) do |form| %>
+      <div class="<%= ui_class(:field) %>">
         <%= form.label :email, "メールアドレス" %>
         <%= form.email_field :email, autofocus: true, autocomplete: "email" %>
       </div>
 
-      <div class="field">
+      <div class="<%= ui_class(:field) %>">
         <%= form.label :password, "パスワード" %>
         <%= form.password_field :password, autocomplete: "current-password" %>
       </div>
 
       <% if devise_mapping.rememberable? %>
-        <label class="checkbox-field">
+        <label class="<%= ui_class(:checkbox_field) %>">
           <%= form.check_box :remember_me %>
           <span>ログイン状態を保持する</span>
         </label>
       <% end %>
 
-      <%= form.submit "ログイン", class: "button button--primary" %>
+      <%= form.submit "ログイン", class: button_classes %>
     <% end %>
   </div>
 
   <% if local_demo_enabled %>
-    <aside class="auth-panel auth-panel--secondary">
+    <aside class="<%= ui_class(:panel) %>">
       <h2>デモアカウント</h2>
-      <dl class="demo-accounts">
+      <dl class="<%= ui_class(:demo_accounts) %>">
         <div>
           <dt>管理者</dt>
           <dd>admin@example.com</dd>

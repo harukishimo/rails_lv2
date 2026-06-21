@@ -1,12 +1,12 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title"><%= @exam_application.display_name %></h1>
-    <p class="page-description">受験表明の詳細、レビュー依頼、面談応募を確認します。</p>
+    <h1 class="<%= ui_class(:page_title) %>"><%= @exam_application.display_name %></h1>
+    <p class="<%= ui_class(:page_description) %>">受験表明の詳細、レビュー依頼、面談応募を確認します。</p>
   </div>
-  <%= link_to "一覧へ戻る", exam_applications_path, class: "button button--secondary" %>
+  <%= link_to "一覧へ戻る", exam_applications_path, class: button_classes(:secondary) %>
 </div>
 
-<dl class="detail-list">
+<dl class="<%= ui_class(:detail_list) %>">
   <dt>受験ID</dt>
   <dd>exam_application=<%= @exam_application.id %></dd>
   <dt>ステータス</dt>
@@ -21,22 +21,22 @@
   <dd><%= @exam_application.evaluation_period.name %></dd>
 </dl>
 
-<div class="action-panel">
+<div class="<%= ui_class(:panel) %>">
   <h2>次の操作</h2>
-  <div class="actions">
+  <div class="<%= ui_class(:actions) %>">
     <% if current_user.candidate? && @exam_application.candidate_id == current_user.id && !@exam_application.closed? %>
-      <%= link_to "レビュー依頼を作成", new_exam_application_review_application_path(@exam_application), class: "button" %>
+      <%= link_to "レビュー依頼を作成", new_exam_application_review_application_path(@exam_application), class: button_classes %>
       <% if @exam_application.interview_application.present? %>
-        <%= link_to "面談応募を確認", interview_application_path(@exam_application.interview_application), class: "button button--secondary" %>
+        <%= link_to "面談応募を確認", interview_application_path(@exam_application.interview_application), class: button_classes(:secondary) %>
       <% else %>
-        <%= link_to "面談応募へ進む", new_exam_application_interview_application_path(@exam_application), class: "button button--secondary" %>
+        <%= link_to "面談応募へ進む", new_exam_application_interview_application_path(@exam_application), class: button_classes(:secondary) %>
       <% end %>
     <% end %>
   </div>
 </div>
 
-<section class="stack">
-  <div class="form-panel">
+<section class="<%= ui_class(:auth_form) %>">
+  <div class="<%= ui_class(:panel) %>">
     <h2>レビュー依頼</h2>
     <% if @exam_application.review_applications.any? %>
       <ul>
@@ -52,7 +52,7 @@
     <% end %>
   </div>
 
-  <div class="form-panel">
+  <div class="<%= ui_class(:panel) %>">
     <h2>面談応募</h2>
     <% if @exam_application.interview_application.present? %>
       <%= link_to @exam_application.interview_application.display_name, interview_application_path(@exam_application.interview_application) %>
@@ -62,7 +62,7 @@
     <% end %>
   </div>
 
-  <div class="form-panel">
+  <div class="<%= ui_class(:panel) %>">
     <h2>取得資格</h2>
     <% if @exam_application.user_qualification.present? %>
       <p><%= @exam_application.user_qualification.evaluation_target.display_name %> / <%= @exam_application.user_qualification.acquired_on %></p>

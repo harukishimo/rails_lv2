@@ -1,24 +1,24 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title">レビューキュー</h1>
-    <p class="page-description">対応可能なレビュー依頼だけを表示します。</p>
+    <h1 class="<%= ui_class(:page_title) %>">レビューキュー</h1>
+    <p class="<%= ui_class(:page_description) %>">対応可能なレビュー依頼だけを表示します。</p>
   </div>
 </div>
 
-<%= form_with url: examiner_review_queue_index_path, method: :get, class: "toolbar" do |form| %>
-  <div class="field">
+<%= form_with url: examiner_review_queue_index_path, method: :get, class: ui_class(:toolbar) do |form| %>
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :status, "ステータス" %>
     <%= form.select :status, options_for_select(ReviewApplication.statuses.keys, params[:status]), include_blank: "すべて" %>
   </div>
-  <div class="field">
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :keyword, "受験対象" %>
     <%= form.search_field :keyword, value: params[:keyword] %>
   </div>
-  <div class="field">
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :candidate_keyword, "受験者" %>
     <%= form.search_field :candidate_keyword, value: params[:candidate_keyword] %>
   </div>
-  <div class="field">
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :comment_keyword, "コメント本文" %>
     <%= form.search_field :comment_keyword, value: params[:comment_keyword] %>
   </div>
@@ -26,7 +26,7 @@
 <% end %>
 
 <% if @review_applications.any? %>
-  <div class="table-wrap">
+  <div class="<%= ui_class(:table_wrap) %>">
     <table>
       <thead>
         <tr>
@@ -47,7 +47,7 @@
             <td><%= exam_application.candidate.name %>&lt;<%= exam_application.candidate.email %>&gt;</td>
             <td><%= exam_application.evaluation_target.display_name %></td>
             <td><%= review_application.submissions.size %></td>
-            <td><%= link_to "詳細", review_application_path(review_application), class: "button button--secondary" %></td>
+            <td><%= link_to "詳細", review_application_path(review_application), class: button_classes(:secondary) %></td>
           </tr>
         <% end %>
       </tbody>

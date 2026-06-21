@@ -1,16 +1,16 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title">受験者検索</h1>
-    <p class="page-description">対応可能な受験対象に紐づく受験者だけを検索します。</p>
+    <h1 class="<%= ui_class(:page_title) %>">受験者検索</h1>
+    <p class="<%= ui_class(:page_description) %>">対応可能な受験対象に紐づく受験者だけを検索します。</p>
   </div>
 </div>
 
-<%= form_with url: examiner_candidates_path, method: :get, class: "toolbar" do |form| %>
-  <div class="field">
+<%= form_with url: examiner_candidates_path, method: :get, class: ui_class(:toolbar) do |form| %>
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :keyword, "氏名・メール" %>
     <%= form.search_field :keyword, value: params[:keyword] %>
   </div>
-  <div class="field">
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :status, "受験状態" %>
     <%= form.select :status, options_for_select(ExamApplication.statuses.keys, params[:status]), include_blank: "すべて" %>
   </div>
@@ -18,7 +18,7 @@
 <% end %>
 
 <% if @candidates.any? %>
-  <div class="table-wrap">
+  <div class="<%= ui_class(:table_wrap) %>">
     <table>
       <thead>
         <tr>
@@ -34,7 +34,7 @@
             <td>candidate=<%= candidate.id %> <%= candidate.name %>&lt;<%= candidate.email %>&gt;</td>
             <td><%= visible_exam_applications(candidate).size %></td>
             <td><%= visible_qualifications(candidate).size %></td>
-            <td><%= link_to "詳細", examiner_candidate_path(candidate), class: "button button--secondary" %></td>
+            <td><%= link_to "詳細", examiner_candidate_path(candidate), class: button_classes(:secondary) %></td>
           </tr>
         <% end %>
       </tbody>
