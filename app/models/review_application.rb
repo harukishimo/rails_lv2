@@ -20,6 +20,8 @@ class ReviewApplication < ApplicationRecord
   has_many :submissions, dependent: :restrict_with_error
   has_many :review_comments, dependent: :restrict_with_error
   has_many :review_decisions, dependent: :restrict_with_error
+  has_many :status_change_events, as: :subject
+  has_many :audit_logs, as: :auditable
 
   accepts_nested_attributes_for :submissions
 

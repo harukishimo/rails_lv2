@@ -35,6 +35,7 @@ module StatusChangeEvents
         target_path: target_path,
         metadata: sanitized_metadata
       ).tap do |status_change_event|
+        record_audit_log(status_change_event)
         SlackDeliveryJob.perform_later(status_change_event.id) if defined?(SlackDeliveryJob)
       end
     end
@@ -47,6 +48,24 @@ module StatusChangeEvents
       return metadata unless defined?(Integrations::SecretRedactor)
 
       Integrations::SecretRedactor.call(metadata)
+    end
+
+    def record_audit_log(status_change_event)
+      return unless defined?(AuditLogs::RecordService)
+
+      AuditLogs::RecordService.call(
+        action: "status_change_event.recorded",
+        actor: actor,
+        auditable: subject,
+        before_changes: { status: from_status },
+        after_changes: {
+          status: to_status,
+          event_type: event_type,
+          status_change_event_id: status_change_event.id,
+          target_path: target_path,
+          metadata: sanitized_metadata
+        }
+      )
     end
   end
 end

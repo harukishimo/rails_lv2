@@ -40,7 +40,7 @@ module InterviewApplications
     end
 
     def message
-      "Interview application status changed from #{previous_status} to #{next_status}"
+      "Interview application status changed from #{previous_status || 'new'} to #{next_status}"
     end
 
     def target_path

@@ -70,4 +70,6 @@
       <%= empty_state("合格判定後に取得資格へ反映されます。") %>
     <% end %>
   </div>
+
+  <%= render "shared/status_change_events", record: @exam_application %>
 </section>

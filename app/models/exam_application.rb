@@ -34,6 +34,7 @@ class ExamApplication < ApplicationRecord
   has_one :interview_application
   has_one :user_qualification
   has_many :status_change_events, as: :subject
+  has_many :audit_logs, as: :auditable
 
   validates :attempt_number, numericality: { only_integer: true, greater_than: 0 }
   validates :declared_at, presence: true, unless: :draft?
