@@ -18,10 +18,14 @@ class EvaluationPeriod < ApplicationRecord
   def cover?(date)
     return false if starts_on.blank? || ends_on.blank?
 
-    (starts_on..ends_on).cover?(date)
+    date_range.cover?(date)
   end
 
   private
+
+  def date_range
+    starts_on..ends_on
+  end
 
   def date_range_is_valid
     return if starts_on.blank? || ends_on.blank?

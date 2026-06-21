@@ -5,12 +5,23 @@ module Search
 
     def initialize(scope, params = {})
       @scope = scope
-      @params = params.to_h.symbolize_keys
+      @search_params = build_search_params(params)
+      @params = @search_params.to_h
+    end
+
+    def self.search_context
+      SearchParams.context_for(name)
     end
 
     private
 
-    attr_reader :scope, :params
+    attr_reader :scope, :params, :search_params
+
+    def build_search_params(params)
+      return params.assert_known! if params.is_a?(SearchParams)
+
+      SearchParams.for(self.class.search_context, params).assert_known!
+    end
 
     def paginate(relation)
       relation.limit(per_page).offset((page - 1) * per_page)

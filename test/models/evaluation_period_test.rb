@@ -27,6 +27,20 @@ class EvaluationPeriodTest < ActiveSupport::TestCase
     assert_includes period.errors[:ends_on], "must be on or after starts on"
   end
 
+  test "cover uses inclusive range boundaries for evaluation period dates" do
+    period = EvaluationPeriod.create!(
+      name: "Bounded #{SecureRandom.hex(4)}",
+      starts_on: Date.new(2026, 4, 1),
+      ends_on: Date.new(2026, 9, 30)
+    )
+
+    assert period.cover?(Date.new(2026, 4, 1))
+    assert period.cover?(Date.new(2026, 6, 21))
+    assert period.cover?(Date.new(2026, 9, 30))
+    assert_not period.cover?(Date.new(2026, 3, 31))
+    assert_not period.cover?(Date.new(2026, 10, 1))
+  end
+
   test "name can be reused after soft delete but restore cannot create duplicate" do
     name = "Period #{SecureRandom.hex(4)}"
     deleted_period = EvaluationPeriod.create!(

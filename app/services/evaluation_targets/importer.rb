@@ -86,12 +86,6 @@ module EvaluationTargets
       "数値レベル" => :skill_level_numeric_level
     }.freeze
 
-    ImportRow = Struct.new(:number, :attributes, keyword_init: true) do
-      def [](key)
-        attributes[key]
-      end
-    end
-
     RowResult = Struct.new(:row_number, :status, :display_name, :errors, keyword_init: true) do
       def success?
         errors.blank?
