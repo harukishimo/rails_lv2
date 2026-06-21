@@ -18,17 +18,26 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
 
   test "evaluation target search paginates with a capped allowlisted parameter" do
     candidate = create_user_with_role(Role::CANDIDATE, name: "Candidate")
-    first_target = create_evaluation_target(language_name: "Ruby", framework_name: "Rails", level_code: "Lv2")
-    second_target = create_evaluation_target(language_name: "Go", framework_name: "Gin", level_code: "Lv3")
+    keyword = "Pagination#{SecureRandom.hex(4)}"
+    first_target = create_evaluation_target(
+      language_name: "#{keyword} Ruby",
+      framework_name: "Rails",
+      level_code: "Lv2"
+    )
+    second_target = create_evaluation_target(
+      language_name: "#{keyword} Go",
+      framework_name: "Gin",
+      level_code: "Lv3"
+    )
     sign_in_as(candidate)
 
-    get evaluation_targets_path, params: { per_page: 1, page: 1, unsafe_order: "name desc" }
+    get evaluation_targets_path, params: { keyword: keyword, per_page: 1, page: 1, unsafe_order: "name desc" }
 
     assert_response :success
     assert_includes response.body, first_target.display_name
     assert_not_includes response.body, second_target.display_name
 
-    get evaluation_targets_path, params: { per_page: 1, page: 2 }
+    get evaluation_targets_path, params: { keyword: keyword, per_page: 1, page: 2 }
 
     assert_response :success
     assert_includes response.body, second_target.display_name
@@ -62,6 +71,18 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "review=#{ruby_review.id}"
     assert_not_includes response.body, "review=#{go_review.id}"
+  end
+
+  test "examiner review queue excludes candidate draft reviews" do
+    target = create_evaluation_target(language_name: "Ruby", framework_name: "Rails", level_code: "Lv2")
+    draft_review = create_draft_review_application(candidate: create_user_with_role(Role::CANDIDATE), target: target)
+    examiner = create_examiner_for(target)
+    sign_in_as(examiner)
+
+    get examiner_review_queue_index_path
+
+    assert_response :success
+    assert_not_includes response.body, "review=#{draft_review.id}"
   end
 
   test "examiner review queue excludes active but not reviewable capabilities" do
@@ -271,6 +292,16 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
           }
         ]
       }
+    )
+  end
+
+  def create_draft_review_application(candidate:, target:)
+    exam_application = create_exam_application(candidate: candidate, target: target)
+    ReviewApplication.create!(
+      exam_application: exam_application,
+      sequence_number: 1,
+      status: :draft,
+      appeal_markdown: "draft appeal"
     )
   end
 

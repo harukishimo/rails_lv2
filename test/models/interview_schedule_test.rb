@@ -115,7 +115,22 @@ class InterviewScheduleTest < ActiveSupport::TestCase
       evaluation_target: create_evaluation_target,
       actor: candidate
     )
-    InterviewApplications::CreateService.call(exam_application: exam_application, actor: candidate)
+    exam_application.update!(status: :review_approved)
+    interview_application = InterviewApplications::CreateService.call(
+      exam_application: exam_application,
+      actor: candidate
+    )
+    assign_examiner(interview_application)
+    interview_application
+  end
+
+  def assign_examiner(interview_application)
+    examiner = create_examiner_for(interview_application.exam_application.evaluation_target)
+    InterviewApplications::AssignExaminerService.call(
+      interview_application: interview_application,
+      actor: examiner,
+      examiner_profile: examiner.examiner_profile
+    )
   end
 
   def create_examiner_for(evaluation_target)

@@ -231,11 +231,14 @@ def seed_interview_application(exam_application:, actor:)
     existing.restore(recursive: false) if existing.respond_to?(:deleted?) && existing.deleted?
     return existing
   end
+  exam_application.reload
+  return unless exam_application.review_approved?
 
   InterviewApplications::CreateService.call(exam_application: exam_application, actor: actor)
 end
 
 def seed_assignment(interview_application:, actor:, examiner_profile:, reason: nil)
+  return unless interview_application
   return interview_application if interview_application.assigned_examiner_profile_id == examiner_profile.id
   return interview_application unless interview_application.assignable?
 
@@ -544,7 +547,26 @@ if %w[
       examiner: examiners.fetch(:primary),
       body_markdown: "提出内容を確認中です。設計意図とテスト方針を重点確認します。"
     )
-    seed_interview_application(exam_application: submitted_exam, actor: candidates.fetch(:main))
+
+    requested_exam = seed_exam_application(
+      candidate: candidates.fetch(:main),
+      evaluation_period: current_period,
+      evaluation_target: targets.fetch([ "frontend", "ruby", "Lv1" ])
+    )
+    requested_review = seed_submitted_review(
+      exam_application: requested_exam,
+      actor: candidates.fetch(:main),
+      appeal_markdown: "## Front End Ruby Lv1 提出\n\nレビュー承認後、面談応募のみ完了しているデモです。",
+      submission_title: "Front End Ruby requested interview evidence",
+      github_url: "https://github.com/harukishimo/frontend_ruby_lv1_demo",
+      note: "Requested interview scenario."
+    )
+    seed_review_decision(
+      review_application: requested_review,
+      examiner: examiners.fetch(:primary),
+      decision: :approve
+    )
+    seed_interview_application(exam_application: requested_exam, actor: candidates.fetch(:main))
 
     approved_exam = seed_exam_application(
       candidate: candidates.fetch(:rails),

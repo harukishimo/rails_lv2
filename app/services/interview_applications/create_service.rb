@@ -28,8 +28,6 @@ module InterviewApplications
     attr_reader :exam_application, :actor
 
     def transition_exam_application_to_interview_requested
-      return if exam_application.reviewing?
-
       ExamApplications::TransitionService.new(exam_application, actor: actor).request_interview!
     end
   end

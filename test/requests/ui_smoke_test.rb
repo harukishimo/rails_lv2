@@ -118,6 +118,7 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
       evaluation_target: create_evaluation_target,
       actor: candidate
     )
+    application.update!(status: :review_approved)
     sign_in_as(candidate)
 
     get new_exam_application_interview_application_path(application)

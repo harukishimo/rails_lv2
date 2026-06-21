@@ -87,8 +87,8 @@ class InterviewApplicationPolicy < ApplicationPolicy
   end
 
   def acceptable_exam_application?
-    return true if record.exam_application.interview_application.present?
+    return true if InterviewApplication.exists?(exam_application_id: record.exam_application_id)
 
-    record.exam_application.declared? || record.exam_application.reviewing? || record.exam_application.review_approved?
+    record.exam_application.review_approved?
   end
 end

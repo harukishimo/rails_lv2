@@ -40,7 +40,7 @@ class InterviewApplication < ApplicationRecord
   end
 
   def schedulable?
-    requested? || examiner_assigned? || schedule_requested?
+    examiner_assigned? || schedule_requested?
   end
 
   def assignable?
@@ -62,9 +62,9 @@ class InterviewApplication < ApplicationRecord
   private
 
   def exam_application_accepts_interview
-    return if exam_application&.declared? || exam_application&.reviewing? || exam_application&.review_approved?
+    return if exam_application&.review_approved?
 
-    errors.add(:exam_application, "must be declared, reviewing, or review approved")
+    errors.add(:exam_application, "must be review approved")
   end
 
   def assigned_examiner_can_evaluate_target

@@ -1,9 +1,9 @@
 require "test_helper"
 
 class InterviewApplicationTest < ActiveSupport::TestCase
-  test "creates interview application for declared exam application" do
+  test "creates interview application for review approved exam application" do
     candidate = create_user_with_role(Role::CANDIDATE)
-    exam_application = create_declared_exam_application(candidate: candidate)
+    exam_application = create_review_approved_exam_application(candidate: candidate)
 
     interview_application = InterviewApplications::CreateService.call(
       exam_application: exam_application,
@@ -24,15 +24,27 @@ class InterviewApplicationTest < ActiveSupport::TestCase
     assert_includes interview_application.errors[:exam_application], "must exist"
   end
 
-  test "allows reviewing and review approved exam application" do
+  test "rejects declared and reviewing exam application" do
     candidate = create_user_with_role(Role::CANDIDATE)
+    declared = create_declared_exam_application(candidate: candidate)
     reviewing = create_declared_exam_application(candidate: candidate)
-    review_approved = create_declared_exam_application(candidate: candidate)
     reviewing.update!(status: :reviewing)
-    review_approved.update!(status: :review_approved)
 
-    assert InterviewApplications::CreateService.call(exam_application: reviewing, actor: candidate).requested?
-    assert reviewing.reload.reviewing?
+    declared_error = assert_raises(ActiveRecord::RecordInvalid) do
+      InterviewApplications::CreateService.call(exam_application: declared, actor: candidate)
+    end
+    reviewing_error = assert_raises(ActiveRecord::RecordInvalid) do
+      InterviewApplications::CreateService.call(exam_application: reviewing, actor: candidate)
+    end
+
+    assert_includes declared_error.record.errors[:exam_application], "must be review approved"
+    assert_includes reviewing_error.record.errors[:exam_application], "must be review approved"
+  end
+
+  test "allows review approved exam application" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    review_approved = create_declared_exam_application(candidate: candidate)
+    review_approved.update!(status: :review_approved)
 
     review_approved_interview = InterviewApplications::CreateService.call(
       exam_application: review_approved,
@@ -51,12 +63,12 @@ class InterviewApplicationTest < ActiveSupport::TestCase
       InterviewApplications::CreateService.call(exam_application: exam_application, actor: candidate)
     end
 
-    assert_includes error.record.errors[:exam_application], "must be declared, reviewing, or review approved"
+    assert_includes error.record.errors[:exam_application], "must be review approved"
   end
 
   test "prevents duplicate interview application for one exam application" do
     candidate = create_user_with_role(Role::CANDIDATE)
-    exam_application = create_declared_exam_application(candidate: candidate)
+    exam_application = create_review_approved_exam_application(candidate: candidate)
     InterviewApplications::CreateService.call(exam_application: exam_application, actor: candidate)
 
     duplicate = InterviewApplication.new(
@@ -71,7 +83,7 @@ class InterviewApplicationTest < ActiveSupport::TestCase
 
   test "database rejects duplicate active interview application" do
     candidate = create_user_with_role(Role::CANDIDATE)
-    exam_application = create_declared_exam_application(candidate: candidate)
+    exam_application = create_review_approved_exam_application(candidate: candidate)
     InterviewApplications::CreateService.call(exam_application: exam_application, actor: candidate)
     now = Time.current
 
@@ -90,6 +102,12 @@ class InterviewApplicationTest < ActiveSupport::TestCase
   end
 
   private
+
+  def create_review_approved_exam_application(candidate:)
+    create_declared_exam_application(candidate: candidate).tap do |exam_application|
+      exam_application.update!(status: :review_approved)
+    end
+  end
 
   def create_declared_exam_application(candidate:)
     ExamApplications::CreateService.call(

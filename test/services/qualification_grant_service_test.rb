@@ -180,6 +180,7 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
       evaluation_target: create_evaluation_target,
       actor: candidate
     )
+    exam_application.update!(status: :review_approved)
     interview_application = InterviewApplications::CreateService.call(
       exam_application: exam_application,
       actor: candidate
