@@ -30,10 +30,10 @@ class InterviewResult < ApplicationRecord
     return if examiner&.admin?
     return if assigned_examiner?
 
-    errors.add(:examiner, "must be assigned examiner or admin")
+    errors.add(:examiner, :must_be_assigned_examiner_or_admin)
   end
 
   def assigned_examiner?
-    interview_application&.assigned_examiner_profile&.user_id == examiner_id
+    interview_application&.assigned_examiner_profiles&.any? { |profile| profile.user_id == examiner_id }
   end
 end

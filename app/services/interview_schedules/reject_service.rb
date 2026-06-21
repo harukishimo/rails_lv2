@@ -30,7 +30,7 @@ module InterviewSchedules
     end
 
     def raise_not_rejectable!
-      interview_schedule.errors.add(:base, "interview schedule is not rejectable")
+      interview_schedule.errors.add(:base, :interview_schedule_not_rejectable)
       raise ActiveRecord::RecordInvalid, interview_schedule
     end
   end

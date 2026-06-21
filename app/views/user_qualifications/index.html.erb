@@ -26,7 +26,8 @@
     <table>
       <thead>
         <tr>
-          <th>資格</th>
+          <th>言語・カテゴリ</th>
+          <th>Lv</th>
           <th>ユーザー</th>
           <th>取得日</th>
           <th>判定者</th>
@@ -35,9 +36,10 @@
       <tbody>
         <% @qualifications.each do |qualification| %>
           <tr>
-            <td>qualification=<%= qualification.id %> <%= qualification.evaluation_target.display_name %></td>
-            <td>user=<%= qualification.user.name %>&lt;<%= qualification.user.email %>&gt;</td>
-            <td><%= qualification.acquired_on %></td>
+            <td><%= evaluation_target_language_label(qualification.evaluation_target) %></td>
+            <td><%= evaluation_target_level_label(qualification.evaluation_target) %></td>
+            <td><%= qualification.user.name %>&lt;<%= qualification.user.email %>&gt;</td>
+            <td><%= l(qualification.acquired_on) %></td>
             <td><%= qualification.granted_by.name %></td>
           </tr>
         <% end %>

@@ -11,14 +11,16 @@
 </section>
 
 <section class="<%= ui_class(:dashboard_grid) %>">
-  <article class="<%= ui_class(:panel) %>">
-    <h2>受験者ワークフロー</h2>
-    <p>受験対象を選択し、レビュー依頼と面談応募へ進みます。</p>
-    <div class="<%= ui_class(:actions) %>">
-      <%= link_to "受験対象を見る", evaluation_targets_path, class: button_classes %>
-      <%= link_to "受験表明を見る", exam_applications_path, class: button_classes(:secondary) %>
-    </div>
-  </article>
+  <% if current_user.candidate? || current_user.admin? %>
+    <article class="<%= ui_class(:panel) %>">
+      <h2>受験者ワークフロー</h2>
+      <p>受験対象を選択し、レビュー依頼と面談応募へ進みます。</p>
+      <div class="<%= ui_class(:actions) %>">
+        <%= link_to "受験対象を見る", evaluation_targets_path, class: button_classes %>
+        <%= link_to "受験表明を見る", exam_applications_path, class: button_classes(:secondary) %>
+      </div>
+    </article>
+  <% end %>
 
   <% if policy(ReviewApplication).queue? %>
     <article class="<%= ui_class(:panel) %>">
@@ -26,6 +28,17 @@
       <p>対応可能スキルに紐づくレビュー依頼を確認します。</p>
       <div class="<%= ui_class(:actions) %>">
         <%= link_to "レビューキュー", examiner_review_queue_index_path, class: button_classes %>
+        <%= link_to "受験者検索", examiner_candidates_path, class: button_classes(:secondary) %>
+      </div>
+    </article>
+  <% end %>
+
+  <% if policy(InterviewApplication).queue? %>
+    <article class="<%= ui_class(:panel) %>">
+      <h2>評価官面談</h2>
+      <p>対応可能スキルに紐づく面談応募と日程調整を確認します。</p>
+      <div class="<%= ui_class(:actions) %>">
+        <%= link_to "面談キュー", examiner_interview_queue_index_path, class: button_classes %>
         <%= link_to "受験者検索", examiner_candidates_path, class: button_classes(:secondary) %>
       </div>
     </article>
@@ -40,45 +53,47 @@
   <% end %>
 </section>
 
-<section class="<%= ui_class(:panel) %>">
-  <div class="<%= ui_class(:page_header) %>">
-    <div>
-      <h2 class="<%= ui_class(:page_title) %>">最近の受験表明</h2>
-      <p class="<%= ui_class(:page_description) %>">自分が確認できる受験単位の直近状況です。</p>
+<% if current_user.candidate? || current_user.admin? %>
+  <section class="<%= ui_class(:panel) %>">
+    <div class="<%= ui_class(:page_header) %>">
+      <div>
+        <h2 class="<%= ui_class(:page_title) %>">最近の受験表明</h2>
+        <p class="<%= ui_class(:page_description) %>">自分が確認できる受験単位の直近状況です。</p>
+      </div>
     </div>
-  </div>
 
-  <% if @exam_applications.any? %>
-    <div class="<%= ui_class(:table_wrap) %>">
-      <table>
-        <thead>
-          <tr>
-            <th>受験対象</th>
-            <th>状態</th>
-            <th>受験者</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @exam_applications.each do |exam_application| %>
+    <% if @exam_applications.any? %>
+      <div class="<%= ui_class(:table_wrap) %>">
+        <table>
+          <thead>
             <tr>
-              <td><%= exam_application.evaluation_target.display_name %></td>
-              <td><%= status_badge(exam_application.status) %></td>
-              <td><%= exam_application.candidate.name %></td>
-              <td>
-                <% if policy(exam_application).show? %>
-                  <%= link_to "詳細", exam_application_path(exam_application) %>
-                <% end %>
-              </td>
+              <th>受験対象</th>
+              <th>状態</th>
+              <th>受験者</th>
+              <th></th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-  <% else %>
-    <%= empty_state("表示できる受験表明はまだありません。") %>
-  <% end %>
-</section>
+          </thead>
+          <tbody>
+            <% @exam_applications.each do |exam_application| %>
+              <tr>
+                <td><%= evaluation_target_compact_name(exam_application.evaluation_target) %></td>
+                <td><%= status_badge(exam_application.status) %></td>
+                <td><%= exam_application.candidate.name %></td>
+                <td>
+                  <% if policy(exam_application).show? %>
+                    <%= link_to "詳細", exam_application_path(exam_application) %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <%= empty_state("表示できる受験表明はまだありません。") %>
+    <% end %>
+  </section>
+<% end %>
 
 <% if @review_queue.any? %>
   <section class="<%= ui_class(:panel) %>">
@@ -114,36 +129,77 @@
   </section>
 <% end %>
 
-<section class="<%= ui_class(:panel) %>">
-  <div class="<%= ui_class(:page_header) %>">
-    <div>
-      <h2 class="<%= ui_class(:page_title) %>">取得資格</h2>
-      <p class="<%= ui_class(:page_description) %>">合格判定から反映された取得資格です。</p>
+<% if @interview_queue.any? %>
+  <section class="<%= ui_class(:panel) %>">
+    <div class="<%= ui_class(:page_header) %>">
+      <div>
+        <h2 class="<%= ui_class(:page_title) %>">対応待ち面談応募</h2>
+        <p class="<%= ui_class(:page_description) %>">評価官として対応可能な面談応募です。</p>
+      </div>
     </div>
-  </div>
 
-  <% if @qualifications.any? %>
     <div class="<%= ui_class(:table_wrap) %>">
       <table>
         <thead>
           <tr>
-            <th>受験対象</th>
-            <th>取得日</th>
+            <th>面談応募</th>
+            <th>受験者</th>
+            <th>状態</th>
+            <th>面談評価官</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          <% @qualifications.each do |qualification| %>
+          <% @interview_queue.each do |interview_application| %>
+            <% exam_application = interview_application.exam_application %>
             <tr>
-              <td><%= qualification.evaluation_target.display_name %></td>
-              <td><%= qualification.acquired_on %></td>
-              <td><%= link_to "一覧", user_qualifications_path %></td>
+              <td><%= evaluation_target_compact_name(exam_application.evaluation_target) %></td>
+              <td><%= exam_application.candidate.name %></td>
+              <td><%= status_badge(interview_application.status) %></td>
+              <td><%= interview_application.assigned_examiner_name %></td>
+              <td><%= link_to "確認", interview_application_path(interview_application) %></td>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
-  <% else %>
-    <%= empty_state("取得資格はまだありません。") %>
-  <% end %>
-</section>
+  </section>
+<% end %>
+
+<% if current_user.candidate? || current_user.admin? %>
+  <section class="<%= ui_class(:panel) %>">
+    <div class="<%= ui_class(:page_header) %>">
+      <div>
+        <h2 class="<%= ui_class(:page_title) %>">取得資格</h2>
+        <p class="<%= ui_class(:page_description) %>">合格判定から反映された取得資格です。</p>
+      </div>
+    </div>
+
+    <% if @qualifications.any? %>
+      <div class="<%= ui_class(:table_wrap) %>">
+        <table>
+          <thead>
+            <tr>
+              <th>言語・カテゴリ</th>
+              <th>Lv</th>
+              <th>取得日</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @qualifications.each do |qualification| %>
+              <tr>
+                <td><%= evaluation_target_language_label(qualification.evaluation_target) %></td>
+                <td><%= evaluation_target_level_label(qualification.evaluation_target) %></td>
+                <td><%= qualification.acquired_on %></td>
+                <td><%= link_to "一覧", user_qualifications_path %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <%= empty_state("取得資格はまだありません。") %>
+    <% end %>
+  </section>
+<% end %>

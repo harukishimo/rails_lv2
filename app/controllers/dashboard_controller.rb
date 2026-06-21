@@ -13,6 +13,7 @@ class DashboardController < ApplicationController
                       .recent
                       .limit(5)
     @review_queue = review_queue
+    @interview_queue = interview_queue
   end
 
   private
@@ -26,6 +27,23 @@ class DashboardController < ApplicationController
         { evaluation_target: %i[programming_language framework skill_level] }
       ])
       .submitted
+      .recent
+      .limit(5)
+  end
+
+  def interview_queue
+    return InterviewApplication.none unless policy(InterviewApplication).queue?
+
+    InterviewApplicationPolicy::QueueScope.new(current_user, InterviewApplication.all).resolve
+      .includes(
+        :assigned_examiner_profile,
+        :secondary_assigned_examiner_profile,
+        exam_application: [
+          :candidate,
+          { evaluation_target: %i[skill_area programming_language framework skill_level] }
+        ]
+      )
+      .where.not(status: InterviewApplication.statuses.fetch(:completed))
       .recent
       .limit(5)
   end

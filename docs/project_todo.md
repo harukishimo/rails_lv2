@@ -146,9 +146,11 @@
 - TODO 13: 完了
 - TODO 14: 完了
 - TODO 15: 完了
+- TODO 16: 完了
+- TODO 17: 完了
 - TODO 10: 未着手
-- TODO 10〜12: TODO 17完了後、TODO 18の直前に実施
-- 次に着手するTODO: TODO 16
+- TODO 10〜12: TODO 18の本資料作成前に実施
+- 次に着手するTODO: TODO 10
 
 ## 現在の成果物ファイル
 
@@ -167,6 +169,7 @@
 - TODO 15: `docs/agents/inside/*.md`
 - TODO 15: `docs/agents/outside/*.md`
 - TODO 15: `docs/loop_automation_settings.md`
+- TODO 16〜17: Railsアプリ本体、`docs/implementation_evidence_index.md`
 - 初期GitHub Issue本文: `docs/github_issues/initial/*.md`
 
 ## 初期GitHub Issue

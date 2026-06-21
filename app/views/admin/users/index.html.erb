@@ -1,0 +1,63 @@
+<section class="<%= ui_class(:page_header) %>">
+  <div>
+    <p class="<%= ui_class(:eyebrow) %>">管理</p>
+    <h1 class="<%= ui_class(:page_title) %>">ユーザー管理</h1>
+    <p class="<%= ui_class(:page_description) %>">ユーザーの検索、作成、ロール設定を行います。</p>
+  </div>
+  <div class="<%= ui_class(:header_actions) %>">
+    <%= link_to "新規ユーザー", new_admin_user_path, class: button_classes %>
+    <%= link_to "管理へ戻る", admin_dashboard_path, class: button_classes(:secondary) %>
+  </div>
+</section>
+
+<%= form_with url: admin_users_path, method: :get, class: ui_class(:toolbar) do |form| %>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :keyword, "氏名・メール" %>
+    <%= form.search_field :keyword, value: params[:keyword] %>
+  </div>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :role, "ロール" %>
+    <%= form.select :role, options_for_select([["すべて", ""]] + @roles.map { |role| [role.name, role.code] }, params[:role]) %>
+  </div>
+  <div class="<%= ui_class(:field) %>">
+    <%= form.label :active, "有効状態" %>
+    <%= form.select :active, options_for_select([["すべて", ""], ["有効", "true"], ["無効", "false"]], params[:active]) %>
+  </div>
+  <%= form.submit "検索" %>
+<% end %>
+
+<% if @users.any? %>
+  <div class="<%= ui_class(:table_wrap) %>">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>氏名</th>
+          <th>メール</th>
+          <th>ロール</th>
+          <th>状態</th>
+          <th>評価官</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr>
+            <td><%= user.id %></td>
+            <td><%= user.name %></td>
+            <td><%= user.email %></td>
+            <td><%= user.roles.map(&:name).join(" / ") %></td>
+            <td><%= status_badge(user.active? ? "active" : "inactive", label: user.active? ? "有効" : "無効") %></td>
+            <td><%= user.examiner_profile ? user.examiner_profile.display_name : "-" %></td>
+            <td>
+              <%= link_to "詳細", admin_user_path(user), class: button_classes(:secondary) %>
+              <%= link_to "編集", edit_admin_user_path(user), class: button_classes(:secondary) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= empty_state("条件に一致するユーザーはありません") %>
+<% end %>

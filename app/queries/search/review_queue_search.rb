@@ -1,5 +1,7 @@
 module Search
   class ReviewQueueSearch < BaseSearch
+    DEFAULT_EXCLUDED_STATUSES = %w[approved rejected canceled].freeze
+
     def relation
       paginate(filtered_scope.recent)
     end
@@ -17,12 +19,29 @@ module Search
           { evaluation_target: %i[skill_area programming_language framework skill_level] }
         ]
       )
-      relation = relation.where(status: enum_value(ReviewApplication, :status, param(:status))) if param(:status)
+      relation = apply_status_filter(relation)
       relation = relation.joins(:exam_application).where(exam_applications: { evaluation_target_id: param(:evaluation_target_id) }) if param(:evaluation_target_id)
       relation = relation.joins(:exam_application).where(exam_applications: { candidate_id: matching_candidate_ids }) if param(:candidate_keyword)
       relation = relation.joins(:exam_application).where(exam_applications: { evaluation_target_id: matching_target_ids }) if param(:keyword)
       relation = relation.joins(:review_comments).where("review_comments.body_markdown LIKE ?", escaped_like(param(:comment_keyword))).distinct if param(:comment_keyword)
       relation
+    end
+
+    def apply_status_filter(relation)
+      selected_statuses = selected_status_values
+      return relation.where(status: selected_statuses) if selected_statuses.any?
+      return relation if status_filter_requested?
+
+      relation.where.not(status: ReviewApplication.statuses.values_at(*DEFAULT_EXCLUDED_STATUSES))
+    end
+
+    def selected_status_values
+      values = enum_values(ReviewApplication, :status, array_param(:statuses))
+      values.presence || Array.wrap(enum_value(ReviewApplication, :status, param(:status))).compact
+    end
+
+    def status_filter_requested?
+      param(:status).present? || array_param(:statuses).any?
     end
 
     def matching_candidate_ids

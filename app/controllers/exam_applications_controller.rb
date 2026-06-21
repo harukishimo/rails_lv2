@@ -17,6 +17,20 @@ class ExamApplicationsController < ApplicationController
     authorize @exam_application
   end
 
+  def permit_interview
+    @exam_application = policy_scope(ExamApplication).find(params[:id])
+    authorize @exam_application
+
+    ExamApplications::PermitInterviewService.call(
+      exam_application: @exam_application,
+      actor: current_user
+    )
+
+    redirect_to exam_application_path(@exam_application), notice: "面談応募を許可しました"
+  rescue ActiveRecord::RecordInvalid => error
+    redirect_to exam_application_path(error.record), alert: error.record.errors.full_messages.to_sentence
+  end
+
   def new
     @exam_application = ExamApplication.new(candidate: current_user)
     authorize @exam_application
@@ -45,7 +59,7 @@ class ExamApplicationsController < ApplicationController
   private
 
   def search_params
-    params.permit(:status, :result, :evaluation_target_id, :candidate_id, :keyword, :page, :per_page)
+    params.permit(:status, :result, :evaluation_target_id, :candidate_id, :keyword, :page, :per_page, statuses: [])
   end
 
   def prepare_form_options

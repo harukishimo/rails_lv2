@@ -25,7 +25,7 @@ FileUtils.chdir APP_ROOT do
   system! "bin/rails db:reset" if ARGV.include?("--reset")
 
   puts "\n== Applying Ridgepole schema =="
-  system! "bundle exec ridgepole --require ./config/ridgepole/sqlite_ignore_column_position_options --config config/database.yml --env development --file db/Schemafile --apply"
+  system! "bin/ridgepole-apply"
 
   puts "\n== Seeding database =="
   system! "bin/rails db:seed"

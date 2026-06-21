@@ -21,6 +21,7 @@ module SkillEvidenceHub
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     config.time_zone = "Asia/Tokyo"
+    config.i18n.available_locales = %i[en ja]
     config.x.local_demo_enabled = Rails.env.development? || Rails.env.test?
     # config.eager_load_paths << Rails.root.join("extras")
   end

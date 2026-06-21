@@ -11,9 +11,10 @@ module InterviewApplications
       "completed" => []
     }.freeze
 
-    def initialize(interview_application, actor:)
+    def initialize(interview_application, actor:, deliver_to_slack: false)
       @interview_application = interview_application
       @actor = actor
+      @deliver_to_slack = deliver_to_slack
     end
 
     def request_schedule!
@@ -24,13 +25,17 @@ module InterviewApplications
       transition_to!(:scheduled)
     end
 
+    def create_calendar!
+      transition_to!(:calendar_created)
+    end
+
     def complete!
       transition_to!(:completed)
     end
 
     private
 
-    attr_reader :interview_application, :actor
+    attr_reader :interview_application, :actor, :deliver_to_slack
 
     def transition_to!(next_status)
       next_status = next_status.to_s
@@ -43,7 +48,8 @@ module InterviewApplications
         interview_application: interview_application,
         actor: actor,
         previous_status: previous_status,
-        next_status: next_status
+        next_status: next_status,
+        deliver_to_slack: deliver_to_slack
       )
       interview_application
     end

@@ -7,8 +7,8 @@
 
 <%= form_with url: examiner_review_queue_index_path, method: :get, class: ui_class(:toolbar) do |form| %>
   <div class="<%= ui_class(:field) %>">
-    <%= form.label :status, "ステータス" %>
-    <%= form.select :status, options_for_select(ReviewApplication.statuses.keys, params[:status]), include_blank: "すべて" %>
+    <%= form.label :statuses, "ステータス" %>
+    <%= status_filter_checkboxes(ReviewApplication) %>
   </div>
   <div class="<%= ui_class(:field) %>">
     <%= form.label :keyword, "受験対象" %>
@@ -30,22 +30,25 @@
     <table>
       <thead>
         <tr>
-          <th>レビュー</th>
-          <th>状態</th>
-          <th>受験者</th>
-          <th>受験対象</th>
-          <th>提出数</th>
-          <th></th>
+            <th>レビュー</th>
+            <th>状態</th>
+            <th>受験者</th>
+            <th>言語・カテゴリ</th>
+            <th>Lv</th>
+            <th>提出数</th>
+            <th></th>
         </tr>
       </thead>
       <tbody>
         <% @review_applications.each do |review_application| %>
           <% exam_application = review_application.exam_application %>
           <tr>
-            <td>review=<%= review_application.id %></td>
+            <% target = exam_application.evaluation_target %>
+            <td>レビュー #<%= review_application.sequence_number %></td>
             <td><%= status_badge(review_application.status) %></td>
             <td><%= exam_application.candidate.name %>&lt;<%= exam_application.candidate.email %>&gt;</td>
-            <td><%= exam_application.evaluation_target.display_name %></td>
+            <td><%= evaluation_target_language_label(target) %></td>
+            <td><%= evaluation_target_level_label(target) %></td>
             <td><%= review_application.submissions.size %></td>
             <td><%= link_to "詳細", review_application_path(review_application), class: button_classes(:secondary) %></td>
           </tr>

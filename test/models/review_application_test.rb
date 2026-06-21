@@ -1,24 +1,36 @@
 require "test_helper"
 
 class ReviewApplicationTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
+  teardown do
+    clear_enqueued_jobs
+    clear_performed_jobs
+  end
+
   test "creates submitted review application with sanitized markdown" do
     candidate = create_user_with_role(Role::CANDIDATE)
     exam_application = create_declared_exam_application(candidate: candidate)
 
-    review_application = ReviewApplications::CreateService.call(
-      exam_application: exam_application,
-      actor: candidate,
-      attributes: {
-        appeal_markdown: "**strong** [bad](javascript:alert(1)) <script>alert(1)</script>",
-        submissions_attributes: [
-          {
-            kind: "github_repository",
-            title: "Rails app repository",
-            github_url: "https://github.com/harukishimo/rails_lv2"
+    review_application = nil
+    assert_no_enqueued_jobs only: SlackDeliveryJob do
+      assert_difference -> { StatusChangeEvent.where(subject_type: "ReviewApplication").count }, 1 do
+        review_application = ReviewApplications::CreateService.call(
+          exam_application: exam_application,
+          actor: candidate,
+          attributes: {
+            appeal_markdown: "**strong** [bad](javascript:alert(1)) <script>alert(1)</script>",
+            submissions_attributes: [
+              {
+                kind: "github_repository",
+                title: "Rails app repository",
+                github_url: "https://github.com/harukishimo/rails_lv2"
+              }
+            ]
           }
-        ]
-      }
-    )
+        )
+      end
+    end
 
     assert review_application.submitted?
     assert_equal 1, review_application.sequence_number
@@ -29,6 +41,10 @@ class ReviewApplicationTest < ActiveSupport::TestCase
     assert_no_match(/<script/, review_application.rendered_appeal_html)
     assert_equal 1, review_application.submissions.size
     assert exam_application.reload.reviewing?
+    event = StatusChangeEvent.where(subject: review_application).order(:id).last
+    assert_equal "review_application_submitted", event.event_type
+    assert_nil event.from_status
+    assert_equal "submitted", event.to_status
   end
 
   test "requires exam application" do

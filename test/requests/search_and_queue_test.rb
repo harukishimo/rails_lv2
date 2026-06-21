@@ -11,9 +11,9 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     get evaluation_targets_path, params: { keyword: "Ruby", admin: "1" }
 
     assert_response :success
-    assert_includes response.body, ruby_target.display_name
-    assert_not_includes response.body, go_target.display_name
-    assert_not_includes response.body, inactive_target.display_name
+    assert_includes response.body, ruby_target.programming_language.name
+    assert_not_includes response.body, go_target.programming_language.name
+    assert_not_includes response.body, inactive_target.programming_language.name
   end
 
   test "evaluation target search paginates with a capped allowlisted parameter" do
@@ -34,13 +34,13 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     get evaluation_targets_path, params: { keyword: keyword, per_page: 1, page: 1, unsafe_order: "name desc" }
 
     assert_response :success
-    assert_includes response.body, first_target.display_name
-    assert_not_includes response.body, second_target.display_name
+    assert_includes response.body, first_target.programming_language.name
+    assert_not_includes response.body, second_target.programming_language.name
 
     get evaluation_targets_path, params: { keyword: keyword, per_page: 1, page: 2 }
 
     assert_response :success
-    assert_includes response.body, second_target.display_name
+    assert_includes response.body, second_target.programming_language.name
   end
 
   test "candidate can search own exam applications by status and target keyword" do
@@ -54,8 +54,8 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     get exam_applications_path, params: { status: "declared", keyword: "Ruby", admin: "1" }
 
     assert_response :success
-    assert_includes response.body, "exam_application=#{ruby_application.id}"
-    assert_not_includes response.body, "exam_application=#{go_application.id}"
+    assert_includes response.body, "受験ID: #{ruby_application.id}"
+    assert_not_includes response.body, "受験ID: #{go_application.id}"
   end
 
   test "examiner review queue only shows review applications for reviewable targets" do
@@ -66,11 +66,11 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     examiner = create_examiner_for(ruby_target)
     sign_in_as(examiner)
 
-    get examiner_review_queue_index_path, params: { status: "submitted", keyword: "Ruby" }
+    get examiner_review_queue_index_path, params: { statuses: %w[submitted], keyword: "Ruby" }
 
     assert_response :success
-    assert_includes response.body, "review=#{ruby_review.id}"
-    assert_not_includes response.body, "review=#{go_review.id}"
+    assert_includes response.body, ruby_review.exam_application.candidate.name
+    assert_not_includes response.body, go_review.exam_application.candidate.name
   end
 
   test "examiner review queue excludes candidate draft reviews" do
@@ -82,7 +82,7 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     get examiner_review_queue_index_path
 
     assert_response :success
-    assert_not_includes response.body, "review=#{draft_review.id}"
+    assert_not_includes response.body, draft_review.exam_application.candidate.email
   end
 
   test "examiner review queue excludes active but not reviewable capabilities" do
@@ -94,7 +94,7 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     get examiner_review_queue_index_path
 
     assert_response :success
-    assert_not_includes response.body, "review=#{review_application.id}"
+    assert_not_includes response.body, review_application.exam_application.candidate.email
   end
 
   test "examiner review queue does not mix candidate-owned reviews for hybrid users" do
@@ -112,16 +112,16 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     get examiner_review_queue_index_path
 
     assert_response :success
-    assert_includes response.body, "review=#{visible_review.id}"
-    assert_not_includes response.body, "review=#{own_non_capable_review.id}"
-    assert_not_includes response.body, "review=#{own_capable_review.id}"
+    assert_includes response.body, visible_review.exam_application.candidate.name
+    assert_not_includes response.body, own_non_capable_review.exam_application.candidate.email
+    assert_not_includes response.body, own_capable_review.exam_application.candidate.email
   end
 
   test "review queue searches review comment body with explicit comment keyword" do
     target = create_evaluation_target(language_name: "Ruby", framework_name: "Rails", level_code: "Lv2")
     examiner = create_examiner_for(target)
-    matching_review = create_review_application(candidate: create_user_with_role(Role::CANDIDATE), target: target)
-    other_review = create_review_application(candidate: create_user_with_role(Role::CANDIDATE), target: target)
+    matching_review = create_review_application(candidate: create_user_with_role(Role::CANDIDATE, name: "Migration Candidate"), target: target)
+    other_review = create_review_application(candidate: create_user_with_role(Role::CANDIDATE, name: "Plain Candidate"), target: target)
     ReviewComment.create!(
       review_application: matching_review,
       examiner: examiner,
@@ -137,8 +137,8 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     get examiner_review_queue_index_path, params: { comment_keyword: "migration evidence" }
 
     assert_response :success
-    assert_includes response.body, "review=#{matching_review.id}"
-    assert_not_includes response.body, "review=#{other_review.id}"
+    assert_includes response.body, matching_review.exam_application.candidate.name
+    assert_not_includes response.body, other_review.exam_application.candidate.name
   end
 
   test "candidate cannot open examiner review queue" do
@@ -150,14 +150,51 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  test "examiner interview queue shows interviewable pending applications and supports multiple status filters" do
+    ruby_target = create_evaluation_target(language_name: "Ruby", framework_name: "Rails", level_code: "Lv2")
+    go_target = create_evaluation_target(language_name: "Go", framework_name: "Gin", level_code: "Lv3")
+    pending_interview = create_interview_application(
+      candidate: create_user_with_role(Role::CANDIDATE, name: "Pending Candidate"),
+      target: ruby_target
+    )
+    hidden_interview = create_interview_application(
+      candidate: create_user_with_role(Role::CANDIDATE, name: "Hidden Candidate"),
+      target: go_target
+    )
+    completed_interview = create_interview_application(
+      candidate: create_user_with_role(Role::CANDIDATE, name: "Completed Candidate"),
+      target: ruby_target
+    )
+    completed_interview.update!(status: :completed)
+    examiner = create_examiner_for(ruby_target, can_review: false, can_interview: true)
+    sign_in_as(examiner)
+
+    get examiner_interview_queue_index_path
+
+    assert_response :success
+    assert_includes response.body, pending_interview.exam_application.candidate.name
+    assert_not_includes response.body, hidden_interview.exam_application.candidate.name
+    assert_not_includes response.body, completed_interview.exam_application.candidate.name
+
+    get examiner_interview_queue_index_path, params: { statuses: %w[completed requested] }
+
+    assert_response :success
+    assert_includes response.body, pending_interview.exam_application.candidate.name
+    assert_includes response.body, completed_interview.exam_application.candidate.name
+    assert_not_includes response.body, hidden_interview.exam_application.candidate.name
+  end
+
   test "examiner can search candidates and see visible candidate qualifications" do
     ruby_target = create_evaluation_target(language_name: "Ruby", framework_name: "Rails", level_code: "Lv2")
     go_target = create_evaluation_target(language_name: "Go", framework_name: "Gin", level_code: "Lv3")
     ruby_candidate = create_user_with_role(Role::CANDIDATE, name: "Ruby Candidate", email: "ruby-candidate@example.com")
     go_candidate = create_user_with_role(Role::CANDIDATE, name: "Go Candidate", email: "go-candidate@example.com")
+    closed_candidate = create_user_with_role(Role::CANDIDATE, name: "Closed Candidate", email: "closed-candidate@example.com")
     ruby_application = create_exam_application(candidate: ruby_candidate, target: ruby_target)
     hidden_application = create_exam_application(candidate: ruby_candidate, target: go_target)
     create_exam_application(candidate: go_candidate, target: go_target)
+    closed_application = create_exam_application(candidate: closed_candidate, target: ruby_target)
+    ExamApplications::TransitionService.new(closed_application, actor: closed_candidate).close!
     examiner = create_examiner_for(ruby_target)
     qualification = create_user_qualification(
       user: ruby_candidate,
@@ -171,33 +208,33 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
       exam_application: hidden_application,
       granted_by: create_examiner_for(go_target)
     )
-    ExamApplications::TransitionService.new(ruby_application, actor: ruby_candidate).close!
     sign_in_as(examiner)
 
     get examiner_candidates_path, params: { keyword: "Ruby" }
 
     assert_response :success
-    assert_includes response.body, "candidate=#{ruby_candidate.id}"
-    assert_not_includes response.body, "candidate=#{go_candidate.id}"
+    assert_includes response.body, ruby_candidate.email
+    assert_not_includes response.body, go_candidate.email
+    assert_not_includes response.body, closed_candidate.email
 
     get examiner_candidates_path, params: { evaluation_target_id: go_target.id }
 
     assert_response :success
-    assert_not_includes response.body, "candidate=#{ruby_candidate.id}"
+    assert_not_includes response.body, ruby_candidate.email
 
-    get examiner_candidates_path, params: { status: "declared" }
+    get examiner_candidates_path, params: { statuses: %w[declared] }
 
     assert_response :success
-    assert_not_includes response.body, "candidate=#{ruby_candidate.id}"
+    assert_includes response.body, ruby_candidate.email
+    assert_not_includes response.body, closed_candidate.email
 
     get examiner_candidate_path(ruby_candidate)
 
     assert_response :success
-    assert_includes response.body, "qualification=#{qualification.id}"
-    assert_includes response.body, ruby_target.display_name
-    assert_not_includes response.body, "qualification=#{hidden_qualification.id}"
-    assert_not_includes response.body, "exam_application=#{hidden_application.id}"
-    assert_not_includes response.body, go_target.display_name
+    assert_includes response.body, qualification.evaluation_target.programming_language.name
+    assert_includes response.body, ruby_target.skill_level.code
+    assert_not_includes response.body, hidden_qualification.evaluation_target.programming_language.name
+    assert_not_includes response.body, hidden_application.evaluation_target.programming_language.name
 
     get examiner_candidate_path(go_candidate)
 
@@ -239,17 +276,17 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
     get user_qualifications_path
 
     assert_response :success
-    assert_includes response.body, "qualification=#{ruby_qualification.id}"
-    assert_not_includes response.body, "qualification=#{go_qualification.id}"
-    assert_not_includes response.body, "qualification=#{revoked_qualification.id}"
+    assert_includes response.body, ruby_qualification.evaluation_target.programming_language.name
+    assert_not_includes response.body, go_qualification.evaluation_target.programming_language.name
+    assert_not_includes response.body, revoked_qualification.evaluation_target.programming_language.name
 
     delete destroy_user_session_path
     sign_in_as(ruby_examiner)
     get user_qualifications_path, params: { user_keyword: "qualified" }
 
     assert_response :success
-    assert_includes response.body, "qualification=#{ruby_qualification.id}"
-    assert_not_includes response.body, "qualification=#{go_qualification.id}"
+    assert_includes response.body, ruby_qualification.user.email
+    assert_not_includes response.body, go_qualification.user.email
   end
 
   test "review queue list preloads associations used for rendering" do
@@ -303,6 +340,12 @@ class SearchAndQueueTest < ActionDispatch::IntegrationTest
       status: :draft,
       appeal_markdown: "draft appeal"
     )
+  end
+
+  def create_interview_application(candidate:, target:)
+    exam_application = create_exam_application(candidate: candidate, target: target)
+    exam_application.update!(status: :review_approved)
+    InterviewApplications::CreateService.call(exam_application: exam_application, actor: candidate)
   end
 
   def create_exam_application(candidate:, target:)

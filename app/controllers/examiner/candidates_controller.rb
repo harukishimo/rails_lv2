@@ -29,7 +29,8 @@ module Examiner
         :status,
         :evaluation_target_id,
         :page,
-        :per_page
+        :per_page,
+        statuses: []
       )
     end
 

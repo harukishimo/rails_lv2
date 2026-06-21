@@ -1,15 +1,23 @@
 require "test_helper"
 
 class InterviewScheduleTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
+  teardown do
+    clear_enqueued_jobs
+    clear_performed_jobs
+  end
+
   test "creates future requested schedule with default timezone" do
     interview_application = create_interview_application
+    starts_at = future_quarter_hour(days: 2)
 
     schedule = InterviewSchedules::CreateService.call(
       interview_application: interview_application,
       actor: interview_application.exam_application.candidate,
       attributes: {
-        starts_at: 2.days.from_now,
-        ends_at: 2.days.from_now + 30.minutes
+        starts_at: starts_at,
+        ends_at: starts_at + 30.minutes
       }
     )
 
@@ -21,14 +29,15 @@ class InterviewScheduleTest < ActiveSupport::TestCase
 
   test "rejects invalid timezone" do
     interview_application = create_interview_application
+    starts_at = future_quarter_hour(days: 2)
 
     error = assert_raises(ActiveRecord::RecordInvalid) do
       InterviewSchedules::CreateService.call(
         interview_application: interview_application,
         actor: interview_application.exam_application.candidate,
         attributes: {
-          starts_at: 2.days.from_now,
-          ends_at: 2.days.from_now + 30.minutes,
+          starts_at: starts_at,
+          ends_at: starts_at + 30.minutes,
           timezone: "Bad/Zone"
         }
       )
@@ -56,14 +65,15 @@ class InterviewScheduleTest < ActiveSupport::TestCase
 
   test "rejects starts_at after ends_at" do
     interview_application = create_interview_application
+    starts_at = future_quarter_hour(days: 2, hour: 11)
 
     error = assert_raises(ActiveRecord::RecordInvalid) do
       InterviewSchedules::CreateService.call(
         interview_application: interview_application,
         actor: interview_application.exam_application.candidate,
         attributes: {
-          starts_at: 2.days.from_now + 1.hour,
-          ends_at: 2.days.from_now
+          starts_at: starts_at,
+          ends_at: starts_at - 1.hour
         }
       )
     end
@@ -71,16 +81,40 @@ class InterviewScheduleTest < ActiveSupport::TestCase
     assert_includes error.record.errors[:starts_at], "must be before ends_at"
   end
 
+  test "rejects schedule times that are not 15 minute increments" do
+    interview_application = create_interview_application
+    starts_at = future_quarter_hour(days: 2, min: 10)
+
+    error = assert_raises(ActiveRecord::RecordInvalid) do
+      InterviewSchedules::CreateService.call(
+        interview_application: interview_application,
+        actor: interview_application.exam_application.candidate,
+        attributes: {
+          starts_at: starts_at,
+          ends_at: starts_at + 30.minutes
+        }
+      )
+    end
+
+    assert_includes error.record.errors[:starts_at], "must be specified in 15-minute increments"
+    assert_includes error.record.errors[:ends_at], "must be specified in 15-minute increments"
+  end
+
   test "approves requested schedule and updates interview application status" do
     interview_application = create_interview_application
     schedule = create_schedule(interview_application)
     examiner = create_examiner_for(interview_application.exam_application.evaluation_target)
 
-    InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
+    assert_no_enqueued_jobs only: CalendarEventCreateJob do
+      assert_enqueued_with(job: SlackDeliveryJob) do
+        InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
+      end
+    end
 
     assert schedule.reload.approved?
     assert interview_application.reload.scheduled?
     assert interview_application.exam_application.reload.interview_scheduled?
+    assert StatusChangeEvent.where(subject: interview_application, event_type: "interview_confirmed").exists?
   end
 
   test "rejects requested schedule without scheduling interview application" do
@@ -97,14 +131,19 @@ class InterviewScheduleTest < ActiveSupport::TestCase
   private
 
   def create_schedule(interview_application)
+    starts_at = future_quarter_hour(days: 3)
     InterviewSchedules::CreateService.call(
       interview_application: interview_application,
       actor: interview_application.exam_application.candidate,
       attributes: {
-        starts_at: 3.days.from_now,
-        ends_at: 3.days.from_now + 30.minutes
+        starts_at: starts_at,
+        ends_at: starts_at + 30.minutes
       }
     )
+  end
+
+  def future_quarter_hour(days:, hour: 10, min: 0)
+    Time.zone.local(Date.current.year, Date.current.month, Date.current.day, hour, min, 0) + days.days
   end
 
   def create_interview_application

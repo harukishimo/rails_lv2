@@ -1,0 +1,24 @@
+<div class="<%= ui_class(:panel) %>">
+  <h2>状態変更履歴</h2>
+  <% status_change_events = record.status_change_events.includes(:actor).recent.limit(10) %>
+  <% if status_change_events.any? %>
+    <ol class="grid gap-3 pl-5">
+      <% status_change_events.each do |event| %>
+        <li>
+          <div class="flex flex-wrap items-center gap-2">
+            <%= status_badge(event.event_type) %>
+            <span class="<%= ui_class(:muted_text) %>"><%= status_transition_label(event) %></span>
+          </div>
+          <p class="mb-1 mt-1 text-sm text-slate-700"><%= status_transition_message(event) %></p>
+          <p class="<%= ui_class(:muted_text) %> text-sm">
+            <%= l(event.created_at, format: :long) %>
+            /
+            <%= event.actor&.name || "システム" %>
+          </p>
+        </li>
+      <% end %>
+    </ol>
+  <% else %>
+    <%= empty_state("状態変更履歴はまだありません。") %>
+  <% end %>
+</div>

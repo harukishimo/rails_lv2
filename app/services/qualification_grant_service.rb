@@ -87,7 +87,7 @@ class QualificationGrantService
   end
 
   def raise_not_decidable!
-    interview_application.errors.add(:base, "interview application does not accept result")
+    interview_application.errors.add(:base, :interview_application_does_not_accept_result)
     raise ActiveRecord::RecordInvalid, interview_application
   end
 end

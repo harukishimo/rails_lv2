@@ -14,12 +14,12 @@
     <%= form.search_field :keyword, value: params[:keyword] %>
   </div>
   <div class="<%= ui_class(:field) %>">
-    <%= form.label :status, "ステータス" %>
-    <%= form.select :status, options_for_select(ExamApplication.statuses.keys, params[:status]), include_blank: "すべて" %>
+    <%= form.label :statuses, "ステータス" %>
+    <%= status_filter_checkboxes(ExamApplication) %>
   </div>
   <div class="<%= ui_class(:field) %>">
     <%= form.label :result, "結果" %>
-    <%= form.select :result, options_for_select(ExamApplication.results.keys, params[:result]), include_blank: "すべて" %>
+    <%= form.select :result, options_for_select(enum_options_for(ExamApplication, :result), params[:result]), include_blank: "すべて" %>
   </div>
   <%= form.submit "検索" %>
 <% end %>
@@ -41,8 +41,8 @@
         <% @exam_applications.each do |exam_application| %>
           <tr>
             <td>
-              <%= exam_application.display_name %>
-              <div class="<%= ui_class(:page_description) %>">exam_application=<%= exam_application.id %></div>
+              <%= evaluation_target_compact_name(exam_application.evaluation_target) %>
+              <div class="<%= ui_class(:page_description) %>">受験ID: <%= exam_application.id %></div>
             </td>
             <td><%= status_badge(exam_application.status) %></td>
             <td><%= status_badge(exam_application.result) %></td>

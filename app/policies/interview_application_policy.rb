@@ -28,8 +28,33 @@ class InterviewApplicationPolicy < ApplicationPolicy
     end
   end
 
+  class QueueScope < Scope
+    def resolve
+      return scope.all if user.admin?
+      return scope.none unless interview_queue_visible?
+
+      scope.joins(:exam_application)
+           .where(exam_applications: { evaluation_target_id: evaluation_target_ids })
+           .where.not(exam_applications: { candidate_id: user.id })
+    end
+
+    private
+
+    def interview_queue_visible?
+      user.examiner? && user.examiner_profile&.active? && user.examiner_profile&.can_interview?
+    end
+
+    def evaluation_target_ids
+      user.examiner_profile&.examiner_skill_capabilities&.interviewable&.pluck(:evaluation_target_id) || []
+    end
+  end
+
   def show?
     owner? || user.admin? || examiner_capable?
+  end
+
+  def queue?
+    user.admin? || (user.examiner? && user.examiner_profile&.active? && user.examiner_profile&.can_interview?)
   end
 
   def create?
@@ -83,7 +108,7 @@ class InterviewApplicationPolicy < ApplicationPolicy
   end
 
   def assigned_examiner?
-    user.examiner? && record.assigned_examiner_profile&.user_id == user.id
+    user.examiner? && record.assigned_examiner_profiles.any? { |profile| profile.user_id == user.id }
   end
 
   def acceptable_exam_application?

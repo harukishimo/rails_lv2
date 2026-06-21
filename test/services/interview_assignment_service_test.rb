@@ -1,23 +1,46 @@
 require "test_helper"
 
 class InterviewAssignmentServiceTest < ActiveSupport::TestCase
-  test "assigns suggested examiner without override metadata and increments monthly count" do
+  test "assigns suggested examiners without override metadata and increments monthly counts" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
-    examiner = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
+    primary_examiner = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
+    secondary_examiner = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 1)
 
-    InterviewApplications::AssignExaminerService.call(
-      interview_application: interview_application,
-      actor: examiner,
-      examiner_profile: examiner.examiner_profile
-    )
+    assert_difference -> { StatusChangeEvent.where(subject: interview_application).count }, 1 do
+      assert_difference -> { AuditLog.where(auditable: interview_application).count }, 2 do
+        InterviewApplications::AssignExaminerService.call(
+          interview_application: interview_application,
+          actor: primary_examiner,
+          examiner_profile: primary_examiner.examiner_profile,
+          secondary_examiner_profile: secondary_examiner.examiner_profile
+        )
+      end
+    end
 
     interview_application.reload
     assert interview_application.examiner_assigned?
-    assert_equal examiner.examiner_profile, interview_application.assigned_examiner_profile
+    assert_equal primary_examiner.examiner_profile, interview_application.assigned_examiner_profile
+    assert_equal secondary_examiner.examiner_profile, interview_application.secondary_assigned_examiner_profile
     assert_nil interview_application.assignment_overridden_by
     assert_nil interview_application.assignment_override_reason
-    assert_equal 1, examiner.examiner_profile.reload.monthly_interview_count
+    assert_equal 1, primary_examiner.examiner_profile.reload.monthly_interview_count
+    assert_equal 2, secondary_examiner.examiner_profile.reload.monthly_interview_count
+
+    status_event = StatusChangeEvent.where(subject: interview_application).recent.first
+    assignment_audit_log = AuditLog.where(auditable: interview_application)
+                                   .where(action: "interview_application.examiner_assigned")
+                                   .recent
+                                   .first
+    assert_equal "interview_application_examiner_assigned", status_event.event_type
+    assert_equal "requested", status_event.from_status
+    assert_equal "examiner_assigned", status_event.to_status
+    assert_nil assignment_audit_log.before_changes.fetch("assigned_examiner_profile_id")
+    assert_nil assignment_audit_log.before_changes.fetch("secondary_assigned_examiner_profile_id")
+    assert_equal primary_examiner.examiner_profile.id, assignment_audit_log.after_changes.fetch("assigned_examiner_profile_id")
+    assert_equal secondary_examiner.examiner_profile.id,
+                 assignment_audit_log.after_changes.fetch("secondary_assigned_examiner_profile_id")
+    assert_not assignment_audit_log.after_changes.fetch("manual_override")
   end
 
   test "manual override saves actor and reason" do
@@ -26,18 +49,30 @@ class InterviewAssignmentServiceTest < ActiveSupport::TestCase
     suggested = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
     override = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 2)
 
-    InterviewApplications::AssignExaminerService.call(
-      interview_application: interview_application,
-      actor: suggested,
-      examiner_profile: override.examiner_profile,
-      reason: "domain familiarity"
-    )
+    assert_difference -> { AuditLog.where(auditable: interview_application).count }, 2 do
+      InterviewApplications::AssignExaminerService.call(
+        interview_application: interview_application,
+        actor: suggested,
+        examiner_profile: override.examiner_profile,
+        reason: "domain familiarity"
+      )
+    end
 
     interview_application.reload
     assert_equal override.examiner_profile, interview_application.assigned_examiner_profile
     assert_equal suggested, interview_application.assignment_overridden_by
     assert_equal "domain familiarity", interview_application.assignment_override_reason
     assert_equal 3, override.examiner_profile.reload.monthly_interview_count
+
+    assignment_audit_log = AuditLog.where(auditable: interview_application)
+                                   .where(action: "interview_application.examiner_assigned")
+                                   .recent
+                                   .first
+    assert_equal override.examiner_profile.id, assignment_audit_log.after_changes.fetch("assigned_examiner_profile_id")
+    assert_equal suggested.id, assignment_audit_log.after_changes.fetch("assignment_overridden_by_id")
+    assert assignment_audit_log.after_changes.fetch("assignment_override_reason_present")
+    assert assignment_audit_log.after_changes.fetch("manual_override")
+    assert_not_includes assignment_audit_log.after_changes.to_json, "domain familiarity"
   end
 
   test "manual override requires reason" do
@@ -126,6 +161,26 @@ class InterviewAssignmentServiceTest < ActiveSupport::TestCase
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 
+  test "rejects assigning same examiner as primary and secondary" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    interview_application = create_interview_application(candidate: candidate)
+    examiner = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
+
+    error = assert_raises(ActiveRecord::RecordInvalid) do
+      InterviewApplications::AssignExaminerService.call(
+        interview_application: interview_application,
+        actor: examiner,
+        examiner_profile: examiner.examiner_profile,
+        secondary_examiner_profile: examiner.examiner_profile
+      )
+    end
+
+    assert_includes error.record.errors[:secondary_assigned_examiner_profile],
+                    "must be different from primary examiner"
+    assert_nil interview_application.reload.assigned_examiner_profile
+    assert_nil interview_application.secondary_assigned_examiner_profile
+  end
+
   test "reassignment decrements previous examiner and increments new examiner" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
@@ -137,16 +192,30 @@ class InterviewAssignmentServiceTest < ActiveSupport::TestCase
       examiner_profile: first.examiner_profile
     )
 
-    InterviewApplications::AssignExaminerService.call(
-      interview_application: interview_application,
-      actor: first,
-      examiner_profile: second.examiner_profile,
-      reason: "load adjustment"
-    )
+    assert_no_difference -> { StatusChangeEvent.where(subject: interview_application).count } do
+      assert_difference -> {
+        AuditLog.where(auditable: interview_application, action: "interview_application.examiner_assigned").count
+      }, 1 do
+        InterviewApplications::AssignExaminerService.call(
+          interview_application: interview_application,
+          actor: first,
+          examiner_profile: second.examiner_profile,
+          reason: "load adjustment"
+        )
+      end
+    end
 
     assert_equal second.examiner_profile, interview_application.reload.assigned_examiner_profile
     assert_equal 0, first.examiner_profile.reload.monthly_interview_count
     assert_equal 2, second.examiner_profile.reload.monthly_interview_count
+
+    assignment_audit_log = AuditLog.where(auditable: interview_application)
+                                   .where(action: "interview_application.examiner_assigned")
+                                   .recent
+                                   .first
+    assert_equal first.examiner_profile.id, assignment_audit_log.before_changes.fetch("assigned_examiner_profile_id")
+    assert_equal second.examiner_profile.id, assignment_audit_log.after_changes.fetch("assigned_examiner_profile_id")
+    assert_not_includes assignment_audit_log.after_changes.to_json, "load adjustment"
   end
 
   private

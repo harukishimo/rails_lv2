@@ -6,11 +6,11 @@ DEMO_PASSWORD = "password123" unless defined?(DEMO_PASSWORD)
 DEMO_TARGET_VERSION = "2026.06" unless defined?(DEMO_TARGET_VERSION)
 
 SKILL_AREA_DEFINITIONS = [
-  { key: "frontend", name: "Front End", display_order: 10, language_based: true },
-  { key: "infra", name: "Infra", display_order: 20, language_based: true },
-  { key: "test_qa", name: "Test & QA", display_order: 30, language_based: false },
-  { key: "design", name: "Design", display_order: 40, language_based: false },
+  { key: "backend", name: "バックエンド", display_order: 10, language_based: true },
+  { key: "frontend", name: "フロントエンド", display_order: 20, language_based: true },
+  { key: "test_qa", name: "試験・QA", display_order: 30, language_based: false },
   { key: "requirements", name: "要件定義", display_order: 50, language_based: false },
+  { key: "cloud", name: "クラウド", display_order: 55, language_based: false },
   { key: "project_manager", name: "プロジェクトマネージャ", display_order: 60, language_based: false }
 ].freeze unless defined?(SKILL_AREA_DEFINITIONS)
 
@@ -18,8 +18,8 @@ LANGUAGE_DEFINITIONS = [
   { key: "ruby", name: "Ruby" },
   { key: "go", name: "Go" },
   { key: "php", name: "PHP" },
-  { key: "python", name: "Python" },
   { key: "java", name: "Java" },
+  { key: "node", name: "Node" },
   { key: "next", name: "Next" },
   { key: "vue", name: "Vue" }
 ].freeze unless defined?(LANGUAGE_DEFINITIONS)
@@ -39,6 +39,127 @@ EVALUATION_PERIOD_DEFINITIONS = [
   { name: "2027 上期", starts_on: Date.new(2027, 4, 1), ends_on: Date.new(2027, 9, 30), active: true },
   { name: "2027 下期", starts_on: Date.new(2027, 10, 1), ends_on: Date.new(2028, 3, 31), active: true }
 ].freeze unless defined?(EVALUATION_PERIOD_DEFINITIONS)
+
+FRAMEWORK_DEFINITIONS = [
+  { key: "rails", name: "Ruby on Rails", language_key: "ruby" },
+  { key: "spring_boot", name: "SpringBoot", language_key: "java" },
+  { key: "nest", name: "Nest", language_key: "node" }
+].freeze unless defined?(FRAMEWORK_DEFINITIONS)
+
+EVALUATION_TARGET_DEFINITIONS = [
+  {
+    key: "backend_ruby",
+    area_key: "backend",
+    language_key: "ruby",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "backend-ruby",
+    external_key_prefix: "backend_ruby",
+    display_order_offset: 10
+  },
+  {
+    key: "ruby_rails",
+    area_key: "backend",
+    language_key: "ruby",
+    framework_key: "rails",
+    level_codes: %w[Lv2],
+    version_suffix: "rails",
+    external_key_prefix: "ruby_on_rails",
+    external_key_overrides: { "Lv2" => "ruby_on_rails_lv2" },
+    display_order_offset: 15
+  },
+  {
+    key: "backend_go",
+    area_key: "backend",
+    language_key: "go",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "backend-go",
+    external_key_prefix: "backend_go",
+    display_order_offset: 20
+  },
+  {
+    key: "backend_php",
+    area_key: "backend",
+    language_key: "php",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "backend-php",
+    external_key_prefix: "backend_php",
+    display_order_offset: 30
+  },
+  {
+    key: "backend_java_spring",
+    area_key: "backend",
+    language_key: "java",
+    framework_key: "spring_boot",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "backend-java-spring",
+    external_key_prefix: "backend_java_spring",
+    display_order_offset: 40
+  },
+  {
+    key: "backend_node_nest",
+    area_key: "backend",
+    language_key: "node",
+    framework_key: "nest",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "backend-node-nest",
+    external_key_prefix: "backend_node_nest",
+    display_order_offset: 50
+  },
+  {
+    key: "frontend_next",
+    area_key: "frontend",
+    language_key: "next",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "frontend-next",
+    external_key_prefix: "frontend_next",
+    display_order_offset: 10
+  },
+  {
+    key: "frontend_vue",
+    area_key: "frontend",
+    language_key: "vue",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "frontend-vue",
+    external_key_prefix: "frontend_vue",
+    display_order_offset: 20
+  },
+  {
+    key: "requirements",
+    area_key: "requirements",
+    language_key: "none",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "requirements",
+    external_key_prefix: "requirements",
+    display_order_offset: 10
+  },
+  {
+    key: "test_qa",
+    area_key: "test_qa",
+    language_key: "none",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "test-qa",
+    external_key_prefix: "test_qa",
+    display_order_offset: 10
+  },
+  {
+    key: "cloud",
+    area_key: "cloud",
+    language_key: "none",
+    level_codes: %w[Lv1 Lv2],
+    version_suffix: "cloud",
+    external_key_prefix: "cloud",
+    display_order_offset: 10
+  },
+  {
+    key: "project_manager",
+    area_key: "project_manager",
+    language_key: "none",
+    level_codes: %w[Lv3],
+    version_suffix: "project-manager",
+    external_key_prefix: "project_manager",
+    display_order_offset: 10
+  }
+].freeze unless defined?(EVALUATION_TARGET_DEFINITIONS)
 
 def seed_record(model, lookup)
   relation = model.respond_to?(:with_deleted) ? model.with_deleted : model
@@ -237,15 +358,17 @@ def seed_interview_application(exam_application:, actor:)
   InterviewApplications::CreateService.call(exam_application: exam_application, actor: actor)
 end
 
-def seed_assignment(interview_application:, actor:, examiner_profile:, reason: nil)
+def seed_assignment(interview_application:, actor:, examiner_profile:, secondary_examiner_profile: nil, reason: nil)
   return unless interview_application
-  return interview_application if interview_application.assigned_examiner_profile_id == examiner_profile.id
+  return interview_application if interview_application.assigned_examiner_profile_id == examiner_profile.id &&
+                                  interview_application.secondary_assigned_examiner_profile_id == secondary_examiner_profile&.id
   return interview_application unless interview_application.assignable?
 
   InterviewApplications::AssignExaminerService.call(
     interview_application: interview_application,
     actor: actor,
     examiner_profile: examiner_profile,
+    secondary_examiner_profile: secondary_examiner_profile,
     reason: reason
   )
 end
@@ -396,52 +519,57 @@ if %w[
   SkillLevel.where.not(code: SKILL_LEVEL_DEFINITIONS.map { |definition| definition.fetch(:code) })
             .update_all(active: false, updated_at: Time.current)
 
-  rails_framework = seed_record(Framework, name: "Ruby on Rails", programming_language: languages.fetch("ruby")) do |record|
-    record.active = true
-  end
+  frameworks = FRAMEWORK_DEFINITIONS.index_with do |definition|
+    seed_record(Framework, name: definition.fetch(:name), programming_language: languages.fetch(definition.fetch(:language_key))) do |record|
+      record.active = true
+    end
+  end.transform_keys { |definition| definition.fetch(:key) }
+  Framework.where.not(name: FRAMEWORK_DEFINITIONS.map { |definition| definition.fetch(:name) })
+           .update_all(active: false, updated_at: Time.current)
 
   targets = {}
-  SKILL_AREA_DEFINITIONS.each do |area_definition|
-    language_definitions = area_definition.fetch(:language_based) ? LANGUAGE_DEFINITIONS : [ NO_LANGUAGE_DEFINITION ]
-    language_definitions.each do |language_definition|
-      SKILL_LEVEL_DEFINITIONS.each do |level_definition|
-        area_key = area_definition.fetch(:key)
-        language_key = language_definition.fetch(:key)
-        level_code = level_definition.fetch(:code)
-        version = "#{DEMO_TARGET_VERSION}-#{area_key}"
-        targets[[ area_key, language_key, level_code ]] = seed_record(
-          EvaluationTarget,
-          programming_language: languages.fetch(language_key),
-          framework: nil,
-          skill_level: levels.fetch(level_code),
-          version: version
-        ) do |record|
-          record.skill_area = skill_areas.fetch(area_key)
-          record.external_knowledge_key = "#{area_key}_#{language_key}_#{level_code.downcase}"
-          record.external_knowledge_url = "https://example.com/internal-knowledge/#{area_key}/#{language_key}/#{level_code.downcase}"
-          record.description = "#{area_definition.fetch(:name)} #{language_definition.fetch(:name)} #{level_code} evaluation target."
-          record.display_order = area_definition.fetch(:display_order) + level_definition.fetch(:numeric_level)
-          record.active = true
-        end
+  rails_target = nil
+  EVALUATION_TARGET_DEFINITIONS.each do |target_definition|
+    area_key = target_definition.fetch(:area_key)
+    language_key = target_definition.fetch(:language_key)
+    target_definition.fetch(:level_codes).each do |level_code|
+      level = levels.fetch(level_code)
+      framework_key = target_definition[:framework_key]
+      framework = framework_key.present? ? frameworks.fetch(framework_key) : nil
+      version = "#{DEMO_TARGET_VERSION}-#{target_definition.fetch(:version_suffix)}"
+      external_key = target_definition.fetch(:external_key_overrides, {}).fetch(
+        level_code,
+        "#{target_definition.fetch(:external_key_prefix)}_#{level_code.downcase}"
+      )
+      target = seed_record(
+        EvaluationTarget,
+        programming_language: languages.fetch(language_key),
+        framework: framework,
+        skill_level: level,
+        version: version
+      ) do |record|
+        record.skill_area = skill_areas.fetch(area_key)
+        record.external_knowledge_key = external_key
+        record.external_knowledge_url = "https://example.com/internal-knowledge/#{target_definition.fetch(:key)}/#{level_code.downcase}"
+        record.description = [
+          skill_areas.fetch(area_key).name,
+          languages.fetch(language_key).name,
+          framework&.name,
+          level_code,
+          "evaluation target. Criteria body is managed outside this app."
+        ].compact.join(" ")
+        record.display_order = (skill_areas.fetch(area_key).display_order * 100) +
+                               target_definition.fetch(:display_order_offset) +
+                               level.numeric_level
+        record.active = true
       end
+
+      targets[[ area_key, language_key, level_code ]] = target unless target_definition.fetch(:key) == "ruby_rails"
+      rails_target = target if target_definition.fetch(:key) == "ruby_rails" && level_code == "Lv2"
     end
   end
 
-  rails_target = seed_record(
-    EvaluationTarget,
-    programming_language: languages.fetch("ruby"),
-    framework: rails_framework,
-    skill_level: levels.fetch("Lv2"),
-    version: "#{DEMO_TARGET_VERSION}-rails"
-  ) do |record|
-    record.skill_area = skill_areas.fetch("frontend")
-    record.external_knowledge_key = "ruby_on_rails_lv2"
-    record.external_knowledge_url = "https://example.com/internal-knowledge/ruby-on-rails/lv2"
-    record.description = "Ruby on Rails Lv2 evaluation target. Criteria body is managed outside this app."
-    record.display_order = 15
-    record.active = true
-  end
-  active_target_ids = targets.values.map(&:id) + [ rails_target.id ]
+  active_target_ids = (targets.values.map(&:id) + [ rails_target&.id ]).compact.uniq
   active_target_keys = EvaluationTarget.where(id: active_target_ids).pluck(:external_knowledge_key).compact
   EvaluationTarget.where.not(id: active_target_ids).find_each do |legacy_target|
     legacy_target.active = false
@@ -478,52 +606,150 @@ if %w[
       retrying: seed_user(email: "candidate7@example.com", name: "中村 再受験", roles: [ Role::CANDIDATE ]),
       passed: seed_user(email: "candidate8@example.com", name: "小林 合格済", roles: [ Role::CANDIDATE ])
     }
+    examiner_matrix = [
+      {
+        label: "バックエンド(Java/SpringBoot)",
+        target_resolver: ->(level_code) { [ targets.fetch([ "backend", "java", level_code ]) ] },
+        levels: {
+          "Lv1" => %w[峰江 上甲],
+          "Lv2" => %w[大川 峰江 大也]
+        }
+      },
+      {
+        label: "バックエンド(Ruby/Rails)",
+        target_resolver: lambda { |level_code|
+          resolved_targets = [ targets.fetch([ "backend", "ruby", level_code ]) ]
+          resolved_targets << rails_target if level_code == "Lv2"
+          resolved_targets
+        },
+        levels: {
+          "Lv1" => %w[徳江 森田 小栗 前田 古謝],
+          "Lv2" => %w[徳江 森田 小栗 前田 古謝]
+        }
+      },
+      {
+        label: "バックエンド(Golang)",
+        target_resolver: ->(level_code) { [ targets.fetch([ "backend", "go", level_code ]) ] },
+        levels: {
+          "Lv1" => %w[峰江 中田 前田 小栗 藤井],
+          "Lv2" => %w[峰江 中田 前田 小栗 藤井]
+        }
+      },
+      {
+        label: "バックエンド(node/Nest)",
+        target_resolver: ->(level_code) { [ targets.fetch([ "backend", "node", level_code ]) ] },
+        levels: {
+          "Lv1" => %w[大山 藤井 徳江 森田],
+          "Lv2" => %w[大山 藤井 徳江 森田]
+        }
+      },
+      {
+        label: "バックエンド(PHP)",
+        target_resolver: ->(level_code) { [ targets.fetch([ "backend", "php", level_code ]) ] },
+        levels: {
+          "Lv1" => %w[徳江 古謝 山下 湊],
+          "Lv2" => %w[徳江 古謝]
+        }
+      },
+      {
+        label: "フロントエンド(React/Next)",
+        target_resolver: ->(level_code) { [ targets.fetch([ "frontend", "next", level_code ]) ] },
+        levels: {
+          "Lv1" => %w[上竹 山崎 太郎 航平],
+          "Lv2" => %w[上竹 山崎 太郎 航平]
+        }
+      },
+      {
+        label: "フロントエンド(Vue/Nuxt)",
+        target_resolver: ->(level_code) { [ targets.fetch([ "frontend", "vue", level_code ]) ] },
+        levels: {
+          "Lv1" => %w[上竹 太郎 航平],
+          "Lv2" => %w[上竹 太郎 航平]
+        }
+      },
+      {
+        label: "システム要件定義・設計",
+        target_resolver: ->(level_code) { [ targets.fetch([ "requirements", "none", level_code ]) ] },
+        levels: {
+          "Lv1" => %w[江頭 森本 峰江 中田],
+          "Lv2" => %w[江頭 森本 峰江 中田]
+        }
+      },
+      {
+        label: "試験・QA",
+        target_resolver: ->(level_code) { [ targets.fetch([ "test_qa", "none", level_code ]) ] },
+        levels: {
+          "Lv1" => %w[裕 江頭 省木 山下],
+          "Lv2" => %w[裕 省木]
+        }
+      },
+      {
+        label: "クラウド",
+        target_resolver: ->(level_code) { [ targets.fetch([ "cloud", "none", level_code ]) ] },
+        levels: {
+          "Lv1" => %w[田中 濱野 田畑],
+          "Lv2" => %w[田中 濱野 田畑]
+        }
+      },
+      {
+        label: "プロジェクトマネージャー",
+        target_resolver: ->(level_code) { [ targets.fetch([ "project_manager", "none", level_code ]) ] },
+        levels: {
+          "Lv3" => %w[道畑 平塚]
+        }
+      }
+    ]
+
+    preferred_examiner_names = %w[徳江 森田 峰江 江頭 上竹 田中 道畑]
+    matrix_examiner_names = examiner_matrix.flat_map { |definition| definition.fetch(:levels).values }.flatten
+    ordered_examiner_names = (preferred_examiner_names + matrix_examiner_names).uniq
+    examiners_by_name = {}
+    examiner_profiles_by_name = {}
+
+    ordered_examiner_names.each.with_index(1) do |name, index|
+      email = index == 1 ? "examiner@example.com" : "examiner#{index}@example.com"
+      user = seed_user(email: email, name: name, roles: [ Role::EXAMINER ])
+      examiners_by_name[name] = user
+      examiner_profiles_by_name[name] = seed_examiner_profile(
+        user: user,
+        display_name: name,
+        monthly_interview_count: index % 4,
+        max_monthly_interviews: 8
+      )
+    end
+
+    desired_capability_ids = []
+    examiner_matrix.each do |definition|
+      definition.fetch(:levels).each do |level_code, names|
+        definition.fetch(:target_resolver).call(level_code).each do |target|
+          names.each do |name|
+            capability = seed_examiner_capability(profile: examiner_profiles_by_name.fetch(name), target: target)
+            desired_capability_ids << capability.id
+          end
+        end
+      end
+    end
+    ExaminerSkillCapability.where(examiner_profile_id: examiner_profiles_by_name.values.map(&:id))
+                           .where.not(id: desired_capability_ids)
+                           .update_all(active: false, can_review: false, can_interview: false, updated_at: Time.current)
+
     examiners = {
-      primary: seed_user(email: "examiner@example.com", name: "評価官 Rails", roles: [ Role::EXAMINER ]),
-      backup: seed_user(email: "examiner2@example.com", name: "評価官 Backup", roles: [ Role::EXAMINER ]),
-      infra: seed_user(email: "examiner3@example.com", name: "評価官 Infra", roles: [ Role::EXAMINER ]),
-      no_language: seed_user(email: "examiner4@example.com", name: "評価官 NonCoding", roles: [ Role::EXAMINER ])
+      primary: examiners_by_name.fetch("徳江"),
+      backup: examiners_by_name.fetch("森田"),
+      go: examiners_by_name.fetch("峰江"),
+      frontend: examiners_by_name.fetch("上竹"),
+      cloud: examiners_by_name.fetch("田中"),
+      no_language: examiners_by_name.fetch("江頭"),
+      qa: examiners_by_name.fetch("裕"),
+      pm: examiners_by_name.fetch("道畑")
     }
-
-    primary_profile = seed_examiner_profile(
-      user: examiners.fetch(:primary),
-      display_name: "評価官 Rails",
-      monthly_interview_count: 1,
-      max_monthly_interviews: 8
-    )
-    backup_profile = seed_examiner_profile(
-      user: examiners.fetch(:backup),
-      display_name: "評価官 Backup",
-      monthly_interview_count: 0,
-      max_monthly_interviews: 8
-    )
-    infra_profile = seed_examiner_profile(
-      user: examiners.fetch(:infra),
-      display_name: "評価官 Infra",
-      monthly_interview_count: 4,
-      max_monthly_interviews: 8
-    )
-    no_language_profile = seed_examiner_profile(
-      user: examiners.fetch(:no_language),
-      display_name: "評価官 NonCoding",
-      monthly_interview_count: 5,
-      max_monthly_interviews: 10
-    )
-
-    ([ rails_target ] + targets.values).each do |target|
-      seed_examiner_capability(profile: primary_profile, target: target)
-    end
-    [ rails_target, targets.fetch([ "frontend", "ruby", "Lv2" ]), targets.fetch([ "infra", "go", "Lv3" ]) ].each do |target|
-      seed_examiner_capability(profile: backup_profile, target: target)
-    end
-    targets.select { |(area_key, _language_key, _level), _target| area_key == "infra" }.each_value do |target|
-      seed_examiner_capability(profile: infra_profile, target: target)
-    end
-    targets.select { |(area_key, _language_key, _level), _target|
-      %w[test_qa design requirements project_manager].include?(area_key)
-    }.each_value do |target|
-      seed_examiner_capability(profile: no_language_profile, target: target)
-    end
+    primary_profile = examiner_profiles_by_name.fetch("徳江")
+    backup_profile = examiner_profiles_by_name.fetch("森田")
+    go_profile = examiner_profiles_by_name.fetch("峰江")
+    frontend_profile = examiner_profiles_by_name.fetch("上竹")
+    cloud_profile = examiner_profiles_by_name.fetch("田中")
+    no_language_profile = examiner_profiles_by_name.fetch("江頭")
+    pm_profile = examiner_profiles_by_name.fetch("道畑")
 
     current_period = periods.fetch("2026 上期")
     past_period = periods.fetch("2025 下期")
@@ -551,14 +777,14 @@ if %w[
     requested_exam = seed_exam_application(
       candidate: candidates.fetch(:main),
       evaluation_period: current_period,
-      evaluation_target: targets.fetch([ "frontend", "ruby", "Lv1" ])
+      evaluation_target: targets.fetch([ "backend", "ruby", "Lv1" ])
     )
     requested_review = seed_submitted_review(
       exam_application: requested_exam,
       actor: candidates.fetch(:main),
-      appeal_markdown: "## Front End Ruby Lv1 提出\n\nレビュー承認後、面談応募のみ完了しているデモです。",
-      submission_title: "Front End Ruby requested interview evidence",
-      github_url: "https://github.com/harukishimo/frontend_ruby_lv1_demo",
+      appeal_markdown: "## Ruby/Rails Lv1 提出\n\nレビュー承認後、面談応募のみ完了しているデモです。",
+      submission_title: "Ruby Rails requested interview evidence",
+      github_url: "https://github.com/harukishimo/ruby_rails_lv1_demo",
       note: "Requested interview scenario."
     )
     seed_review_decision(
@@ -596,30 +822,31 @@ if %w[
       interview_application: assigned_interview,
       actor: admin,
       examiner_profile: backup_profile,
-      reason: "デモ用にBackup評価官へ手動割り当て"
+      secondary_examiner_profile: examiner_profiles_by_name.fetch("小栗"),
+      reason: "デモ用にRuby/Rails評価官へ手動割り当て"
     )
 
     returned_exam = seed_exam_application(
       candidate: candidates.fetch(:go),
       evaluation_period: current_period,
-      evaluation_target: targets.fetch([ "infra", "go", "Lv3" ])
+      evaluation_target: targets.fetch([ "backend", "go", "Lv2" ])
     )
     returned_review = seed_submitted_review(
       exam_application: returned_exam,
       actor: candidates.fetch(:go),
-      appeal_markdown: "## Go Lv3 提出\n\n並行処理とエラーハンドリングの証跡を提出します。",
+      appeal_markdown: "## Go Lv2 提出\n\n並行処理とエラーハンドリングの証跡を提出します。",
       submission_title: "Go returned review repository",
       github_url: "https://github.com/harukishimo/go_lv3_demo",
       note: "Returned review scenario."
     )
     seed_review_comment(
       review_application: returned_review,
-      examiner: examiners.fetch(:infra),
+      examiner: examiners.fetch(:go),
       body_markdown: "並行処理のテストケースが不足しています。追加してください。"
     )
     seed_review_decision(
       review_application: returned_review,
-      examiner: examiners.fetch(:infra),
+      examiner: examiners.fetch(:go),
       decision: :return_to_candidate,
       reason_markdown: "排他制御と異常系テストの証跡を追加してください。"
     )
@@ -639,12 +866,12 @@ if %w[
     )
     seed_review_comment(
       review_application: rejected_review,
-      examiner: examiners.fetch(:primary),
+      examiner: examiners.fetch(:frontend),
       body_markdown: "状態管理とアクセシビリティ要件の説明が不足しています。"
     )
     seed_review_decision(
       review_application: rejected_review,
-      examiner: examiners.fetch(:primary),
+      examiner: examiners.fetch(:frontend),
       decision: :reject,
       reason_markdown: "必須要件の証跡が不足しているため却下します。"
     )
@@ -672,7 +899,7 @@ if %w[
       github_url: "https://github.com/harukishimo/pm_lv3_demo",
       note: "Schedule requested interview scenario."
     )
-    seed_review_decision(review_application: schedule_review, examiner: examiners.fetch(:no_language), decision: :approve)
+    seed_review_decision(review_application: schedule_review, examiner: examiners.fetch(:pm), decision: :approve)
     schedule_requested_interview = seed_interview_application(
       exam_application: schedule_requested_exam,
       actor: candidates.fetch(:pm)
@@ -680,7 +907,8 @@ if %w[
     seed_assignment(
       interview_application: schedule_requested_interview,
       actor: admin,
-      examiner_profile: no_language_profile,
+      examiner_profile: pm_profile,
+      secondary_examiner_profile: examiner_profiles_by_name.fetch("平塚"),
       reason: "PM領域の評価官へ割り当て"
     )
     seed_interview_schedule(
@@ -693,7 +921,7 @@ if %w[
     failed_retry_exam = seed_exam_application(
       candidate: candidates.fetch(:retrying),
       evaluation_period: current_period,
-      evaluation_target: targets.fetch([ "infra", "python", "Lv2" ]),
+      evaluation_target: targets.fetch([ "cloud", "none", "Lv2" ]),
       attempt_number: 1,
       status: :closed,
       result: :failed,
@@ -703,7 +931,7 @@ if %w[
     )
     seed_status_event(
       subject: failed_retry_exam,
-      actor: examiners.fetch(:infra),
+      actor: examiners.fetch(:cloud),
       from_status: "interview_scheduled",
       to_status: "closed",
       event_type: "exam_application_failed_closed",
@@ -712,24 +940,25 @@ if %w[
     retry_exam = seed_exam_application(
       candidate: candidates.fetch(:retrying),
       evaluation_period: current_period,
-      evaluation_target: targets.fetch([ "infra", "python", "Lv2" ]),
+      evaluation_target: targets.fetch([ "cloud", "none", "Lv2" ]),
       attempt_number: 2
     )
     retry_review = seed_submitted_review(
       exam_application: retry_exam,
       actor: candidates.fetch(:retrying),
-      appeal_markdown: "## Python Infra Lv2 再受験\n\n前回指摘された例外処理と運用設計を改善しました。",
-      submission_title: "Python retry approved evidence",
-      github_url: "https://github.com/harukishimo/python_infra_retry",
+      appeal_markdown: "## クラウド Lv2 再受験\n\n前回指摘された例外処理と運用設計を改善しました。",
+      submission_title: "Cloud retry approved evidence",
+      github_url: "https://github.com/harukishimo/cloud_retry",
       note: "Retry scheduled interview scenario."
     )
-    seed_review_decision(review_application: retry_review, examiner: examiners.fetch(:infra), decision: :approve)
+    seed_review_decision(review_application: retry_review, examiner: examiners.fetch(:cloud), decision: :approve)
     scheduled_interview = seed_interview_application(exam_application: retry_exam, actor: candidates.fetch(:retrying))
     seed_assignment(
       interview_application: scheduled_interview,
       actor: admin,
-      examiner_profile: infra_profile,
-      reason: "Infra評価官へ割り当て"
+      examiner_profile: cloud_profile,
+      secondary_examiner_profile: examiner_profiles_by_name.fetch("濱野"),
+      reason: "クラウド評価官へ割り当て"
     )
     approved_schedule = seed_interview_schedule(
       interview_application: scheduled_interview,
@@ -737,27 +966,28 @@ if %w[
       starts_at: 12.days.from_now.change(hour: 11, min: 0, sec: 0),
       ends_at: 12.days.from_now.change(hour: 12, min: 0, sec: 0)
     )
-    approve_interview_schedule(interview_schedule: approved_schedule, actor: examiners.fetch(:infra))
+    approve_interview_schedule(interview_schedule: approved_schedule, actor: examiners.fetch(:cloud))
 
     calendar_exam = seed_exam_application(
       candidate: candidates.fetch(:passed),
       evaluation_period: current_period,
-      evaluation_target: targets.fetch([ "frontend", "vue", "Lv3" ])
+      evaluation_target: targets.fetch([ "frontend", "vue", "Lv2" ])
     )
     calendar_review = seed_submitted_review(
       exam_application: calendar_exam,
       actor: candidates.fetch(:passed),
-      appeal_markdown: "## Vue Lv3 提出\n\n大規模画面設計とレビュー証跡を提出します。",
+      appeal_markdown: "## Vue Lv2 提出\n\n大規模画面設計とレビュー証跡を提出します。",
       submission_title: "Vue calendar created evidence",
       github_url: "https://github.com/harukishimo/vue_lv3_demo",
       note: "Calendar created interview scenario."
     )
-    seed_review_decision(review_application: calendar_review, examiner: examiners.fetch(:primary), decision: :approve)
+    seed_review_decision(review_application: calendar_review, examiner: examiners.fetch(:frontend), decision: :approve)
     calendar_interview = seed_interview_application(exam_application: calendar_exam, actor: candidates.fetch(:passed))
     seed_assignment(
       interview_application: calendar_interview,
       actor: admin,
-      examiner_profile: primary_profile,
+      examiner_profile: frontend_profile,
+      secondary_examiner_profile: examiner_profiles_by_name.fetch("太郎"),
       reason: "Vue対応可能な評価官へ割り当て"
     )
     calendar_schedule = seed_interview_schedule(
@@ -766,11 +996,11 @@ if %w[
       starts_at: 15.days.from_now.change(hour: 16, min: 0, sec: 0),
       ends_at: 15.days.from_now.change(hour: 17, min: 0, sec: 0)
     )
-    approve_interview_schedule(interview_schedule: calendar_schedule, actor: examiners.fetch(:primary))
+    approve_interview_schedule(interview_schedule: calendar_schedule, actor: examiners.fetch(:frontend))
     mark_calendar_created(
       interview_application: calendar_interview,
       interview_schedule: calendar_schedule,
-      actor: examiners.fetch(:primary)
+      actor: examiners.fetch(:frontend)
     )
 
     completed_exam = seed_exam_application(
@@ -792,6 +1022,7 @@ if %w[
       interview_application: completed_interview,
       actor: admin,
       examiner_profile: no_language_profile,
+      secondary_examiner_profile: examiner_profiles_by_name.fetch("森本"),
       reason: "要件定義評価官へ割り当て"
     )
     completed_schedule = seed_interview_schedule(
@@ -816,7 +1047,7 @@ if %w[
     past_exam = seed_historical_exam_application(
       candidate: candidates.fetch(:passed),
       evaluation_period: past_period,
-      evaluation_target: targets.fetch([ "frontend", "php", "Lv1" ]),
+      evaluation_target: targets.fetch([ "backend", "php", "Lv1" ]),
       attempt_number: 1,
       result: :passed,
       declared_at: Time.zone.local(2026, 1, 10, 10, 0, 0),
@@ -825,7 +1056,7 @@ if %w[
     )
     seed_qualification(
       user: candidates.fetch(:passed),
-      evaluation_target: targets.fetch([ "frontend", "php", "Lv1" ]),
+      evaluation_target: targets.fetch([ "backend", "php", "Lv1" ]),
       exam_application: past_exam,
       acquired_on: Date.new(2026, 2, 5),
       granted_by: examiners.fetch(:primary)
@@ -842,14 +1073,14 @@ if %w[
     canceled_exam = seed_exam_application(
       candidate: candidates.fetch(:rails),
       evaluation_period: current_period,
-      evaluation_target: targets.fetch([ "design", "none", "Lv1" ])
+      evaluation_target: targets.fetch([ "requirements", "none", "Lv1" ])
     )
     canceled_review = seed_submitted_review(
       exam_application: canceled_exam,
       actor: candidates.fetch(:rails),
-      appeal_markdown: "## Design Lv1 取り消しデモ\n\n提出後に受験者都合で取り消します。",
-      submission_title: "Design canceled review evidence",
-      github_url: "https://github.com/harukishimo/design_lv1_canceled",
+      appeal_markdown: "## 要件定義 Lv1 取り消しデモ\n\n提出後に受験者都合で取り消します。",
+      submission_title: "Requirements canceled review evidence",
+      github_url: "https://github.com/harukishimo/requirements_lv1_canceled",
       note: "Canceled review scenario."
     )
     ReviewApplications::CancelService.call(
@@ -860,14 +1091,17 @@ if %w[
 
     primary_profile.update!(monthly_interview_count: 2)
     backup_profile.update!(monthly_interview_count: 1)
-    infra_profile.update!(monthly_interview_count: 4)
+    go_profile.update!(monthly_interview_count: 3)
+    cloud_profile.update!(monthly_interview_count: 4)
+    frontend_profile.update!(monthly_interview_count: 2)
     no_language_profile.update!(monthly_interview_count: 7)
+    pm_profile.update!(monthly_interview_count: 1)
 
     unless Rails.env.test?
       puts "Demo accounts:"
       puts "  admin@example.com / #{DEMO_PASSWORD}"
       puts "  candidate@example.com - candidate8@example.com / #{DEMO_PASSWORD}"
-      puts "  examiner@example.com - examiner4@example.com / #{DEMO_PASSWORD}"
+      puts "  examiner@example.com - examiner#{ordered_examiner_names.size}@example.com / #{DEMO_PASSWORD}"
       puts "Demo master records: #{SkillArea.active.count} active skill areas, #{ProgrammingLanguage.active.count} active languages, #{EvaluationTarget.active.count} active evaluation targets"
       puts "Demo workflow records: #{ExamApplication.count} exams, #{ReviewApplication.count} reviews, #{InterviewApplication.count} interviews"
     end

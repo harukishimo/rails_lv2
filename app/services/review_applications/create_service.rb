@@ -22,6 +22,7 @@ module ReviewApplications
           )
 
           transition_exam_application_to_reviewing
+          record_status_change!(review_application, previous_status: nil, next_status: review_application.status)
           review_application
         end
       end
@@ -43,6 +44,15 @@ module ReviewApplications
       return unless exam_application.declared?
 
       ExamApplications::TransitionService.new(exam_application, actor: actor).start_review!
+    end
+
+    def record_status_change!(review_application, previous_status:, next_status:)
+      StatusChangeRecorder.call(
+        review_application: review_application,
+        actor: actor,
+        previous_status: previous_status,
+        next_status: next_status
+      )
     end
   end
 end

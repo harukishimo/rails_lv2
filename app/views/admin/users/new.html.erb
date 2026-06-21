@@ -1,0 +1,10 @@
+<section class="<%= ui_class(:page_header) %>">
+  <div>
+    <p class="<%= ui_class(:eyebrow) %>">管理</p>
+    <h1 class="<%= ui_class(:page_title) %>">ユーザー作成</h1>
+  </div>
+</section>
+
+<section class="<%= ui_class(:panel) %>">
+  <%= render "form", user: @user, roles: @roles %>
+</section>

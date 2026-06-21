@@ -30,7 +30,7 @@ module RestoreDuplicateGuard
 
     return unless duplicate.exists?
 
-    errors.add(:base, "cannot restore because active duplicate exists")
+    errors.add(:base, :active_duplicate_exists)
     throw(:abort)
   end
 

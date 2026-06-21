@@ -1,38 +1,51 @@
 require "test_helper"
 
 class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
-  test "capable examiner can open assignment form with suggested examiner without saving suggestion" do
+  test "capable examiner can open assignment form with two suggested examiners as default selections without saving" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
-    suggested = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
+    suggested_primary = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
+    suggested_secondary = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 1)
     create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 3)
-    sign_in_as(suggested)
+    sign_in_as(suggested_primary)
 
     get assignment_interview_application_path(interview_application)
 
     assert_response :success
-    assert_includes response.body, "suggested_examiner_id=#{suggested.examiner_profile.id}"
+    assert_includes response.body, "面談評価官1"
+    assert_includes response.body, "面談評価官2"
+    assert_includes response.body, suggested_primary.examiner_profile.display_name
+    assert_includes response.body, suggested_secondary.examiner_profile.display_name
+    assert_select "select[name='interview_application[assigned_examiner_profile_id]'] option[selected][value=?]",
+                  suggested_primary.examiner_profile.id.to_s
+    assert_select "select[name='interview_application[secondary_assigned_examiner_profile_id]'] option[selected][value=?]",
+                  suggested_secondary.examiner_profile.id.to_s
     assert_nil interview_application.reload.assigned_examiner_profile
+    assert_nil interview_application.secondary_assigned_examiner_profile
   end
 
-  test "capable examiner can confirm suggested examiner" do
+  test "capable examiner can confirm suggested examiners" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
-    examiner = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
-    sign_in_as(examiner)
+    primary_examiner = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
+    secondary_examiner = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 1)
+    sign_in_as(primary_examiner)
 
     patch assignment_interview_application_path(interview_application), params: {
       interview_application: {
-        assigned_examiner_profile_id: examiner.examiner_profile.id
+        assigned_examiner_profile_id: primary_examiner.examiner_profile.id,
+        secondary_assigned_examiner_profile_id: secondary_examiner.examiner_profile.id
       }
     }
 
     assert_redirected_to interview_application_path(interview_application)
     interview_application.reload
     assert interview_application.examiner_assigned?
-    assert_equal examiner.examiner_profile, interview_application.assigned_examiner_profile
+    assert_equal primary_examiner.examiner_profile, interview_application.assigned_examiner_profile
+    assert_equal secondary_examiner.examiner_profile, interview_application.secondary_assigned_examiner_profile
     assert_nil interview_application.assignment_overridden_by
-    assert_equal 1, examiner.examiner_profile.reload.monthly_interview_count
+    assert_equal 1, primary_examiner.examiner_profile.reload.monthly_interview_count
+    assert_equal 2, secondary_examiner.examiner_profile.reload.monthly_interview_count
   end
 
   test "capable examiner can manually override suggested examiner with reason" do
@@ -70,7 +83,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Assignment override reason is required for manual override"
+    assert_includes response.body, "変更理由は手動変更時に入力してください"
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 
@@ -88,8 +101,27 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, "入力内容を確認してください"
-    assert_includes response.body, "Assigned examiner profile must be selected"
+    assert_includes response.body, "面談評価官を選択してください"
     assert_nil interview_application.reload.assigned_examiner_profile
+  end
+
+  test "assignment with same primary and secondary examiner is rejected" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    interview_application = create_interview_application(candidate: candidate)
+    examiner = create_examiner_for(interview_application.exam_application.evaluation_target, monthly_interview_count: 0)
+    sign_in_as(examiner)
+
+    patch assignment_interview_application_path(interview_application), params: {
+      interview_application: {
+        assigned_examiner_profile_id: examiner.examiner_profile.id,
+        secondary_assigned_examiner_profile_id: examiner.examiner_profile.id
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "面談評価官2は面談評価官1と別の評価官を指定してください"
+    assert_nil interview_application.reload.assigned_examiner_profile
+    assert_nil interview_application.secondary_assigned_examiner_profile
   end
 
   test "candidate cannot open assignment form" do
@@ -128,7 +160,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Assigned examiner profile must be able to interview target"
+    assert_includes response.body, "面談評価官はこの受験対象の面談に対応できる評価官を指定してください"
   end
 
   test "capable examiner cannot assign candidate self profile" do
@@ -154,7 +186,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Assigned examiner profile must not be the candidate"
+    assert_includes response.body, "面談評価官は受験者本人以外を指定してください"
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 
@@ -177,7 +209,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Assigned examiner profile has reached monthly interview limit"
+    assert_includes response.body, "面談評価官は月間面談上限に達しています"
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 

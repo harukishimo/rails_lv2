@@ -14,10 +14,17 @@ module ReviewApplications
       review_application.with_lock do
         raise_not_cancelable! unless review_application.cancelable?
 
+        previous_status = review_application.status
         review_application.update!(
           status: :canceled,
           canceled_at: Time.current,
           cancel_reason: cancel_reason
+        )
+        StatusChangeRecorder.call(
+          review_application: review_application,
+          actor: actor,
+          previous_status: previous_status,
+          next_status: review_application.status
         )
         review_application
       end
@@ -28,7 +35,7 @@ module ReviewApplications
     attr_reader :review_application, :actor, :cancel_reason
 
     def raise_not_cancelable!
-      review_application.errors.add(:base, "review application is not cancelable")
+      review_application.errors.add(:base, :review_application_not_cancelable)
       raise ActiveRecord::RecordInvalid, review_application
     end
   end

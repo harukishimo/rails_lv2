@@ -19,7 +19,8 @@ module Examiner
         :keyword,
         :comment_keyword,
         :page,
-        :per_page
+        :per_page,
+        statuses: []
       )
     end
 

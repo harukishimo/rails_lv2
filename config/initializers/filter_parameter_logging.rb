@@ -11,6 +11,8 @@ Rails.application.config.filter_parameters += [
   :refresh_token,
   :access_token,
   :authorization,
+  :webhook,
+  :webhook_url,
   :_key,
   :crypt,
   :salt,

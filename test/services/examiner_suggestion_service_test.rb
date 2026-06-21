@@ -14,6 +14,23 @@ class ExaminerSuggestionServiceTest < ActiveSupport::TestCase
                      ExaminerSuggestionService.call(interview_application: interview_application)
   end
 
+  test "suggests two available examiners ordered by workload when limit is two" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    interview_application = create_interview_application(candidate: candidate)
+    target = interview_application.exam_application.evaluation_target
+    busiest_examiner = create_examiner_for(target, monthly_interview_count: 5)
+    lightest_examiner = create_examiner_for(target, monthly_interview_count: 0)
+    second_lightest_examiner = create_examiner_for(target, monthly_interview_count: 1)
+
+    suggestions = ExaminerSuggestionService.call(interview_application: interview_application, limit: 2)
+
+    assert_equal [
+      lightest_examiner.examiner_profile,
+      second_lightest_examiner.examiner_profile
+    ], suggestions
+    assert_not_includes suggestions, busiest_examiner.examiner_profile
+  end
+
   test "does not suggest inactive profile, interview-disabled profile, disabled capability, over-limit profile, or self" do
     candidate_examiner = create_user_with_role(Role::CANDIDATE)
     add_role(candidate_examiner, Role::EXAMINER)

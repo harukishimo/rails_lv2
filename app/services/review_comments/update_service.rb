@@ -28,7 +28,7 @@ module ReviewComments
     end
 
     def raise_not_commentable!
-      review_comment.errors.add(:review_application, "must accept comments")
+      review_comment.errors.add(:review_application, :must_accept_comments)
       raise ActiveRecord::RecordInvalid, review_comment
     end
   end

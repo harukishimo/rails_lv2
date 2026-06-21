@@ -1,6 +1,6 @@
 module ApplicationHelper
   def status_badge(status, label: nil)
-    tag.span(label || status.to_s.humanize, class: status_badge_classes(status))
+    tag.span(label || label_for(status), class: status_badge_classes(status))
   end
 
   def error_summary(record)
@@ -20,6 +20,87 @@ module ApplicationHelper
 
   def nav_link(label, path)
     link_to label, path, class: ui_class(:nav_link)
+  end
+
+  def enum_label(model_class, enum_name, value)
+    I18n.t(
+      "activerecord.enums.#{model_class.model_name.i18n_key}.#{enum_name}.#{value}",
+      default: label_for(value)
+    )
+  end
+
+  def enum_options_for(model_class, enum_name)
+    enum_values = model_class.public_send(enum_name.to_s.pluralize).keys
+    enum_values.map { |value| [ enum_label(model_class, enum_name, value), value ] }
+  end
+
+  def status_filter_checkboxes(model_class, enum_name = :status, param_name: :statuses)
+    checkbox_filter_group(param_name, enum_options_for(model_class, enum_name))
+  end
+
+  def checkbox_filter_group(param_name, options)
+    selected_values = selected_filter_values(param_name)
+
+    tag.div(class: ui_class(:checkbox_group)) do
+      safe_join(options.map do |label, value|
+        checkbox_id = "#{param_name}_#{value}"
+        tag.label(for: checkbox_id, class: ui_class(:checkbox_filter)) do
+          check_box_tag("#{param_name}[]", value, selected_values.include?(value), id: checkbox_id) +
+            tag.span(label)
+        end
+      end)
+    end
+  end
+
+  def selected_filter_values(param_name)
+    values = Array.wrap(params[param_name]).reject(&:blank?).map(&:to_s)
+    values << params[:status].to_s if values.empty? && params[:status].present?
+    values
+  end
+
+  def skill_area_label(skill_area)
+    name = skill_area.respond_to?(:name) ? skill_area.name.to_s : skill_area.to_s
+    SKILL_AREA_LABELS.fetch(name.strip.downcase, name)
+  end
+
+  def evaluation_target_language_label(target)
+    return skill_area_label(target.skill_area) if no_language_target?(target)
+
+    target.programming_language.name
+  end
+
+  def evaluation_target_level_label(target)
+    target.skill_level.code
+  end
+
+  def evaluation_target_area_label(target)
+    skill_area_label(target.skill_area)
+  end
+
+  def evaluation_target_technology_label(target)
+    return "なし" if no_language_target?(target)
+
+    [ target.programming_language.name, target.framework&.name ].compact.join(" / ")
+  end
+
+  def evaluation_target_compact_name(target)
+    "#{evaluation_target_language_label(target)} #{evaluation_target_level_label(target)}"
+  end
+
+  def label_for(value)
+    I18n.t("labels.#{value}", default: value.to_s.humanize)
+  end
+
+  def status_transition_label(event)
+    return label_for(event.to_status) if event.from_status.blank?
+
+    "#{label_for(event.from_status)} → #{label_for(event.to_status)}"
+  end
+
+  def status_transition_message(event)
+    return "#{label_for(event.to_status)}になりました" if event.from_status.blank?
+
+    "#{label_for(event.from_status)}から#{label_for(event.to_status)}へ変更しました"
   end
 
   def button_classes(variant = :primary)
@@ -72,6 +153,8 @@ module ApplicationHelper
     demo_accounts: "mb-4 grid gap-3",
     toolbar: "mb-5 flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm",
     field: "grid min-w-44 gap-1.5",
+    checkbox_group: "flex max-w-3xl flex-wrap gap-2",
+    checkbox_filter: "inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800",
     form_actions: "mt-4 flex flex-wrap gap-3",
     actions: "mt-4 flex flex-wrap gap-3",
     header_actions: "mt-0 flex flex-wrap gap-3",
@@ -83,6 +166,28 @@ module ApplicationHelper
     warning_box: "mb-4 rounded-md border-l-4 border-amber-600 bg-amber-50 px-4 py-3 text-amber-900",
     muted_text: "text-slate-500",
     mono_text: "font-mono text-sm text-slate-800"
+  }.freeze
+
+  SKILL_AREA_LABELS = {
+    "front end" => "フロントエンド",
+    "frontend" => "フロントエンド",
+    "backend" => "バックエンド",
+    "back end" => "バックエンド",
+    "バックエンド" => "バックエンド",
+    "infra" => "インフラ",
+    "infrastructure" => "インフラ",
+    "infrastructer" => "インフラ",
+    "cloud" => "クラウド",
+    "クラウド" => "クラウド",
+    "test" => "試験・QA",
+    "test & qa" => "試験・QA",
+    "test&qa" => "試験・QA",
+    "test_qa" => "試験・QA",
+    "qa" => "試験・QA",
+    "design" => "デザイン",
+    "desgin" => "デザイン",
+    "要件定義" => "要件定義",
+    "プロジェクトマネージャ" => "プロジェクトマネージャ"
   }.freeze
 
   SUCCESS_STATUSES = %w[active approved passed completed closed calendar_created approve].freeze
@@ -105,5 +210,9 @@ module ApplicationHelper
     else
       "#{base} bg-slate-100 text-slate-700"
     end
+  end
+
+  def no_language_target?(target)
+    target.programming_language.name.in?(%w[言語なし none None NONE])
   end
 end

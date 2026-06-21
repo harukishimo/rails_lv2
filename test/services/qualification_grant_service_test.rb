@@ -191,17 +191,22 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
       actor: examiner,
       examiner_profile: examiner.examiner_profile
     )
+    starts_at = future_quarter_hour(days: 1)
     schedule = InterviewSchedules::CreateService.call(
       interview_application: interview_application,
       actor: candidate,
       attributes: {
-        starts_at: 1.day.from_now,
-        ends_at: 1.day.from_now + 30.minutes
+        starts_at: starts_at,
+        ends_at: starts_at + 30.minutes
       }
     )
     InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
 
     [ interview_application.reload, examiner ]
+  end
+
+  def future_quarter_hour(days:, hour: 10, min: 0)
+    Time.zone.local(Date.current.year, Date.current.month, Date.current.day, hour, min, 0) + days.days
   end
 
   def create_closed_exam_application(candidate:, evaluation_period:, evaluation_target:, actor:)

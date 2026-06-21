@@ -1,0 +1,104 @@
+<section class="<%= ui_class(:page_header) %>">
+  <div>
+    <p class="<%= ui_class(:eyebrow) %>">管理 / 取込</p>
+    <h1 class="<%= ui_class(:page_title) %>">受験対象取込</h1>
+  </div>
+  <%= link_to "管理へ戻る", admin_dashboard_path, class: button_classes(:secondary) %>
+</section>
+
+<section class="<%= ui_class(:panel) %>">
+  <h2>CSV/XLSXファイル</h2>
+  <p class="<%= ui_class(:page_description) %>">必須列: skill_area, programming_language, skill_level, version, external_knowledge_url または external_knowledge_key</p>
+
+  <% if @import_error.present? %>
+    <div class="<%= ui_class(:form_errors) %>" role="alert">
+      <h2 class="<%= ui_class(:form_errors_title) %>">取込内容を確認してください</h2>
+      <ul>
+        <li><%= @import_error %></li>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+    <%= form_with url: preview_admin_evaluation_target_import_path, multipart: true, local: true, class: "grid gap-3 rounded-lg border border-slate-200 bg-white p-4" do |form| %>
+      <label class="text-sm font-semibold text-slate-700">プレビュー用ファイル</label>
+      <%= form.file_field :file, accept: ".csv,.xlsx" %>
+      <%= form.submit "プレビュー", class: button_classes(:secondary) %>
+    <% end %>
+
+    <%= form_with url: import_admin_evaluation_target_import_path, multipart: true, local: true, class: "grid gap-3 rounded-lg border border-slate-200 bg-white p-4" do |form| %>
+      <label class="text-sm font-semibold text-slate-700">取込実行用ファイル</label>
+      <%= form.file_field :file, accept: ".csv,.xlsx" %>
+      <%= form.submit "取込実行", class: button_classes %>
+    <% end %>
+  </div>
+</section>
+
+<% if @result.present? %>
+  <section class="<%= ui_class(:panel) %>">
+    <div class="<%= ui_class(:page_header) %>">
+      <div>
+        <p class="<%= ui_class(:eyebrow) %>"><%= @result.mode == :preview ? "Preview" : "Import" %></p>
+        <h2 class="<%= ui_class(:page_title) %>">取込結果</h2>
+      </div>
+    </div>
+
+    <dl class="<%= ui_class(:detail_list) %>">
+      <div>
+        <dt class="text-sm font-semibold text-slate-500">処理行数</dt>
+        <dd class="m-0 font-semibold text-slate-900"><%= @result.processed_count %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-semibold text-slate-500">作成</dt>
+        <dd class="m-0 font-semibold text-slate-900"><%= @result.created_count %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-semibold text-slate-500">更新</dt>
+        <dd class="m-0 font-semibold text-slate-900"><%= @result.updated_count %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-semibold text-slate-500">エラー</dt>
+        <dd class="m-0 font-semibold text-slate-900"><%= @result.failed_count %></dd>
+      </div>
+    </dl>
+
+    <% if @result.truncated? %>
+      <div class="<%= ui_class(:warning_box) %>">
+        表示件数を先頭<%= @result.rows.size %>件に制限しています。非表示の行数: <%= @result.truncated_count %>
+      </div>
+    <% end %>
+
+    <div class="<%= ui_class(:table_wrap) %>">
+      <table>
+        <thead>
+          <tr>
+            <th>行</th>
+            <th>結果</th>
+            <th>受験対象</th>
+            <th>エラー</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @result.rows.each do |row| %>
+            <tr>
+              <td><%= row.row_number %></td>
+              <td><%= status_badge(row.status) %></td>
+              <td><%= row.display_name.presence || "-" %></td>
+              <td>
+                <% if row.errors.present? %>
+                  <ul class="m-0 list-disc pl-5">
+                    <% row.errors.each do |error| %>
+                      <li><%= error %></li>
+                    <% end %>
+                  </ul>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<% end %>

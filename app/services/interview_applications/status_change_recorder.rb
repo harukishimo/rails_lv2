@@ -1,19 +1,21 @@
 module InterviewApplications
   class StatusChangeRecorder
-    def self.call(interview_application:, actor:, previous_status:, next_status:)
+    def self.call(interview_application:, actor:, previous_status:, next_status:, deliver_to_slack: false)
       new(
         interview_application: interview_application,
         actor: actor,
         previous_status: previous_status,
-        next_status: next_status
+        next_status: next_status,
+        deliver_to_slack: deliver_to_slack
       ).call
     end
 
-    def initialize(interview_application:, actor:, previous_status:, next_status:)
+    def initialize(interview_application:, actor:, previous_status:, next_status:, deliver_to_slack: false)
       @interview_application = interview_application
       @actor = actor
       @previous_status = previous_status
       @next_status = next_status
+      @deliver_to_slack = deliver_to_slack
     end
 
     def call
@@ -27,20 +29,21 @@ module InterviewApplications
         event_type: event_type,
         message: message,
         target_path: target_path,
-        metadata: metadata
+        metadata: metadata,
+        deliver_to_slack: deliver_to_slack
       )
     end
 
     private
 
-    attr_reader :interview_application, :actor, :previous_status, :next_status
+    attr_reader :interview_application, :actor, :previous_status, :next_status, :deliver_to_slack
 
     def event_type
       "interview_application_#{next_status}"
     end
 
     def message
-      "Interview application status changed from #{previous_status} to #{next_status}"
+      "Interview application status changed from #{previous_status || 'new'} to #{next_status}"
     end
 
     def target_path

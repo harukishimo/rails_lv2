@@ -1,0 +1,26 @@
+<section class="<%= ui_class(:page_header) %>">
+  <div>
+    <p class="<%= ui_class(:eyebrow) %>">管理</p>
+    <h1 class="<%= ui_class(:page_title) %>"><%= @user.name %></h1>
+    <p class="<%= ui_class(:page_description) %>"><%= @user.email %></p>
+  </div>
+  <div class="<%= ui_class(:header_actions) %>">
+    <%= link_to "編集", edit_admin_user_path(@user), class: button_classes %>
+    <%= link_to "一覧へ戻る", admin_users_path, class: button_classes(:secondary) %>
+  </div>
+</section>
+
+<dl class="<%= ui_class(:detail_list) %>">
+  <dt>ロール</dt>
+  <dd><%= @user.roles.map(&:name).join(" / ") %></dd>
+  <dt>状態</dt>
+  <dd><%= status_badge(@user.active? ? "active" : "inactive", label: @user.active? ? "有効" : "無効") %></dd>
+  <dt>評価官プロフィール</dt>
+  <dd>
+    <% if @user.examiner_profile.present? %>
+      <%= link_to @user.examiner_profile.display_name, edit_admin_examiner_profile_path(@user.examiner_profile) %>
+    <% else %>
+      未作成
+    <% end %>
+  </dd>
+</dl>

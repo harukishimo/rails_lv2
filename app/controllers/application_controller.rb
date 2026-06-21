@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   include AuthorizationAuditLogging
   include Pundit::Authorization
 
+  around_action :switch_locale
   after_action :verify_pundit_authorization, unless: :skip_pundit_verification?
 
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
@@ -14,12 +15,17 @@ class ApplicationController < ActionController::Base
 
   private
 
+  def switch_locale(&action)
+    I18n.with_locale(:ja, &action)
+  end
+
   def user_not_authorized(exception)
     log_authorization_denial(exception)
 
     respond_to do |format|
       format.html { render plain: "Forbidden", status: :forbidden }
       format.json { render json: { error: { code: "forbidden", message: "権限がありません" } }, status: :forbidden }
+      format.any { render plain: "Forbidden", status: :forbidden }
     end
   end
 

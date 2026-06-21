@@ -12,20 +12,31 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resource :dashboard, only: :show, controller: :dashboard
+    resources :users, except: :destroy
+    resources :examiner_profiles, only: %i[index edit update]
+    resource :evaluation_target_import, only: :new, controller: :evaluation_target_imports do
+      post :preview
+      post :import, action: :create
+    end
+    get "exports", to: "exports#show", as: :exports
+    get "exports/:report(.:format)", to: "exports#download", as: :export
   end
 
   resource :dashboard, only: :show, controller: :dashboard
 
   resources :exam_applications, only: %i[index show new create] do
+    patch :permit_interview, on: :member
     resource :interview_application, only: %i[new create]
     resources :review_applications, only: %i[new create], shallow: true do
       patch :cancel, on: :member
     end
   end
   resources :evaluation_targets, only: :index
+  resources :notifications, only: :index
   resources :user_qualifications, only: :index
   namespace :examiner do
     resources :review_queue, only: :index
+    resources :interview_queue, only: :index
     resources :candidates, only: %i[index show]
   end
   resources :interview_applications, only: :show do

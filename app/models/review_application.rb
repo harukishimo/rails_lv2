@@ -20,6 +20,8 @@ class ReviewApplication < ApplicationRecord
   has_many :submissions, dependent: :restrict_with_error
   has_many :review_comments, dependent: :restrict_with_error
   has_many :review_decisions, dependent: :restrict_with_error
+  has_many :status_change_events, as: :subject
+  has_many :audit_logs, as: :auditable
 
   accepts_nested_attributes_for :submissions
 
@@ -62,7 +64,7 @@ class ReviewApplication < ApplicationRecord
   end
 
   def display_name
-    "Review ##{sequence_number} for #{exam_application.display_name}"
+    "レビュー ##{sequence_number} / #{exam_application.display_name}"
   end
 
   private
@@ -78,7 +80,7 @@ class ReviewApplication < ApplicationRecord
   def exam_application_accepts_review
     return if exam_application&.declared? || exam_application&.reviewing?
 
-    errors.add(:exam_application, "must be declared or reviewing")
+    errors.add(:exam_application, :must_be_declared_or_reviewing)
   end
 
   def sequence_number_is_unique_among_active_records
@@ -91,7 +93,7 @@ class ReviewApplication < ApplicationRecord
     )
     duplicate = duplicate.where.not(id: id) if persisted?
 
-    errors.add(:sequence_number, "has already been taken") if duplicate.exists?
+    errors.add(:sequence_number, :taken) if duplicate.exists?
   end
 
   def in_progress_review_is_unique
@@ -105,13 +107,13 @@ class ReviewApplication < ApplicationRecord
     )
     duplicate = duplicate.where.not(id: id) if persisted?
 
-    errors.add(:base, "in-progress review application already exists") if duplicate.exists?
+    errors.add(:base, :in_progress_review_application_exists) if duplicate.exists?
   end
 
   def evidence_submission_is_present
     return if submissions.reject(&:marked_for_destruction?).any?(&:evidence?)
 
-    errors.add(:base, "review application must include a file or GitHub repository submission")
+    errors.add(:base, :review_evidence_required)
   end
 
   def prevent_restore_in_progress_duplicate
@@ -126,7 +128,7 @@ class ReviewApplication < ApplicationRecord
     duplicate = duplicate.where.not(id: id) if id.present?
     return unless duplicate.exists?
 
-    errors.add(:base, "cannot restore because in-progress review application already exists")
+    errors.add(:base, :cannot_restore_in_progress_review_application_exists)
     throw(:abort)
   end
 

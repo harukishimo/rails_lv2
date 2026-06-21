@@ -1,0 +1,33 @@
+<section class="<%= ui_class(:page_header) %>">
+  <div>
+    <p class="<%= ui_class(:eyebrow) %>">管理 / 帳票</p>
+    <h1 class="<%= ui_class(:page_title) %>">帳票出力</h1>
+  </div>
+  <%= link_to "管理へ戻る", admin_dashboard_path, class: button_classes(:secondary) %>
+</section>
+
+<section class="<%= ui_class(:panel) %>">
+  <div class="<%= ui_class(:table_wrap) %>">
+    <table>
+      <thead>
+        <tr>
+          <th>帳票</th>
+          <th>出力</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @reports.each do |report| %>
+          <tr>
+            <td><%= report.title %></td>
+            <td>
+              <div class="<%= ui_class(:header_actions) %>">
+                <%= link_to "CSV", admin_export_path(report.key, format: :csv), class: button_classes(:secondary) %>
+                <%= link_to "XLSX", admin_export_path(report.key, format: :xlsx), class: button_classes %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

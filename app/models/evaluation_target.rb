@@ -42,7 +42,7 @@ class EvaluationTarget < ApplicationRecord
   def external_knowledge_reference_present
     return if external_knowledge_url.present? || external_knowledge_key.present?
 
-    errors.add(:base, "external knowledge url or key is required")
+    errors.add(:base, :external_knowledge_reference_required)
   end
 
   def external_knowledge_url_is_http_url
@@ -51,16 +51,16 @@ class EvaluationTarget < ApplicationRecord
     uri = URI.parse(external_knowledge_url)
     return if uri.is_a?(URI::HTTP) && uri.host.present?
 
-    errors.add(:external_knowledge_url, "must be an HTTP or HTTPS URL")
+    errors.add(:external_knowledge_url, :http_url)
   rescue URI::InvalidURIError
-    errors.add(:external_knowledge_url, "must be an HTTP or HTTPS URL")
+    errors.add(:external_knowledge_url, :http_url)
   end
 
   def framework_matches_programming_language
     return if framework.blank? || programming_language.blank?
     return if framework.programming_language_id.blank? || framework.programming_language_id == programming_language_id
 
-    errors.add(:framework, "must belong to the selected programming language")
+    errors.add(:framework, :must_match_programming_language)
   end
 
   def identity_is_unique_among_active_targets
@@ -75,6 +75,6 @@ class EvaluationTarget < ApplicationRecord
     )
     duplicate = duplicate.where.not(id: id) if persisted?
 
-    errors.add(:base, "evaluation target identity has already been taken") if duplicate.exists?
+    errors.add(:base, :evaluation_target_identity_taken) if duplicate.exists?
   end
 end

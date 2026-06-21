@@ -8,7 +8,8 @@ class AdminDashboardAuthorizationTest < ActionDispatch::IntegrationTest
     get admin_dashboard_path
 
     assert_response :success
-    assert_equal "Admin dashboard", response.body
+    assert_includes response.body, "受験対象取込"
+    assert_includes response.body, "帳票出力"
   end
 
   test "candidate is forbidden from admin dashboard" do
@@ -24,8 +25,11 @@ class AdminDashboardAuthorizationTest < ActionDispatch::IntegrationTest
     user = create_user_with_role(Role::CANDIDATE)
 
     sign_in_as(user)
-    logs = capture_rails_logs do
-      get admin_dashboard_path
+    logs = nil
+    assert_difference -> { AuditLog.where(action: "authorization.denied", actor: user).count }, 1 do
+      logs = capture_rails_logs do
+        get admin_dashboard_path
+      end
     end
 
     assert_response :forbidden
@@ -35,6 +39,12 @@ class AdminDashboardAuthorizationTest < ActionDispatch::IntegrationTest
     assert_includes logs, "\"query\":\"show?\""
     assert_includes logs, "\"record\":\"admin_dashboard\""
     assert_not_includes logs, user.email
+    audit_log = AuditLog.where(action: "authorization.denied", actor: user).recent.first
+    assert_equal "AdminDashboardPolicy", audit_log.after_changes.fetch("policy")
+    assert_equal "show?", audit_log.after_changes.fetch("query")
+    assert_equal "admin_dashboard", audit_log.after_changes.fetch("record")
+    assert_equal admin_dashboard_path, audit_log.after_changes.fetch("path")
+    assert_not_includes audit_log.after_changes.to_json, user.email
   end
 
   test "examiner is forbidden from admin dashboard" do

@@ -21,10 +21,10 @@ class UserQualification < ApplicationRecord
   def exam_application_matches_user_and_target
     return if exam_application.blank?
 
-    errors.add(:exam_application, "must belong to user") unless exam_application.candidate_id == user_id
+    errors.add(:exam_application, :must_belong_to_user) unless exam_application.candidate_id == user_id
     return if exam_application.evaluation_target_id == evaluation_target_id
 
-    errors.add(:exam_application, "must match evaluation target")
+    errors.add(:exam_application, :must_match_evaluation_target)
   end
 
   def active_user_target_is_unique
@@ -38,6 +38,6 @@ class UserQualification < ApplicationRecord
     )
     duplicate = duplicate.where.not(id: id) if persisted?
 
-    errors.add(:base, "active qualification already exists for this user and target") if duplicate.exists?
+    errors.add(:base, :active_qualification_exists) if duplicate.exists?
   end
 end
