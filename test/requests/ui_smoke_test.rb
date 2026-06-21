@@ -50,7 +50,7 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
     get exam_applications_path
 
     assert_response :success
-    assert_includes response.body, "status-badge status-badge--declared"
+    assert_includes response.body, "Declared"
     assert_includes response.body, application.display_name
 
     get exam_application_path(application)
@@ -118,6 +118,7 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
       evaluation_target: create_evaluation_target,
       actor: candidate
     )
+    application.update!(status: :review_approved)
     sign_in_as(candidate)
 
     get new_exam_application_interview_application_path(application)

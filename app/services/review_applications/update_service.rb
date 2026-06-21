@@ -14,7 +14,9 @@ module ReviewApplications
       review_application.with_lock do
         raise_not_editable! unless review_application.editable?
 
+        previous_status = review_application.status
         review_application.update!(review_attributes.merge(resubmission_attributes))
+        record_status_change!(previous_status: previous_status, next_status: review_application.status)
         review_application
       end
     end
@@ -34,6 +36,17 @@ module ReviewApplications
         status: :submitted,
         submitted_at: Time.current
       }
+    end
+
+    def record_status_change!(previous_status:, next_status:)
+      return if previous_status == next_status
+
+      StatusChangeRecorder.call(
+        review_application: review_application,
+        actor: actor,
+        previous_status: previous_status,
+        next_status: next_status
+      )
     end
 
     def raise_not_editable!

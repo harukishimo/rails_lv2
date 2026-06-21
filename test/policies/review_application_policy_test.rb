@@ -100,6 +100,19 @@ class ReviewApplicationPolicyTest < ActiveSupport::TestCase
     assert_not_includes resolved, hidden_review
   end
 
+  test "capable examiner cannot access candidate draft review application" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    draft_review = create_draft_review_application(candidate: candidate)
+    examiner = create_examiner_for(draft_review.exam_application.evaluation_target)
+    policy = ReviewApplicationPolicy.new(examiner, draft_review)
+    resolved = ReviewApplicationPolicy::Scope.new(examiner, ReviewApplication).resolve
+
+    assert_not policy.show?
+    assert_not policy.comment?
+    assert_not policy.decide?
+    assert_not_includes resolved, draft_review
+  end
+
   private
 
   def create_review_application(candidate:)
@@ -123,6 +136,22 @@ class ReviewApplicationPolicyTest < ActiveSupport::TestCase
           }
         ]
       }
+    )
+  end
+
+  def create_draft_review_application(candidate:)
+    exam_application = ExamApplications::CreateService.call(
+      candidate: candidate,
+      evaluation_period: create_evaluation_period,
+      evaluation_target: create_evaluation_target,
+      actor: candidate
+    )
+
+    ReviewApplication.create!(
+      exam_application: exam_application,
+      sequence_number: 1,
+      status: :draft,
+      appeal_markdown: "draft appeal"
     )
   end
 

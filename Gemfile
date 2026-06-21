@@ -24,10 +24,14 @@ gem "csv", "~> 3.3"
 gem "roo", "~> 2.10"
 # Generate workbook exports for admin reports.
 gem "caxlsx", "~> 4.4"
+# Use explicit HTTP clients for Slack and Google Calendar integrations.
+gem "faraday", "~> 2.14"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
 gem "importmap-rails"
+# Compile utility-first application styles with Tailwind CSS.
+gem "tailwindcss-rails", "~> 4.6"
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
 gem "turbo-rails"
 # Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
@@ -73,6 +77,9 @@ group :development, :test do
 end
 
 group :development do
+  # Run Rails and Tailwind watch processes together in bin/dev.
+  gem "foreman", "~> 0.90", require: false
+
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
 end
@@ -81,4 +88,5 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+  gem "webmock", "~> 3.26"
 end

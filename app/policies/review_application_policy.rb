@@ -20,6 +20,7 @@ class ReviewApplicationPolicy < ApplicationPolicy
     def examiner_review_ids
       scope.joins(:exam_application)
            .where(exam_applications: { evaluation_target_id: evaluation_target_ids })
+           .where.not(status: ReviewApplication.statuses.fetch(:draft))
            .select(:id)
     end
 
@@ -36,6 +37,7 @@ class ReviewApplicationPolicy < ApplicationPolicy
       scope.joins(:exam_application)
            .where(exam_applications: { evaluation_target_id: evaluation_target_ids })
            .where.not(exam_applications: { candidate_id: user.id })
+           .where.not(status: ReviewApplication.statuses.fetch(:draft))
     end
 
     private
@@ -96,6 +98,8 @@ class ReviewApplicationPolicy < ApplicationPolicy
   end
 
   def examiner_capable?
+    return false if record.draft?
+
     user.examiner? && user.examiner_profile&.can_evaluate?(record.exam_application.evaluation_target)
   end
 

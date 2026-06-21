@@ -1,23 +1,23 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title">受験表明一覧</h1>
-    <p class="page-description">自分の受験状況、レビュー依頼、面談応募へ進む起点です。</p>
+    <h1 class="<%= ui_class(:page_title) %>">受験表明一覧</h1>
+    <p class="<%= ui_class(:page_description) %>">自分の受験状況、レビュー依頼、面談応募へ進む起点です。</p>
   </div>
   <% if current_user.candidate? %>
-    <%= link_to "受験表明を作成", new_exam_application_path, class: "button" %>
+    <%= link_to "受験表明を作成", new_exam_application_path, class: button_classes %>
   <% end %>
 </div>
 
-<%= form_with url: exam_applications_path, method: :get, class: "toolbar" do |form| %>
-  <div class="field">
+<%= form_with url: exam_applications_path, method: :get, class: ui_class(:toolbar) do |form| %>
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :keyword, "対象キーワード" %>
     <%= form.search_field :keyword, value: params[:keyword] %>
   </div>
-  <div class="field">
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :status, "ステータス" %>
     <%= form.select :status, options_for_select(ExamApplication.statuses.keys, params[:status]), include_blank: "すべて" %>
   </div>
-  <div class="field">
+  <div class="<%= ui_class(:field) %>">
     <%= form.label :result, "結果" %>
     <%= form.select :result, options_for_select(ExamApplication.results.keys, params[:result]), include_blank: "すべて" %>
   </div>
@@ -25,7 +25,7 @@
 <% end %>
 
 <% if @exam_applications.any? %>
-  <div class="table-wrap">
+  <div class="<%= ui_class(:table_wrap) %>">
     <table>
       <thead>
         <tr>
@@ -42,13 +42,13 @@
           <tr>
             <td>
               <%= exam_application.display_name %>
-              <div class="page-description">exam_application=<%= exam_application.id %></div>
+              <div class="<%= ui_class(:page_description) %>">exam_application=<%= exam_application.id %></div>
             </td>
             <td><%= status_badge(exam_application.status) %></td>
             <td><%= status_badge(exam_application.result) %></td>
             <td><%= exam_application.candidate.name %>&lt;<%= exam_application.candidate.email %>&gt;</td>
             <td><%= exam_application.evaluation_period.name %></td>
-            <td><%= link_to "詳細", exam_application_path(exam_application), class: "button button--secondary" %></td>
+            <td><%= link_to "詳細", exam_application_path(exam_application), class: button_classes(:secondary) %></td>
           </tr>
         <% end %>
       </tbody>

@@ -1,0 +1,24 @@
+create_table "slack_deliveries", force: :cascade do |t|
+  t.references "status_change_event", null: false, index: false
+  t.string "webhook_name", null: false, default: "default"
+  t.integer "delivery_status", null: false, default: 0
+  t.text "payload"
+  t.integer "response_code"
+  t.text "response_body"
+  t.datetime "delivered_at"
+  t.text "error_message"
+  t.integer "retry_count", null: false, default: 0
+  t.datetime "deleted_at"
+  t.timestamps null: false
+
+  t.index [ "deleted_at" ], name: "index_slack_deliveries_on_deleted_at"
+  t.index [ "delivery_status", "created_at" ],
+          name: "index_slack_deliveries_on_status_and_created_at"
+  t.index [ "status_change_event_id", "webhook_name" ],
+          name: "index_slack_deliveries_on_event_and_webhook",
+          unique: true,
+          where: "deleted_at IS NULL"
+end
+
+add_foreign_key "slack_deliveries", "status_change_events",
+                column: "status_change_event_id"

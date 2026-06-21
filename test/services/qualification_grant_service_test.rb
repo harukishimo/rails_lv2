@@ -2,7 +2,7 @@ require "test_helper"
 
 class QualificationGrantServiceTest < ActiveSupport::TestCase
   test "passing result creates qualification and closes exam application atomically" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
     exam_application = interview_application.exam_application
 
     assert_difference -> { InterviewResult.count }, 1 do
@@ -33,12 +33,12 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
     interview_events = StatusChangeEvent.where(subject: interview_application).order(:id)
     assert_equal %w[exam_application_passed exam_application_closed], exam_events.last(2).map(&:event_type)
     assert_equal "interview_application_completed", interview_events.last.event_type
-    assert_equal "scheduled", interview_events.last.from_status
+    assert_equal "calendar_created", interview_events.last.from_status
     assert_equal "completed", interview_events.last.to_status
   end
 
   test "failing result closes exam without qualification and allows new attempt" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
     exam_application = interview_application.exam_application
 
     assert_difference -> { InterviewResult.count }, 1 do
@@ -66,7 +66,7 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
   end
 
   test "does not create duplicate qualification for same user and target" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
     exam_application = interview_application.exam_application
     previous_application = create_closed_exam_application(
       candidate: exam_application.candidate,
@@ -95,7 +95,7 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
   end
 
   test "rejects duplicate interview result" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
     QualificationGrantService.call(
       interview_application: interview_application,
       examiner: examiner,
@@ -115,7 +115,7 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
   end
 
   test "invalid result is returned as record validation error" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
 
     error = assert_raises(ActiveRecord::RecordInvalid) do
       QualificationGrantService.call(
@@ -130,7 +130,7 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
   end
 
   test "interview result comment html is sanitized" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
 
     result = QualificationGrantService.call(
       interview_application: interview_application,
@@ -146,7 +146,7 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
   end
 
   test "rolls back result qualification and exam close when later transaction step fails" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
     exam_application = interview_application.exam_application
     service = QualificationGrantService.new(
       interview_application: interview_application,
@@ -167,12 +167,12 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
     assert_equal 0, UserQualification.where(exam_application: exam_application).count
     assert exam_application.reload.interview_scheduled?
     assert exam_application.result_none?
-    assert interview_application.reload.scheduled?
+    assert interview_application.reload.calendar_created?
   end
 
   private
 
-  def create_scheduled_interview_application
+  def create_calendar_created_interview_application
     candidate = create_user_with_role(Role::CANDIDATE)
     exam_application = ExamApplications::CreateService.call(
       candidate: candidate,
@@ -180,6 +180,7 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
       evaluation_target: create_evaluation_target,
       actor: candidate
     )
+    exam_application.update!(status: :review_approved)
     interview_application = InterviewApplications::CreateService.call(
       exam_application: exam_application,
       actor: candidate
@@ -199,6 +200,7 @@ class QualificationGrantServiceTest < ActiveSupport::TestCase
       }
     )
     InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
+    CalendarEventCreateJob.perform_now(schedule.id, actor_id: examiner.id)
 
     [ interview_application.reload, examiner ]
   end

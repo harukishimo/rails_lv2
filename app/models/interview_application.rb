@@ -19,6 +19,7 @@ class InterviewApplication < ApplicationRecord
   has_many :interview_schedules, dependent: :restrict_with_error
   has_one :interview_result, dependent: :restrict_with_error
   has_many :status_change_events, as: :subject
+  has_many :audit_logs, as: :auditable
 
   validates :requested_at, presence: true
   validates :exam_application_id, uniqueness: { conditions: -> { where(deleted_at: nil) } }
@@ -40,7 +41,7 @@ class InterviewApplication < ApplicationRecord
   end
 
   def schedulable?
-    requested? || examiner_assigned? || schedule_requested?
+    examiner_assigned? || schedule_requested?
   end
 
   def assignable?
@@ -56,15 +57,15 @@ class InterviewApplication < ApplicationRecord
   end
 
   def result_decidable?
-    (scheduled? || calendar_created?) && interview_result.blank?
+    calendar_created? && interview_result.blank?
   end
 
   private
 
   def exam_application_accepts_interview
-    return if exam_application&.declared? || exam_application&.reviewing? || exam_application&.review_approved?
+    return if exam_application&.review_approved?
 
-    errors.add(:exam_application, "must be declared, reviewing, or review approved")
+    errors.add(:exam_application, "must be review approved")
   end
 
   def assigned_examiner_can_evaluate_target

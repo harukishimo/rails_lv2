@@ -4,11 +4,12 @@ CI.run do
   step "Setup", "bin/setup --skip-server"
 
   step "Style: Ruby", "bin/rubocop"
+  step "Assets: Tailwind CSS build", "bin/rails tailwindcss:build"
 
   step "Security: Gem audit", "bin/bundler-audit check --update"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
-  step "Schema: Ridgepole dry-run", "bundle exec ridgepole --require ./config/ridgepole/sqlite_ignore_column_position_options --config config/database.yml --env test --file db/Schemafile --apply --dry-run"
   step "Schema: Ridgepole apply", "bundle exec ridgepole --require ./config/ridgepole/sqlite_ignore_column_position_options --config config/database.yml --env test --file db/Schemafile --apply"
+  step "Schema: Ridgepole dry-run", "bundle exec ridgepole --require ./config/ridgepole/sqlite_ignore_column_position_options --config config/database.yml --env test --file db/Schemafile --apply --dry-run"
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
   step "Tests: Rails", "bin/rails test"
 

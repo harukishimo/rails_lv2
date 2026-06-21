@@ -1,12 +1,12 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title"><%= @candidate.name %></h1>
-    <p class="page-description"><%= @candidate.email %></p>
+    <h1 class="<%= ui_class(:page_title) %>"><%= @candidate.name %></h1>
+    <p class="<%= ui_class(:page_description) %>"><%= @candidate.email %></p>
   </div>
-  <%= link_to "検索へ戻る", examiner_candidates_path, class: "button button--secondary" %>
+  <%= link_to "検索へ戻る", examiner_candidates_path, class: button_classes(:secondary) %>
 </div>
 
-<dl class="detail-list">
+<dl class="<%= ui_class(:detail_list) %>">
   <dt>受験者</dt>
   <dd><%= candidate_line(@candidate) %></dd>
   <dt>表示対象受験数</dt>
@@ -15,8 +15,8 @@
   <dd><%= visible_qualifications(@candidate).size %></dd>
 </dl>
 
-<section class="stack">
-  <div class="form-panel">
+<section class="<%= ui_class(:auth_form) %>">
+  <div class="<%= ui_class(:panel) %>">
     <h2>取得資格</h2>
     <% if visible_qualifications(@candidate).any? %>
       <ul>
@@ -29,7 +29,7 @@
     <% end %>
   </div>
 
-  <div class="form-panel">
+  <div class="<%= ui_class(:panel) %>">
     <h2>受験履歴</h2>
     <% if visible_exam_applications(@candidate).any? %>
       <ul>

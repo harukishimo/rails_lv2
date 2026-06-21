@@ -1,21 +1,21 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title"><%= @interview_application.display_name %></h1>
-    <p class="page-description">assigned_examiner=<%= @interview_application.assigned_examiner_name %></p>
+    <h1 class="<%= ui_class(:page_title) %>"><%= @interview_application.display_name %></h1>
+    <p class="<%= ui_class(:page_description) %>">assigned_examiner=<%= @interview_application.assigned_examiner_name %></p>
   </div>
-  <div class="actions">
+  <div class="<%= ui_class(:actions) %>">
     <% if policy(@interview_application.exam_application).show? %>
-      <%= link_to "受験へ戻る", exam_application_path(@interview_application.exam_application), class: "button button--secondary" %>
+      <%= link_to "受験へ戻る", exam_application_path(@interview_application.exam_application), class: button_classes(:secondary) %>
     <% else %>
-      <%= link_to "受験者検索へ戻る", examiner_candidates_path, class: "button button--secondary" %>
+      <%= link_to "受験者検索へ戻る", examiner_candidates_path, class: button_classes(:secondary) %>
     <% end %>
     <% if policy(@interview_application).assignment? %>
-      <%= link_to "面談評価官を割り振る", assignment_interview_application_path(@interview_application), class: "button" %>
+      <%= link_to "面談評価官を割り振る", assignment_interview_application_path(@interview_application), class: button_classes %>
     <% end %>
   </div>
 </div>
 
-<dl class="detail-list">
+<dl class="<%= ui_class(:detail_list) %>">
   <dt>状態</dt>
   <dd><%= status_badge(@interview_application.status) %></dd>
   <dt>受験者</dt>
@@ -26,8 +26,8 @@
   <dd><%= @interview_application.assigned_examiner_name %></dd>
 </dl>
 
-<section class="stack">
-  <div class="form-panel">
+<section class="<%= ui_class(:auth_form) %>">
+  <div class="<%= ui_class(:panel) %>">
     <h2>希望日時</h2>
     <% persisted_schedules = @interview_application.interview_schedules.reject(&:new_record?) %>
     <% if persisted_schedules.any? %>
@@ -37,10 +37,10 @@
             schedule=<%= schedule.display_name %>:<%= schedule.status %>
             <%= status_badge(schedule.status) %>
             <% if policy(schedule).approve? %>
-              <%= button_to "承認", approve_interview_schedule_path(schedule), method: :patch, class: "button" %>
+              <%= button_to "承認", approve_interview_schedule_path(schedule), method: :patch, class: button_classes %>
             <% end %>
             <% if policy(schedule).reject? %>
-              <%= button_to "差し戻し", reject_interview_schedule_path(schedule), method: :patch, class: "button button--danger" %>
+              <%= button_to "差し戻し", reject_interview_schedule_path(schedule), method: :patch, class: button_classes(:danger) %>
             <% end %>
           </li>
         <% end %>
@@ -51,26 +51,26 @@
 
     <% if policy(@interview_application).schedule? %>
       <%= form_with model: [@interview_application, @interview_schedule] do |form| %>
-        <div class="field">
+        <div class="<%= ui_class(:field) %>">
           <%= form.label :starts_at, "開始日時" %>
           <%= form.datetime_field :starts_at %>
         </div>
-        <div class="field">
+        <div class="<%= ui_class(:field) %>">
           <%= form.label :ends_at, "終了日時" %>
           <%= form.datetime_field :ends_at %>
         </div>
-        <div class="field">
+        <div class="<%= ui_class(:field) %>">
           <%= form.label :timezone, "タイムゾーン" %>
           <%= form.text_field :timezone, value: "Asia/Tokyo" %>
         </div>
-        <div class="form-actions">
+        <div class="<%= ui_class(:form_actions) %>">
           <%= form.submit "希望日時を登録" %>
         </div>
       <% end %>
     <% end %>
   </div>
 
-  <div class="form-panel">
+  <div class="<%= ui_class(:panel) %>">
     <h2>面談結果</h2>
     <% if @interview_application.interview_result.present? && @interview_application.interview_result.persisted? %>
       <p><%= status_badge(@interview_application.interview_result.result) %></p>
@@ -81,18 +81,20 @@
 
     <% if policy(@interview_application).decide_result? %>
       <%= form_with model: [@interview_application, @interview_result] do |form| %>
-        <div class="field">
+        <div class="<%= ui_class(:field) %>">
           <%= form.label :result, "判定" %>
           <%= form.select :result, InterviewResult.results.keys.map { |result| [result, result] } %>
         </div>
-        <div class="field">
+        <div class="<%= ui_class(:field) %>">
           <%= form.label :comment_markdown, "コメント" %>
           <%= form.text_area :comment_markdown %>
         </div>
-        <div class="form-actions">
+        <div class="<%= ui_class(:form_actions) %>">
           <%= form.submit "面談結果を登録" %>
         </div>
       <% end %>
     <% end %>
   </div>
+
+  <%= render "shared/status_change_events", record: @interview_application %>
 </section>

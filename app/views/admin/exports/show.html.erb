@@ -1,29 +1,33 @@
-<section class="page-heading">
+<section class="<%= ui_class(:page_header) %>">
   <div>
-    <p class="eyebrow">Admin / Exports</p>
-    <h1>帳票出力</h1>
+    <p class="<%= ui_class(:eyebrow) %>">Admin / Exports</p>
+    <h1 class="<%= ui_class(:page_title) %>">帳票出力</h1>
   </div>
-  <%= link_to "管理へ戻る", admin_dashboard_path, class: "button" %>
+  <%= link_to "管理へ戻る", admin_dashboard_path, class: button_classes(:secondary) %>
 </section>
 
-<section class="panel">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>帳票</th>
-        <th>出力</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @reports.each do |report| %>
+<section class="<%= ui_class(:panel) %>">
+  <div class="<%= ui_class(:table_wrap) %>">
+    <table>
+      <thead>
         <tr>
-          <td><%= report.title %></td>
-          <td class="actions">
-            <%= link_to "CSV", admin_export_path(report.key, format: :csv), class: "button" %>
-            <%= link_to "XLSX", admin_export_path(report.key, format: :xlsx), class: "button" %>
-          </td>
+          <th>帳票</th>
+          <th>出力</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @reports.each do |report| %>
+          <tr>
+            <td><%= report.title %></td>
+            <td>
+              <div class="<%= ui_class(:header_actions) %>">
+                <%= link_to "CSV", admin_export_path(report.key, format: :csv), class: button_classes(:secondary) %>
+                <%= link_to "XLSX", admin_export_path(report.key, format: :xlsx), class: button_classes %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 </section>

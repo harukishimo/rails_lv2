@@ -3,7 +3,7 @@ require "test_helper"
 class InterviewApplicationsTest < ActionDispatch::IntegrationTest
   test "candidate can open new interview application form with non-cancelable warning" do
     candidate = create_user_with_role(Role::CANDIDATE)
-    exam_application = create_declared_exam_application(candidate: candidate)
+    exam_application = create_review_approved_exam_application(candidate: candidate)
     sign_in_as(candidate)
 
     get new_exam_application_interview_application_path(exam_application)
@@ -14,7 +14,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
 
   test "candidate can create interview application and sees unassigned examiner" do
     candidate = create_user_with_role(Role::CANDIDATE)
-    exam_application = create_declared_exam_application(candidate: candidate)
+    exam_application = create_review_approved_exam_application(candidate: candidate)
     sign_in_as(candidate)
 
     assert_difference -> { InterviewApplication.count }, 1 do
@@ -26,7 +26,21 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_includes response.body, "assigned_examiner=面接官未定"
+    assert_includes response.body, "状態変更履歴"
+    assert_includes response.body, "Interview application requested"
     assert exam_application.reload.interview_requested?
+  end
+
+  test "candidate cannot create interview application before review approval" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    exam_application = create_declared_exam_application(candidate: candidate)
+    sign_in_as(candidate)
+
+    assert_no_difference -> { InterviewApplication.count } do
+      post exam_application_interview_application_path(exam_application)
+    end
+
+    assert_response :forbidden
   end
 
   test "candidate cannot create interview application without existing own exam application" do
@@ -44,7 +58,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
 
   test "candidate cannot create duplicate interview application" do
     candidate = create_user_with_role(Role::CANDIDATE)
-    exam_application = create_declared_exam_application(candidate: candidate)
+    exam_application = create_review_approved_exam_application(candidate: candidate)
     InterviewApplications::CreateService.call(exam_application: exam_application, actor: candidate)
     sign_in_as(candidate)
 
@@ -70,6 +84,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
   test "candidate can create future interview schedule" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
+    assign_interview_application(interview_application)
     sign_in_as(candidate)
 
     assert_difference -> { InterviewSchedule.count }, 1 do
@@ -107,6 +122,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
   test "candidate can create schedule from string datetime in Asia Tokyo time zone" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
+    assign_interview_application(interview_application)
     starts_at = 2.days.from_now.change(hour: 10, min: 0, sec: 0)
     ends_at = starts_at + 30.minutes
     sign_in_as(candidate)
@@ -126,6 +142,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
   test "candidate cannot create past interview schedule" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
+    assign_interview_application(interview_application)
     sign_in_as(candidate)
 
     assert_no_difference -> { InterviewSchedule.count } do
@@ -144,6 +161,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
   test "candidate cannot create interview schedule with starts_at after ends_at" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
+    assign_interview_application(interview_application)
     sign_in_as(candidate)
 
     assert_no_difference -> { InterviewSchedule.count } do
@@ -162,6 +180,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
   test "candidate cannot create schedule with invalid timezone" do
     candidate = create_user_with_role(Role::CANDIDATE)
     interview_application = create_interview_application(candidate: candidate)
+    assign_interview_application(interview_application)
     sign_in_as(candidate)
 
     assert_no_difference -> { InterviewSchedule.count } do
@@ -272,11 +291,12 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
   private
 
   def create_interview_application(candidate:)
-    exam_application = create_declared_exam_application(candidate: candidate)
+    exam_application = create_review_approved_exam_application(candidate: candidate)
     InterviewApplications::CreateService.call(exam_application: exam_application, actor: candidate)
   end
 
   def create_schedule(interview_application)
+    assign_interview_application(interview_application)
     InterviewSchedules::CreateService.call(
       interview_application: interview_application,
       actor: interview_application.exam_application.candidate,
@@ -284,6 +304,17 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
         starts_at: 3.days.from_now,
         ends_at: 3.days.from_now + 30.minutes
       }
+    )
+  end
+
+  def assign_interview_application(interview_application)
+    return interview_application if interview_application.assigned_examiner_profile.present?
+
+    examiner = create_examiner_for(interview_application.exam_application.evaluation_target)
+    InterviewApplications::AssignExaminerService.call(
+      interview_application: interview_application,
+      actor: examiner,
+      examiner_profile: examiner.examiner_profile
     )
   end
 
@@ -301,6 +332,12 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
       evaluation_target: create_evaluation_target,
       actor: candidate
     )
+  end
+
+  def create_review_approved_exam_application(candidate:)
+    create_declared_exam_application(candidate: candidate).tap do |exam_application|
+      exam_application.update!(status: :review_approved)
+    end
   end
 
   def create_evaluation_period

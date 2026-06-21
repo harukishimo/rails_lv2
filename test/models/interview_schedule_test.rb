@@ -1,6 +1,13 @@
 require "test_helper"
 
 class InterviewScheduleTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
+  teardown do
+    clear_enqueued_jobs
+    clear_performed_jobs
+  end
+
   test "creates future requested schedule with default timezone" do
     interview_application = create_interview_application
 
@@ -76,7 +83,9 @@ class InterviewScheduleTest < ActiveSupport::TestCase
     schedule = create_schedule(interview_application)
     examiner = create_examiner_for(interview_application.exam_application.evaluation_target)
 
-    InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
+    assert_enqueued_with(job: CalendarEventCreateJob) do
+      InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
+    end
 
     assert schedule.reload.approved?
     assert interview_application.reload.scheduled?
@@ -115,7 +124,22 @@ class InterviewScheduleTest < ActiveSupport::TestCase
       evaluation_target: create_evaluation_target,
       actor: candidate
     )
-    InterviewApplications::CreateService.call(exam_application: exam_application, actor: candidate)
+    exam_application.update!(status: :review_approved)
+    interview_application = InterviewApplications::CreateService.call(
+      exam_application: exam_application,
+      actor: candidate
+    )
+    assign_examiner(interview_application)
+    interview_application
+  end
+
+  def assign_examiner(interview_application)
+    examiner = create_examiner_for(interview_application.exam_application.evaluation_target)
+    InterviewApplications::AssignExaminerService.call(
+      interview_application: interview_application,
+      actor: examiner,
+      examiner_profile: examiner.examiner_profile
+    )
   end
 
   def create_examiner_for(evaluation_target)
