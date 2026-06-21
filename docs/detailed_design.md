@@ -180,6 +180,8 @@ TODO 7の [要件定義書](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/re
 
 DBスキーマ管理はRails migration主体ではなく、`ridgepole` を採用する。`db/Schemafile` はRidgepoleの入口に限定し、table定義の正は `db/schemas/tables/*.schema` とする。実装Issueでは対象tableのschema file変更、dry-run確認、apply結果をLoop Reportに残す。
 
+詳細なRidgepole実行手順、危険DDLのhuman-review条件、data migration分離、SQLite/PostgreSQL差分は [DB Schema Operations](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/db_schema_operations.md) に定義する。
+
 方針:
 
 - DB schema変更は `db/schemas/tables/*.schema` に1 table 1 fileで配置する

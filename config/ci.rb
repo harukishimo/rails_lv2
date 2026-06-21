@@ -8,8 +8,8 @@ CI.run do
 
   step "Security: Gem audit", "bin/bundler-audit check --update"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
-  step "Schema: Ridgepole apply", "bundle exec ridgepole --require ./config/ridgepole/sqlite_ignore_column_position_options --config config/database.yml --env test --file db/Schemafile --apply"
-  step "Schema: Ridgepole dry-run", "bundle exec ridgepole --require ./config/ridgepole/sqlite_ignore_column_position_options --config config/database.yml --env test --file db/Schemafile --apply --dry-run"
+  step "Schema: Ridgepole apply", "env RAILS_ENV=test bin/ridgepole-apply"
+  step "Schema: Ridgepole dry-run", "env RAILS_ENV=test bin/ridgepole-dry-run"
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
   step "Tests: Rails", "bin/rails test"
 

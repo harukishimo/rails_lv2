@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+APP_ROOT = File.expand_path("..", __dir__)
+ENV["RAILS_ENV"] ||= "development"
+
+Dir.chdir(APP_ROOT) do
+  exec(
+    "bundle",
+    "exec",
+    "ridgepole",
+    "--require",
+    "./config/ridgepole/sqlite_ignore_column_position_options",
+    "--config",
+    "config/database.yml",
+    "--env",
+    ENV.fetch("RAILS_ENV"),
+    "--file",
+    "db/Schemafile",
+    "--apply"
+  )
+end
