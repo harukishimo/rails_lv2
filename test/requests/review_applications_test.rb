@@ -96,6 +96,18 @@ class ReviewApplicationsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Edit #{review_application.display_name}"
   end
 
+  test "candidate can see review application status history" do
+    candidate = create_user_with_role(Role::CANDIDATE)
+    review_application = create_review_application(candidate: candidate)
+    sign_in_as(candidate)
+
+    get review_application_path(review_application)
+
+    assert_response :success
+    assert_includes response.body, "状態変更履歴"
+    assert_includes response.body, "Review application submitted"
+  end
+
   test "candidate can update editable review application" do
     candidate = create_user_with_role(Role::CANDIDATE)
     review_application = create_review_application(candidate: candidate)

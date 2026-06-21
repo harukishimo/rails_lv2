@@ -19,6 +19,7 @@ class InterviewApplication < ApplicationRecord
   has_many :interview_schedules, dependent: :restrict_with_error
   has_one :interview_result, dependent: :restrict_with_error
   has_many :status_change_events, as: :subject
+  has_many :audit_logs, as: :auditable
 
   validates :requested_at, presence: true
   validates :exam_application_id, uniqueness: { conditions: -> { where(deleted_at: nil) } }

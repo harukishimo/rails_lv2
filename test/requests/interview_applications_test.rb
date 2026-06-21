@@ -26,6 +26,8 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_includes response.body, "assigned_examiner=面接官未定"
+    assert_includes response.body, "状態変更履歴"
+    assert_includes response.body, "Interview application requested"
     assert exam_application.reload.interview_requested?
   end
 

@@ -65,6 +65,8 @@ class ExamApplicationsTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, application.display_name
+    assert_includes response.body, "状態変更履歴"
+    assert_includes response.body, "Exam application declared"
   end
 
   test "candidate cannot see another candidate exam application" do
