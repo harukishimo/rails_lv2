@@ -2,10 +2,16 @@ create_table "examiner_profiles", force: :cascade do |t|
   t.references "user", null: false, index: false
   t.string "display_name", null: false
   t.boolean "active", null: false, default: true
+  t.boolean "can_review", null: false, default: true
+  t.boolean "can_interview", null: false, default: true
+  t.integer "monthly_interview_count", null: false, default: 0
+  t.integer "max_monthly_interviews"
   t.datetime "deleted_at"
   t.timestamps null: false
 
   t.index [ "active" ], name: "index_examiner_profiles_on_active"
+  t.index [ "can_interview", "monthly_interview_count" ],
+          name: "index_examiner_profiles_on_interview_availability"
   t.index [ "deleted_at" ], name: "index_examiner_profiles_on_deleted_at"
   t.index [ "user_id" ], name: "index_examiner_profiles_on_user_id"
 end

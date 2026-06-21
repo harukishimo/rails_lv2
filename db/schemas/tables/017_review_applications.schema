@@ -1,0 +1,27 @@
+create_table "review_applications", force: :cascade do |t|
+  t.references "exam_application", null: false, index: false
+  t.integer "sequence_number", null: false, default: 1
+  t.integer "status", null: false, default: 0
+  t.text "appeal_markdown"
+  t.text "rendered_appeal_html"
+  t.datetime "submitted_at"
+  t.datetime "canceled_at"
+  t.text "cancel_reason"
+  t.datetime "decided_at"
+  t.references "decided_by", index: false
+  t.integer "lock_version", null: false, default: 0
+  t.datetime "deleted_at"
+  t.timestamps null: false
+
+  t.index [ "deleted_at" ], name: "index_review_applications_on_deleted_at"
+  t.index [ "exam_application_id", "sequence_number" ],
+          name: "index_review_applications_on_active_sequence",
+          unique: true,
+          where: "deleted_at IS NULL"
+  t.index [ "exam_application_id", "status" ], name: "index_review_applications_on_exam_application_and_status"
+  t.index [ "exam_application_id" ],
+          name: "index_review_applications_on_in_progress",
+          unique: true,
+          where: "deleted_at IS NULL AND status IN (0, 1, 2)"
+  t.index [ "status" ], name: "index_review_applications_on_status"
+end

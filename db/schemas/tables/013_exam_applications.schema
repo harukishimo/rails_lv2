@@ -1,0 +1,27 @@
+create_table "exam_applications", force: :cascade do |t|
+  t.references "evaluation_period", null: false, index: false
+  t.references "candidate", null: false, index: false
+  t.references "evaluation_target", null: false, index: false
+  t.integer "attempt_number", null: false, default: 1
+  t.integer "status", null: false, default: 0
+  t.datetime "declared_at"
+  t.datetime "closed_at"
+  t.integer "result", null: false, default: 0
+  t.datetime "result_decided_at"
+  t.integer "lock_version", null: false, default: 0
+  t.datetime "deleted_at"
+  t.timestamps null: false
+
+  t.index [ "candidate_id", "status" ], name: "index_exam_applications_on_candidate_id_and_status"
+  t.index [ "deleted_at" ], name: "index_exam_applications_on_deleted_at"
+  t.index [ "evaluation_period_id", "candidate_id", "evaluation_target_id", "attempt_number" ],
+          name: "index_exam_applications_on_active_identity",
+          unique: true,
+          where: "deleted_at IS NULL"
+  t.index [ "evaluation_period_id", "candidate_id", "evaluation_target_id" ],
+          name: "index_exam_applications_on_open_identity",
+          unique: true,
+          where: "deleted_at IS NULL AND status != 9"
+  t.index [ "evaluation_target_id", "status" ], name: "index_exam_applications_on_target_and_status"
+  t.index [ "status" ], name: "index_exam_applications_on_status"
+end

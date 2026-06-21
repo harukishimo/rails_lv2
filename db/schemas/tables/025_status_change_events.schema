@@ -1,0 +1,22 @@
+create_table "status_change_events", force: :cascade do |t|
+  t.references "actor", index: false
+  t.string "subject_type", null: false
+  t.integer "subject_id", null: false
+  t.string "from_status"
+  t.string "to_status", null: false
+  t.string "event_type", null: false
+  t.text "message"
+  t.text "metadata"
+  t.string "target_path"
+  t.datetime "deleted_at"
+  t.timestamps null: false
+
+  t.index [ "actor_id", "created_at" ], name: "index_status_change_events_on_actor_and_created_at"
+  t.index [ "deleted_at" ], name: "index_status_change_events_on_deleted_at"
+  t.index [ "event_type", "created_at" ], name: "index_status_change_events_on_event_type_and_created_at"
+  t.index [ "subject_type", "subject_id", "created_at" ],
+          name: "index_status_change_events_on_subject_and_created_at"
+end
+
+add_foreign_key "status_change_events", "users",
+                column: "actor_id"

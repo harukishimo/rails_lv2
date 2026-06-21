@@ -1,0 +1,35 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Assignment for <%= @interview_application.display_name %></h1>
+    <p class="page-description">current_examiner=<%= @interview_application.assigned_examiner_name %></p>
+  </div>
+  <%= link_to "面談へ戻る", interview_application_path(@interview_application), class: "button button--secondary" %>
+</div>
+
+<%= error_summary(@interview_application) %>
+
+<div class="note-panel">
+  suggested_examiner_id=<%= @suggested_examiner&.id %><br>
+  suggested_examiner=<%= @suggested_examiner&.display_name || "候補なし" %>
+</div>
+
+<div class="form-panel">
+  <%= form_with model: @interview_application, url: assignment_interview_application_path(@interview_application), method: :patch do |form| %>
+    <div class="field">
+      <%= form.label :assigned_examiner_profile_id, "面談評価官" %>
+      <%= form.collection_select :assigned_examiner_profile_id,
+                                 @examiner_profiles,
+                                 :id,
+                                 :display_name,
+                                 selected: @suggested_examiner&.id,
+                                 prompt: "選択してください" %>
+    </div>
+    <div class="field">
+      <%= form.label :assignment_override_reason, "変更理由" %>
+      <%= form.text_area :assignment_override_reason %>
+    </div>
+    <div class="form-actions">
+      <%= form.submit "面談評価官を確定" %>
+    </div>
+  <% end %>
+</div>

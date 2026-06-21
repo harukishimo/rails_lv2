@@ -1,0 +1,22 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">面談応募</h1>
+    <p class="page-description"><%= @exam_application.display_name %></p>
+  </div>
+  <%= link_to "受験へ戻る", exam_application_path(@exam_application), class: "button button--secondary" %>
+</div>
+
+<%= error_summary(@interview_application) %>
+
+<div class="warning-box">
+  応募後は取消できません。受験対象と評価期を確認してから登録してください。
+</div>
+
+<div class="form-panel">
+  <%= form_with model: @interview_application, url: exam_application_interview_application_path(@exam_application) do |form| %>
+    <p>面談応募を登録すると、評価官の割り振りと希望日時登録へ進めます。</p>
+    <div class="form-actions">
+      <%= form.submit "面談応募を登録" %>
+    </div>
+  <% end %>
+</div>

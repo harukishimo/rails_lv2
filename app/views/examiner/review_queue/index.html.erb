@@ -1,0 +1,58 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">レビューキュー</h1>
+    <p class="page-description">対応可能なレビュー依頼だけを表示します。</p>
+  </div>
+</div>
+
+<%= form_with url: examiner_review_queue_index_path, method: :get, class: "toolbar" do |form| %>
+  <div class="field">
+    <%= form.label :status, "ステータス" %>
+    <%= form.select :status, options_for_select(ReviewApplication.statuses.keys, params[:status]), include_blank: "すべて" %>
+  </div>
+  <div class="field">
+    <%= form.label :keyword, "受験対象" %>
+    <%= form.search_field :keyword, value: params[:keyword] %>
+  </div>
+  <div class="field">
+    <%= form.label :candidate_keyword, "受験者" %>
+    <%= form.search_field :candidate_keyword, value: params[:candidate_keyword] %>
+  </div>
+  <div class="field">
+    <%= form.label :comment_keyword, "コメント本文" %>
+    <%= form.search_field :comment_keyword, value: params[:comment_keyword] %>
+  </div>
+  <%= form.submit "検索" %>
+<% end %>
+
+<% if @review_applications.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>レビュー</th>
+          <th>状態</th>
+          <th>受験者</th>
+          <th>受験対象</th>
+          <th>提出数</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @review_applications.each do |review_application| %>
+          <% exam_application = review_application.exam_application %>
+          <tr>
+            <td>review=<%= review_application.id %></td>
+            <td><%= status_badge(review_application.status) %></td>
+            <td><%= exam_application.candidate.name %>&lt;<%= exam_application.candidate.email %>&gt;</td>
+            <td><%= exam_application.evaluation_target.display_name %></td>
+            <td><%= review_application.submissions.size %></td>
+            <td><%= link_to "詳細", review_application_path(review_application), class: "button button--secondary" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= empty_state("対応可能なレビュー依頼はありません。") %>
+<% end %>

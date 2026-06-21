@@ -16,6 +16,8 @@ class ExaminerSkillCapability < ApplicationRecord
   validate :examiner_profile_is_active
 
   scope :active, -> { where(active: true) }
+  scope :reviewable, -> { active.where(can_review: true) }
+  scope :interviewable, -> { active.where(can_interview: true) }
 
   private
 

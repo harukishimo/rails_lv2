@@ -20,8 +20,8 @@ module SkillEvidenceHub
     #
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
+    config.time_zone = "Asia/Tokyo"
+    config.x.local_demo_enabled = Rails.env.development? || Rails.env.test?
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

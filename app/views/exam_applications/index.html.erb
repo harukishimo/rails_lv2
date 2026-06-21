@@ -1,0 +1,59 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">受験表明一覧</h1>
+    <p class="page-description">自分の受験状況、レビュー依頼、面談応募へ進む起点です。</p>
+  </div>
+  <% if current_user.candidate? %>
+    <%= link_to "受験表明を作成", new_exam_application_path, class: "button" %>
+  <% end %>
+</div>
+
+<%= form_with url: exam_applications_path, method: :get, class: "toolbar" do |form| %>
+  <div class="field">
+    <%= form.label :keyword, "対象キーワード" %>
+    <%= form.search_field :keyword, value: params[:keyword] %>
+  </div>
+  <div class="field">
+    <%= form.label :status, "ステータス" %>
+    <%= form.select :status, options_for_select(ExamApplication.statuses.keys, params[:status]), include_blank: "すべて" %>
+  </div>
+  <div class="field">
+    <%= form.label :result, "結果" %>
+    <%= form.select :result, options_for_select(ExamApplication.results.keys, params[:result]), include_blank: "すべて" %>
+  </div>
+  <%= form.submit "検索" %>
+<% end %>
+
+<% if @exam_applications.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>受験</th>
+          <th>状態</th>
+          <th>結果</th>
+          <th>受験者</th>
+          <th>評価期</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @exam_applications.each do |exam_application| %>
+          <tr>
+            <td>
+              <%= exam_application.display_name %>
+              <div class="page-description">exam_application=<%= exam_application.id %></div>
+            </td>
+            <td><%= status_badge(exam_application.status) %></td>
+            <td><%= status_badge(exam_application.result) %></td>
+            <td><%= exam_application.candidate.name %>&lt;<%= exam_application.candidate.email %>&gt;</td>
+            <td><%= exam_application.evaluation_period.name %></td>
+            <td><%= link_to "詳細", exam_application_path(exam_application), class: "button button--secondary" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= empty_state("受験表明はまだありません。受験対象を選んで受験表明を作成してください。") %>
+<% end %>

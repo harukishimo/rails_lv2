@@ -1,0 +1,9 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">New review application</h1>
+    <p class="page-description">提出物とMarkdownコメントを登録して評価官へレビュー依頼します。</p>
+  </div>
+  <%= link_to "受験へ戻る", exam_application_path(@review_application.exam_application), class: "button button--secondary" %>
+</div>
+
+<%= render "form", review_application: @review_application %>

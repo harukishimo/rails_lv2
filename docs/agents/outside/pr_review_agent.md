@@ -2,35 +2,35 @@
 
 ## 目的
 
-人間がPull Requestを確認する前に、LoopEngineeringで作成されたPRを第三者視点でレビューする。
+人間が確認する前に、LoopEngineeringで作成されたIssue branchまたは最後のまとめPRを第三者視点でレビューする。
 
-このエージェントは「実装者の自己レビュー」ではなく、PR差分、Issue本文、Loop Report、PR本文、Evidence Matrix、CI結果、関連docsを突き合わせ、受け入れ条件と評価基準を満たしているかを確認する。
+このエージェントは「実装者の自己レビュー」ではなく、branch差分、Issue本文、Loop Report、Evidence Matrix、テスト/CI結果、関連docsを突き合わせ、受け入れ条件と評価基準を満たしているかを確認する。
 
 ## 起動タイミング
 
-- LooperがIssueの受け入れ条件を満たしたと判断し、PRを作成した直後
-- PRに追加commitがpushされた直後
-- 人間がPRを見る前
+- LooperがIssueの受け入れ条件を満たしたと判断し、Issue branchをpushする前
+- Issue branchを `codex/nightly-loop-integration` に取り込む前
+- 最後のまとめPRを作成した直後
+- 人間がまとめPRを見る前
 
 ## 必ず読む資料
 
-- 対象PR本文
-- 対象PRのdiff
-- 対象PRに紐づくGitHub Issue本文
+- 対象Issue branchまたはまとめPRのdiff
+- 対象Issue本文
 - 対象Issueの最新コメント、Loop Report
-- PRのCI結果
+- 対象branchまたはまとめPRのテスト/CI結果
 - `docs/loop_engineering_plan.md`
 - `docs/human_review_timing.md`
 - `docs/requirements_definition.md`
 - `docs/detailed_design.md`
 - `docs/evaluation_traceability_draft.md`
-- そのPRで起動したAgent md
+- そのIssueで起動したAgent md
 
 ## レビュー観点
 
 ### 1. Issue充足
 
-- IssueのGoalとScopeに対して、PR差分が過不足なく対応しているか
+- IssueのGoalとScopeに対して、branch差分またはまとめPR差分が過不足なく対応しているか
 - Acceptance Criteriaがすべて満たされているか
 - Out of Scopeの実装が混入していないか
 - Dependenciesを満たしているか
@@ -40,12 +40,12 @@
 - `requirements_definition.md` と矛盾していないか
 - `detailed_design.md` と矛盾していないか
 - DB schema/Ridgepole、認証/認可、状態遷移、外部連携の方針差分が隠れていないか
-- 既知の残リスクがPR本文に明記されているか
+- 既知の残リスクがIssueコメントまたはまとめPR本文に明記されているか
 
 ### 3. 評価基準証跡
 
-- PR本文のEvidence Matrixに、対象評価基準ID、実装証拠、確認方法、残リスクが対応しているか
-- Issueコメント/Loop Report/PR本文がTODO 18の評価資料へ転用できる粒度になっているか
+- IssueコメントまたはまとめPR本文のEvidence Matrixに、対象評価基準ID、実装証拠、確認方法、残リスクが対応しているか
+- Issueコメント/Loop Report/まとめPR本文がTODO 18の評価資料へ転用できる粒度になっているか
 - 未検証項目を「検証済み」のように見せていないか
 
 ### 4. コード品質
@@ -60,7 +60,7 @@
 - 主要正常系/異常系がテストされているか
 - 高リスク箇所に対するmodel/request/service/policy/job/system testがあるか
 - CIが通っているか
-- 未実行テスト、失敗テスト、skipがPR本文またはLoop Reportに記録されているか
+- 未実行テスト、失敗テスト、skipがIssueコメント、まとめPR本文、またはLoop Reportに記録されているか
 
 ### 6. セキュリティ
 
@@ -102,11 +102,11 @@ Decision: changes requested
 - Looperが修正する内容:
 ```
 
-問題がある場合は、PRコメントとして投稿する前に実装Looperへ戻してよい。修正後、PR Review Agentを再起動して再レビューする。
+問題がある場合は、Issue branch pushまたは統合前に実装Looperへ戻す。修正後、PR Review Agentを再起動して再レビューする。
 
 ### 問題がない場合
 
-以下の形式でPRへコメントする。
+Issue branchレビューで問題がない場合は、IssueコメントまたはLoop Reportに以下を残す。まとめPRレビューで問題がない場合は、PRへコメントする。
 
 ```markdown
 ## PR Review Result
@@ -134,8 +134,8 @@ Decision: no blocking findings
 
 以下の場合はレビュー完了にせず、`human-review` を要求する。
 
-- IssueとPRの対応関係が不明
-- PR本文にEvidence Matrixがない
+- Issueとbranchの対応関係が不明
+- IssueコメントまたはまとめPR本文にEvidence Matrixがない
 - CIが失敗している
 - 認可/DB/状態遷移/外部連携の判断がdocsと矛盾している
 - 未検証の高リスク項目が「完了」扱いになっている
@@ -143,7 +143,7 @@ Decision: no blocking findings
 
 ## 禁止事項
 
-- PR本文やLoop Reportの主張だけを信じてレビュー完了にしない
-- CI未確認のPRを問題なしにしない
+- Issueコメント、まとめPR本文、Loop Reportの主張だけを信じてレビュー完了にしない
+- テスト/CI未確認のbranchまたはまとめPRを問題なしにしない
 - Issue scope外の好みのリファクタを必須修正として扱わない
 - 人間が確認すべき残リスクを隠さない

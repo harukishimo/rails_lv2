@@ -14,7 +14,40 @@ Rails.application.routes.draw do
     resource :dashboard, only: :show, controller: :dashboard
   end
 
-  root "health#index"
+  resource :dashboard, only: :show, controller: :dashboard
+
+  resources :exam_applications, only: %i[index show new create] do
+    resource :interview_application, only: %i[new create]
+    resources :review_applications, only: %i[new create], shallow: true do
+      patch :cancel, on: :member
+    end
+  end
+  resources :evaluation_targets, only: :index
+  resources :user_qualifications, only: :index
+  namespace :examiner do
+    resources :review_queue, only: :index
+    resources :candidates, only: %i[index show]
+  end
+  resources :interview_applications, only: :show do
+    member do
+      get :assignment
+      patch :assignment, action: :assign
+    end
+    resources :interview_schedules, only: :create
+    resource :interview_result, only: :create
+  end
+  resources :interview_schedules, only: [] do
+    patch :approve, on: :member
+    patch :reject, on: :member
+  end
+  resources :review_applications, only: %i[show edit update] do
+    resources :review_comments, only: :create
+    resources :review_decisions, only: :create
+  end
+  resources :review_comments, only: :update
+
+  root "dashboard#show"
+  get "health" => "health#index", as: :app_health
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
