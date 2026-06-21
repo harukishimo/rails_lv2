@@ -8,7 +8,7 @@
 
 <dl class="<%= ui_class(:detail_list) %>">
   <dt>受験ID</dt>
-  <dd>exam_application=<%= @exam_application.id %></dd>
+  <dd><%= @exam_application.id %></dd>
   <dt>ステータス</dt>
   <dd><%= status_badge(@exam_application.status) %></dd>
   <dt>結果</dt>

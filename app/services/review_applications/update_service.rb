@@ -50,7 +50,7 @@ module ReviewApplications
     end
 
     def raise_not_editable!
-      review_application.errors.add(:base, "review application is not editable")
+      review_application.errors.add(:base, :review_application_not_editable)
       raise ActiveRecord::RecordInvalid, review_application
     end
   end

@@ -19,12 +19,12 @@ class ReviewComment < ApplicationRecord
   def examiner_has_examiner_role
     return if examiner&.examiner? || examiner&.admin?
 
-    errors.add(:examiner, "must be an examiner")
+    errors.add(:examiner, :examiner_role_required)
   end
 
   def review_application_accepts_comments
     return if review_application&.commentable?
 
-    errors.add(:review_application, "must accept comments")
+    errors.add(:review_application, :must_accept_comments)
   end
 end

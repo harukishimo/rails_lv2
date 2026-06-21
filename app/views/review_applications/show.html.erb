@@ -1,7 +1,7 @@
 <div class="<%= ui_class(:page_header) %>">
   <div>
     <h1 class="<%= ui_class(:page_title) %>"><%= @review_application.display_name %></h1>
-    <p class="<%= ui_class(:page_description) %>">status=<%= @review_application.status %></p>
+    <p class="<%= ui_class(:page_description) %>">状態: <%= enum_label(ReviewApplication, :status, @review_application.status) %></p>
   </div>
   <div class="<%= ui_class(:actions) %>">
     <% if policy(@review_application.exam_application).show? %>
@@ -39,7 +39,7 @@
     <% if @review_application.submissions.any? %>
       <ul>
         <% @review_application.submissions.each do |submission| %>
-          <li>submission=<%= submission.title %>:<%= submission.kind %> <%= submission.github_url %></li>
+          <li>提出物: <%= submission.title %> / <%= enum_label(Submission, :kind, submission.kind) %> <%= submission.github_url %></li>
         <% end %>
       </ul>
     <% else %>
@@ -91,7 +91,7 @@
       <%= form_with model: [@review_application, @review_decision] do |form| %>
         <div class="<%= ui_class(:field) %>">
           <%= form.label :decision, "判定" %>
-          <%= form.select :decision, ReviewDecision.decisions.keys.map { |decision| [decision, decision] } %>
+          <%= form.select :decision, enum_options_for(ReviewDecision, :decision) %>
         </div>
         <div class="<%= ui_class(:field) %>">
           <%= form.label :reason_markdown, "理由" %>

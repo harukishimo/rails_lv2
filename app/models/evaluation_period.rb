@@ -27,6 +27,6 @@ class EvaluationPeriod < ApplicationRecord
     return if starts_on.blank? || ends_on.blank?
     return if starts_on <= ends_on
 
-    errors.add(:ends_on, "must be on or after starts on")
+    errors.add(:ends_on, :on_or_after_starts_on)
   end
 end

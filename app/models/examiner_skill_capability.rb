@@ -24,12 +24,12 @@ class ExaminerSkillCapability < ApplicationRecord
   def evaluation_target_is_active
     return if evaluation_target&.active?
 
-    errors.add(:evaluation_target, "must be active")
+    errors.add(:evaluation_target, :must_be_active)
   end
 
   def examiner_profile_is_active
     return if examiner_profile&.active?
 
-    errors.add(:examiner_profile, "must be active")
+    errors.add(:examiner_profile, :must_be_active)
   end
 end

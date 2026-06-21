@@ -59,7 +59,7 @@ module ReviewDecisions
     end
 
     def raise_not_decidable!
-      review_application.errors.add(:base, "review application does not accept decisions")
+      review_application.errors.add(:base, :review_application_does_not_accept_decisions)
       raise ActiveRecord::RecordInvalid, review_application
     end
   end

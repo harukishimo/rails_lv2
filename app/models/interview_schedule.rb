@@ -45,20 +45,20 @@ class InterviewSchedule < ApplicationRecord
     return if starts_at.blank? || ends_at.blank?
     return if starts_at < ends_at
 
-    errors.add(:starts_at, "must be before ends_at")
+    errors.add(:starts_at, :before_ends_at)
   end
 
   def starts_at_must_be_future
     return if starts_at.blank?
     return if starts_at > Time.current
 
-    errors.add(:starts_at, "must be in the future")
+    errors.add(:starts_at, :future)
   end
 
   def timezone_must_be_known
     return if timezone.blank?
     return if Time.find_zone(timezone).present?
 
-    errors.add(:timezone, "is invalid")
+    errors.add(:timezone, :invalid)
   end
 end

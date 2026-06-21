@@ -138,32 +138,32 @@ module InterviewApplications
     end
 
     def raise_examiner_required!
-      interview_application.errors.add(:assigned_examiner_profile, "must be selected")
+      interview_application.errors.add(:assigned_examiner_profile, :must_be_selected)
       raise ActiveRecord::RecordInvalid, interview_application
     end
 
     def raise_not_assignable!
-      interview_application.errors.add(:base, "interview application is not assignable")
+      interview_application.errors.add(:base, :interview_application_not_assignable)
       raise ActiveRecord::RecordInvalid, interview_application
     end
 
     def raise_not_capable!
-      interview_application.errors.add(:assigned_examiner_profile, "must be able to interview target")
+      interview_application.errors.add(:assigned_examiner_profile, :must_be_able_to_interview_target)
       raise ActiveRecord::RecordInvalid, interview_application
     end
 
     def raise_self_assignment!
-      interview_application.errors.add(:assigned_examiner_profile, "must not be the candidate")
+      interview_application.errors.add(:assigned_examiner_profile, :must_not_be_candidate)
       raise ActiveRecord::RecordInvalid, interview_application
     end
 
     def raise_monthly_limit_reached!
-      interview_application.errors.add(:assigned_examiner_profile, "has reached monthly interview limit")
+      interview_application.errors.add(:assigned_examiner_profile, :monthly_interview_limit_reached)
       raise ActiveRecord::RecordInvalid, interview_application
     end
 
     def raise_reason_required!
-      interview_application.errors.add(:assignment_override_reason, "is required for manual override")
+      interview_application.errors.add(:assignment_override_reason, :required_for_manual_override)
       raise ActiveRecord::RecordInvalid, interview_application
     end
   end

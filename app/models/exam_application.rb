@@ -66,26 +66,26 @@ class ExamApplication < ApplicationRecord
   def candidate_has_candidate_role
     return if candidate&.candidate?
 
-    errors.add(:candidate, "must have candidate role")
+    errors.add(:candidate, :candidate_role_required)
   end
 
   def evaluation_target_is_active
     return if evaluation_target&.active?
 
-    errors.add(:evaluation_target, "must be active")
+    errors.add(:evaluation_target, :must_be_active)
   end
 
   def evaluation_period_is_active
     return if evaluation_period&.active?
 
-    errors.add(:evaluation_period, "must be active")
+    errors.add(:evaluation_period, :must_be_active)
   end
 
   def evaluation_period_includes_today
     return if evaluation_period.blank?
     return if evaluation_period.cover?(Date.current)
 
-    errors.add(:evaluation_period, "must include today")
+    errors.add(:evaluation_period, :must_include_today)
   end
 
   def attempt_number_is_unique_among_active_records
@@ -100,7 +100,7 @@ class ExamApplication < ApplicationRecord
     )
     duplicate = duplicate.where.not(id: id) if persisted?
 
-    errors.add(:attempt_number, "has already been taken") if duplicate.exists?
+    errors.add(:attempt_number, :taken) if duplicate.exists?
   end
 
   def open_application_identity_is_unique
@@ -115,7 +115,7 @@ class ExamApplication < ApplicationRecord
     ).where.not(status: self.class.statuses.fetch(:closed))
     duplicate = duplicate.where.not(id: id) if persisted?
 
-    errors.add(:base, "open exam application already exists for this candidate and target") if duplicate.exists?
+    errors.add(:base, :open_exam_application_exists) if duplicate.exists?
   end
 
   def prevent_restore_open_duplicate
@@ -131,7 +131,7 @@ class ExamApplication < ApplicationRecord
     duplicate = duplicate.where.not(id: id) if id.present?
     return unless duplicate.exists?
 
-    errors.add(:base, "cannot restore because open exam application already exists")
+    errors.add(:base, :cannot_restore_open_exam_application_exists)
     throw(:abort)
   end
 end

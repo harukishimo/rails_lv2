@@ -1,6 +1,6 @@
 module ApplicationHelper
   def status_badge(status, label: nil)
-    tag.span(label || status.to_s.humanize, class: status_badge_classes(status))
+    tag.span(label || label_for(status), class: status_badge_classes(status))
   end
 
   def error_summary(record)
@@ -20,6 +20,34 @@ module ApplicationHelper
 
   def nav_link(label, path)
     link_to label, path, class: ui_class(:nav_link)
+  end
+
+  def enum_label(model_class, enum_name, value)
+    I18n.t(
+      "activerecord.enums.#{model_class.model_name.i18n_key}.#{enum_name}.#{value}",
+      default: label_for(value)
+    )
+  end
+
+  def enum_options_for(model_class, enum_name)
+    enum_values = model_class.public_send(enum_name.to_s.pluralize).keys
+    enum_values.map { |value| [ enum_label(model_class, enum_name, value), value ] }
+  end
+
+  def label_for(value)
+    I18n.t("labels.#{value}", default: value.to_s.humanize)
+  end
+
+  def status_transition_label(event)
+    return label_for(event.to_status) if event.from_status.blank?
+
+    "#{label_for(event.from_status)} → #{label_for(event.to_status)}"
+  end
+
+  def status_transition_message(event)
+    return "#{label_for(event.to_status)}になりました" if event.from_status.blank?
+
+    "#{label_for(event.from_status)}から#{label_for(event.to_status)}へ変更しました"
   end
 
   def button_classes(variant = :primary)

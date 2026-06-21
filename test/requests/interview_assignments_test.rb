@@ -11,7 +11,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     get assignment_interview_application_path(interview_application)
 
     assert_response :success
-    assert_includes response.body, "suggested_examiner_id=#{suggested.examiner_profile.id}"
+    assert_includes response.body, "自動提案された評価官ID: #{suggested.examiner_profile.id}"
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 
@@ -70,7 +70,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Assignment override reason is required for manual override"
+    assert_includes response.body, "変更理由は手動変更時に入力してください"
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 
@@ -88,7 +88,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, "入力内容を確認してください"
-    assert_includes response.body, "Assigned examiner profile must be selected"
+    assert_includes response.body, "面談評価官を選択してください"
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 
@@ -128,7 +128,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Assigned examiner profile must be able to interview target"
+    assert_includes response.body, "面談評価官はこの受験対象の面談に対応できる評価官を指定してください"
   end
 
   test "capable examiner cannot assign candidate self profile" do
@@ -154,7 +154,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Assigned examiner profile must not be the candidate"
+    assert_includes response.body, "面談評価官は受験者本人以外を指定してください"
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 
@@ -177,7 +177,7 @@ class InterviewAssignmentsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Assigned examiner profile has reached monthly interview limit"
+    assert_includes response.body, "面談評価官は月間面談上限に達しています"
     assert_nil interview_application.reload.assigned_examiner_profile
   end
 

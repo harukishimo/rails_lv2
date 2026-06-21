@@ -35,7 +35,7 @@ module ReviewApplications
     attr_reader :review_application, :actor, :cancel_reason
 
     def raise_not_cancelable!
-      review_application.errors.add(:base, "review application is not cancelable")
+      review_application.errors.add(:base, :review_application_not_cancelable)
       raise ActiveRecord::RecordInvalid, review_application
     end
   end

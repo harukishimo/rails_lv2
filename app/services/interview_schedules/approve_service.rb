@@ -34,7 +34,7 @@ module InterviewSchedules
     end
 
     def raise_not_approvable!
-      interview_schedule.errors.add(:base, "interview schedule is not approvable")
+      interview_schedule.errors.add(:base, :interview_schedule_not_approvable)
       raise ActiveRecord::RecordInvalid, interview_schedule
     end
 

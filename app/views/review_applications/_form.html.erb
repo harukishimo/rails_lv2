@@ -13,7 +13,7 @@
       <div class="<%= ui_class(:panel) %>">
         <div class="<%= ui_class(:field) %>">
           <%= submission_form.label :kind, "提出種別" %>
-          <%= submission_form.select :kind, Submission.kinds.keys.map { |kind| [kind, kind] } %>
+          <%= submission_form.select :kind, enum_options_for(Submission, :kind) %>
         </div>
         <div class="<%= ui_class(:field) %>">
           <%= submission_form.label :title, "タイトル" %>

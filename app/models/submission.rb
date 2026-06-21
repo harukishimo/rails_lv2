@@ -32,14 +32,14 @@ class Submission < ApplicationRecord
     return unless github_repository?
     return if github_url.present?
 
-    errors.add(:github_url, "must be present for GitHub repository submissions")
+    errors.add(:github_url, :required_for_github_repository_submission)
   end
 
   def file_required_for_file_submission
     return unless file?
     return if file.attached?
 
-    errors.add(:file, "must be attached for file submissions")
+    errors.add(:file, :required_for_file_submission)
   end
 
   def file_size_within_limit
@@ -47,7 +47,7 @@ class Submission < ApplicationRecord
     return unless file.attached?
     return if attached_file_byte_size <= MAX_FILE_SIZE
 
-    errors.add(:file, "must be 20MB or smaller")
+    errors.add(:file, :too_large_for_submission)
   end
 
   def file_extension_is_allowed
@@ -55,13 +55,13 @@ class Submission < ApplicationRecord
     return unless file.attached?
     return if ALLOWED_FILE_EXTENSIONS.include?(attached_file_extension)
 
-    errors.add(:file, "must have an allowed extension")
+    errors.add(:file, :extension_not_allowed)
   end
 
   def review_application_is_editable
     return if review_application&.editable?
 
-    errors.add(:review_application, "must be editable")
+    errors.add(:review_application, :must_be_editable)
   end
 
   def attached_file_byte_size

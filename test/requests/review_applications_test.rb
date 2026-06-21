@@ -9,7 +9,7 @@ class ReviewApplicationsTest < ActionDispatch::IntegrationTest
     get new_exam_application_review_application_path(exam_application)
 
     assert_response :success
-    assert_includes response.body, "New review application"
+    assert_includes response.body, "レビュー依頼作成"
   end
 
   test "candidate can create review application with github repository submission" do
@@ -54,7 +54,7 @@ class ReviewApplicationsTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "review application must include a file or GitHub repository submission"
+    assert_includes response.body, "レビュー依頼にはファイルまたはGitHubリポジトリの提出が必要です"
   end
 
   test "candidate can create review application with file submission" do
@@ -93,7 +93,7 @@ class ReviewApplicationsTest < ActionDispatch::IntegrationTest
     get edit_review_application_path(review_application)
 
     assert_response :success
-    assert_includes response.body, "Edit #{review_application.display_name}"
+    assert_includes response.body, "レビュー依頼編集"
   end
 
   test "candidate can see review application status history" do
@@ -105,7 +105,7 @@ class ReviewApplicationsTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "状態変更履歴"
-    assert_includes response.body, "Review application submitted"
+    assert_includes response.body, "レビュー提出"
   end
 
   test "candidate can update editable review application" do
@@ -194,7 +194,7 @@ class ReviewApplicationsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "in-progress review application already exists"
+    assert_includes response.body, "進行中のレビュー依頼はすでに存在します"
   end
 
   test "candidate cannot show another candidate review application" do

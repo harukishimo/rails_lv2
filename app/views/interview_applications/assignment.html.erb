@@ -1,7 +1,7 @@
 <div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="<%= ui_class(:page_title) %>">Assignment for <%= @interview_application.display_name %></h1>
-    <p class="<%= ui_class(:page_description) %>">current_examiner=<%= @interview_application.assigned_examiner_name %></p>
+    <h1 class="<%= ui_class(:page_title) %>">面談評価官の割り振り</h1>
+    <p class="<%= ui_class(:page_description) %>">現在の面談評価官: <%= @interview_application.assigned_examiner_name %></p>
   </div>
   <%= link_to "面談へ戻る", interview_application_path(@interview_application), class: button_classes(:secondary) %>
 </div>
@@ -9,8 +9,8 @@
 <%= error_summary(@interview_application) %>
 
 <div class="<%= ui_class(:panel) %>">
-  suggested_examiner_id=<%= @suggested_examiner&.id %><br>
-  suggested_examiner=<%= @suggested_examiner&.display_name || "候補なし" %>
+  自動提案された評価官ID: <%= @suggested_examiner&.id || "-" %><br>
+  自動提案された評価官: <%= @suggested_examiner&.display_name || "候補なし" %>
 </div>
 
 <div class="<%= ui_class(:panel) %>">

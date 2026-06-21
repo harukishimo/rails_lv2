@@ -226,7 +226,7 @@ class ReviewCommentsAndDecisionsTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Review application must accept comments"
+    assert_includes response.body, "レビュー依頼はコメントを受け付けられる状態にしてください"
   end
 
   private

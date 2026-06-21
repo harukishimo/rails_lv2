@@ -50,7 +50,7 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
     get exam_applications_path
 
     assert_response :success
-    assert_includes response.body, "Declared"
+    assert_includes response.body, "受験表明済み"
     assert_includes response.body, application.display_name
 
     get exam_application_path(application)
@@ -80,7 +80,7 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, "入力内容を確認してください"
-    assert_includes response.body, "open exam application already exists"
+    assert_includes response.body, "同じ評価期・受験者・受験対象の進行中の受験はすでに存在します"
   end
 
   test "blank exam application form selection is shown as form error" do
@@ -96,8 +96,8 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, "入力内容を確認してください"
-    assert_includes response.body, "Evaluation period"
-    assert_includes response.body, "Evaluation target"
+    assert_includes response.body, "評価期を入力してください"
+    assert_includes response.body, "受験対象を入力してください"
   end
 
   test "qualification index has a useful empty state" do

@@ -25,9 +25,9 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     assert_redirected_to interview_application_path(interview_application)
 
     follow_redirect!
-    assert_includes response.body, "assigned_examiner=面接官未定"
+    assert_includes response.body, "面談評価官: 面接官未定"
     assert_includes response.body, "状態変更履歴"
-    assert_includes response.body, "Interview application requested"
+    assert_includes response.body, "面談応募"
     assert exam_application.reload.interview_requested?
   end
 
@@ -67,7 +67,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Exam application has already been taken"
+    assert_includes response.body, "受験はすでに存在します"
   end
 
   test "interview application has no cancel route" do
@@ -155,7 +155,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Starts at must be in the future"
+    assert_includes response.body, "開始日時は未来の日時を指定してください"
   end
 
   test "candidate cannot create interview schedule with starts_at after ends_at" do
@@ -174,7 +174,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Starts at must be before ends_at"
+    assert_includes response.body, "開始日時は終了日時より前にしてください"
   end
 
   test "candidate cannot create schedule with invalid timezone" do
@@ -194,7 +194,7 @@ class InterviewApplicationsTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Timezone is invalid"
+    assert_includes response.body, "タイムゾーンは不正な値です"
   end
 
   test "capable examiner can approve requested schedule" do

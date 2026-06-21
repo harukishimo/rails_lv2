@@ -7,13 +7,9 @@
         <li>
           <div class="flex flex-wrap items-center gap-2">
             <%= status_badge(event.event_type) %>
-            <% if event.from_status.present? %>
-              <span class="<%= ui_class(:muted_text) %>"><%= event.from_status %> → <%= event.to_status %></span>
-            <% else %>
-              <span class="<%= ui_class(:muted_text) %>"><%= event.to_status %></span>
-            <% end %>
+            <span class="<%= ui_class(:muted_text) %>"><%= status_transition_label(event) %></span>
           </div>
-          <p class="mb-1 mt-1 text-sm text-slate-700"><%= event.message %></p>
+          <p class="mb-1 mt-1 text-sm text-slate-700"><%= status_transition_message(event) %></p>
           <p class="<%= ui_class(:muted_text) %> text-sm">
             <%= l(event.created_at, format: :long) %>
             /

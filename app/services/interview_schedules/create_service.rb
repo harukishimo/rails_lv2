@@ -33,7 +33,7 @@ module InterviewSchedules
     end
 
     def raise_not_schedulable!
-      interview_application.errors.add(:base, "interview application does not accept schedules")
+      interview_application.errors.add(:base, :interview_application_does_not_accept_schedules)
       raise ActiveRecord::RecordInvalid, interview_application
     end
   end

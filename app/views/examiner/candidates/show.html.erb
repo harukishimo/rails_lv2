@@ -21,7 +21,7 @@
     <% if visible_qualifications(@candidate).any? %>
       <ul>
         <% visible_qualifications(@candidate).each do |qualification| %>
-          <li>qualification=<%= qualification.id %> <%= qualification.evaluation_target.display_name %> acquired_on=<%= qualification.acquired_on %></li>
+          <li>取得資格ID: <%= qualification.id %> <%= qualification.evaluation_target.display_name %> 取得日: <%= l(qualification.acquired_on) %></li>
         <% end %>
       </ul>
     <% else %>
@@ -34,7 +34,7 @@
     <% if visible_exam_applications(@candidate).any? %>
       <ul>
         <% visible_exam_applications(@candidate).each do |exam_application| %>
-          <li>exam_application=<%= exam_application.id %> <%= status_badge(exam_application.status) %> <%= exam_application.evaluation_target.display_name %></li>
+          <li>受験ID: <%= exam_application.id %> <%= status_badge(exam_application.status) %> <%= exam_application.evaluation_target.display_name %></li>
         <% end %>
       </ul>
     <% else %>

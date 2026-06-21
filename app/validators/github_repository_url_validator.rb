@@ -11,8 +11,8 @@ class GithubRepositoryUrlValidator < ActiveModel::EachValidator
               uri.query.blank? &&
               uri.fragment.blank?
 
-    record.errors.add(attribute, "must be a GitHub repository URL")
+    record.errors.add(attribute, :github_repository_url)
   rescue URI::InvalidURIError
-    record.errors.add(attribute, "must be a GitHub repository URL")
+    record.errors.add(attribute, :github_repository_url)
   end
 end

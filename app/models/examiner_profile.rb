@@ -46,6 +46,6 @@ class ExaminerProfile < ApplicationRecord
   def user_has_examiner_role
     return if user&.examiner?
 
-    errors.add(:user, "must have examiner role")
+    errors.add(:user, :must_have_examiner_role)
   end
 end

@@ -8,7 +8,7 @@
 <%= form_with url: examiner_review_queue_index_path, method: :get, class: ui_class(:toolbar) do |form| %>
   <div class="<%= ui_class(:field) %>">
     <%= form.label :status, "ステータス" %>
-    <%= form.select :status, options_for_select(ReviewApplication.statuses.keys, params[:status]), include_blank: "すべて" %>
+    <%= form.select :status, options_for_select(enum_options_for(ReviewApplication, :status), params[:status]), include_blank: "すべて" %>
   </div>
   <div class="<%= ui_class(:field) %>">
     <%= form.label :keyword, "受験対象" %>
@@ -42,7 +42,7 @@
         <% @review_applications.each do |review_application| %>
           <% exam_application = review_application.exam_application %>
           <tr>
-            <td>review=<%= review_application.id %></td>
+            <td>レビューID: <%= review_application.id %></td>
             <td><%= status_badge(review_application.status) %></td>
             <td><%= exam_application.candidate.name %>&lt;<%= exam_application.candidate.email %>&gt;</td>
             <td><%= exam_application.evaluation_target.display_name %></td>

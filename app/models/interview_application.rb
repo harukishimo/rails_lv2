@@ -65,14 +65,14 @@ class InterviewApplication < ApplicationRecord
   def exam_application_accepts_interview
     return if exam_application&.review_approved?
 
-    errors.add(:exam_application, "must be review approved")
+    errors.add(:exam_application, :must_be_review_approved)
   end
 
   def assigned_examiner_can_evaluate_target
     return if assigned_examiner_profile.blank?
     return if assigned_examiner_profile.can_interview_for?(exam_application&.evaluation_target)
 
-    errors.add(:assigned_examiner_profile, "must be able to evaluate target")
+    errors.add(:assigned_examiner_profile, :must_be_able_to_interview_target)
   end
 
   def assigned_examiner_is_not_candidate
@@ -80,7 +80,7 @@ class InterviewApplication < ApplicationRecord
     return if assigned_examiner_profile.blank?
     return unless assigned_examiner_profile.user_id == exam_application&.candidate_id
 
-    errors.add(:assigned_examiner_profile, "must not be the candidate")
+    errors.add(:assigned_examiner_profile, :must_not_be_candidate)
   end
 
   def assigned_examiner_has_monthly_capacity
@@ -88,7 +88,7 @@ class InterviewApplication < ApplicationRecord
     return if assigned_examiner_profile.blank?
     return unless assigned_examiner_profile.monthly_interview_limit_reached?
 
-    errors.add(:assigned_examiner_profile, "has reached monthly interview limit")
+    errors.add(:assigned_examiner_profile, :monthly_interview_limit_reached)
   end
 
   def assigned_examiner_profile_changed_for_validation?

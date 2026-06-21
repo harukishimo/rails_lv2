@@ -1,7 +1,7 @@
 <div class="<%= ui_class(:page_header) %>">
   <div>
     <h1 class="<%= ui_class(:page_title) %>"><%= @interview_application.display_name %></h1>
-    <p class="<%= ui_class(:page_description) %>">assigned_examiner=<%= @interview_application.assigned_examiner_name %></p>
+    <p class="<%= ui_class(:page_description) %>">面談評価官: <%= @interview_application.assigned_examiner_name %></p>
   </div>
   <div class="<%= ui_class(:actions) %>">
     <% if policy(@interview_application.exam_application).show? %>
@@ -34,7 +34,7 @@
       <ul>
         <% persisted_schedules.each do |schedule| %>
           <li>
-            schedule=<%= schedule.display_name %>:<%= schedule.status %>
+            希望日時: <%= schedule.display_name %>
             <%= status_badge(schedule.status) %>
             <% if policy(schedule).approve? %>
               <%= button_to "承認", approve_interview_schedule_path(schedule), method: :patch, class: button_classes %>
@@ -83,7 +83,7 @@
       <%= form_with model: [@interview_application, @interview_result] do |form| %>
         <div class="<%= ui_class(:field) %>">
           <%= form.label :result, "判定" %>
-          <%= form.select :result, InterviewResult.results.keys.map { |result| [result, result] } %>
+          <%= form.select :result, enum_options_for(InterviewResult, :result) %>
         </div>
         <div class="<%= ui_class(:field) %>">
           <%= form.label :comment_markdown, "コメント" %>
