@@ -50,7 +50,7 @@ class UiSmokeTest < ActionDispatch::IntegrationTest
     get exam_applications_path
 
     assert_response :success
-    assert_includes response.body, "status-badge status-badge--declared"
+    assert_includes response.body, "Declared"
     assert_includes response.body, application.display_name
 
     get exam_application_path(application)

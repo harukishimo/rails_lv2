@@ -1,40 +1,40 @@
 <%= error_summary(review_application) %>
 
-<div class="form-panel">
+<div class="<%= ui_class(:panel) %>">
   <%= form_with model: review_application,
                 url: review_application.persisted? ? review_application_path(review_application) : exam_application_review_applications_path(review_application.exam_application),
                 method: review_application.persisted? ? :patch : :post do |form| %>
-    <div class="field">
+    <div class="<%= ui_class(:field) %>">
       <%= form.label :appeal_markdown, "アピールコメント（Markdown）" %>
       <%= form.text_area :appeal_markdown %>
     </div>
 
     <%= form.fields_for :submissions do |submission_form| %>
-      <div class="form-panel">
-        <div class="field">
+      <div class="<%= ui_class(:panel) %>">
+        <div class="<%= ui_class(:field) %>">
           <%= submission_form.label :kind, "提出種別" %>
           <%= submission_form.select :kind, Submission.kinds.keys.map { |kind| [kind, kind] } %>
         </div>
-        <div class="field">
+        <div class="<%= ui_class(:field) %>">
           <%= submission_form.label :title, "タイトル" %>
           <%= submission_form.text_field :title %>
         </div>
-        <div class="field">
+        <div class="<%= ui_class(:field) %>">
           <%= submission_form.label :github_url, "GitHub URL" %>
           <%= submission_form.url_field :github_url %>
         </div>
-        <div class="field">
+        <div class="<%= ui_class(:field) %>">
           <%= submission_form.label :file, "ファイル" %>
           <%= submission_form.file_field :file %>
         </div>
-        <div class="field">
+        <div class="<%= ui_class(:field) %>">
           <%= submission_form.label :note, "補足" %>
           <%= submission_form.text_area :note %>
         </div>
       </div>
     <% end %>
 
-    <div class="form-actions">
+    <div class="<%= ui_class(:form_actions) %>">
       <%= form.submit review_application.persisted? ? "レビュー依頼を更新" : "レビュー依頼を登録" %>
     </div>
   <% end %>

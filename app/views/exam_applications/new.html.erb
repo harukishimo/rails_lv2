@@ -1,24 +1,24 @@
-<div class="page-header">
+<div class="<%= ui_class(:page_header) %>">
   <div>
-    <h1 class="page-title">New exam application</h1>
-    <p class="page-description">受験したい評価対象を選択して、受験表明を登録します。</p>
+    <h1 class="<%= ui_class(:page_title) %>">New exam application</h1>
+    <p class="<%= ui_class(:page_description) %>">受験したい評価対象を選択して、受験表明を登録します。</p>
   </div>
-  <%= link_to "一覧へ戻る", exam_applications_path, class: "button button--secondary" %>
+  <%= link_to "一覧へ戻る", exam_applications_path, class: button_classes(:secondary) %>
 </div>
 
 <%= error_summary(@exam_application) %>
 
-<div class="form-panel">
+<div class="<%= ui_class(:panel) %>">
   <%= form_with model: @exam_application, url: exam_applications_path do |form| %>
-    <div class="field">
+    <div class="<%= ui_class(:field) %>">
       <%= form.label :evaluation_period_id, "評価期" %>
       <%= form.collection_select :evaluation_period_id, @evaluation_periods, :id, :name, prompt: "選択してください" %>
     </div>
-    <div class="field">
+    <div class="<%= ui_class(:field) %>">
       <%= form.label :evaluation_target_id, "受験対象" %>
       <%= form.collection_select :evaluation_target_id, @evaluation_targets, :id, :display_name, prompt: "選択してください" %>
     </div>
-    <div class="form-actions">
+    <div class="<%= ui_class(:form_actions) %>">
       <%= form.submit "受験表明を登録" %>
     </div>
   <% end %>

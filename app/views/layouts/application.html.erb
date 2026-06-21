@@ -18,16 +18,15 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
   </head>
 
   <body>
-    <header class="app-header">
-      <div class="app-header__inner">
-        <%= link_to "Skill Evidence Hub", root_path, class: "app-header__brand" %>
+    <header class="<%= ui_class(:app_header) %>">
+      <div class="<%= ui_class(:app_header_inner) %>">
+        <%= link_to "Skill Evidence Hub", root_path, class: ui_class(:app_brand) %>
         <% if user_signed_in? %>
-          <nav class="app-nav" aria-label="Primary navigation">
+          <nav class="<%= ui_class(:app_nav) %>" aria-label="Primary navigation">
             <%= nav_link "受験対象", evaluation_targets_path %>
             <%= nav_link "受験表明", exam_applications_path %>
             <%= nav_link "取得資格", user_qualifications_path %>
@@ -41,21 +40,21 @@
               <%= nav_link "管理", admin_dashboard_path %>
             <% end %>
           </nav>
-          <div class="app-header__user">
+          <div class="<%= ui_class(:app_user) %>">
             <span><%= current_user.name %></span>
-            <%= button_to "ログアウト", destroy_user_session_path, method: :delete, class: "link-button" %>
+            <%= button_to "ログアウト", destroy_user_session_path, method: :delete, class: link_button_classes %>
           </div>
         <% end %>
       </div>
     </header>
 
-    <main class="app-main">
+    <main class="<%= ui_class(:app_main) %>">
       <% if notice.present? %>
-        <p class="flash flash--notice"><%= notice %></p>
+        <p class="<%= flash_classes(:notice) %>"><%= notice %></p>
       <% end %>
 
       <% if alert.present? %>
-        <p class="flash flash--alert"><%= alert %></p>
+        <p class="<%= flash_classes(:alert) %>"><%= alert %></p>
       <% end %>
 
       <%= yield %>
