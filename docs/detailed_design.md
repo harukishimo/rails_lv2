@@ -22,6 +22,8 @@ TODO 7の [要件定義書](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/re
 
 評価基準本文や大きな知識体系は外部ナレッジシステムで管理する。アプリ内では、受験対象の識別、提出・レビュー・面談・資格反映の業務証跡を管理する。
 
+実装後のアーキテクチャ採用理由、Rails標準との差分、DDD/Clean Architectureの部分採用理由、凝集度/結合度/DIの証跡は [アーキテクチャ判断メモ](/Users/haruki.shimo/Documents/ruby_study_lv2/docs/architecture_decisions.md) に整理する。
+
 ## 画面一覧
 
 ### 共通画面
