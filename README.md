@@ -24,7 +24,7 @@ bin/setup --skip-server
 bin/dev
 ```
 
-`bin/dev` starts Rails and `bin/rails tailwindcss:watch` through `Procfile.dev`.
+`bin/dev` starts Rails and `bin/rails tailwindcss:watch[always]` through `Procfile.dev`.
 For one-off stylesheet generation, run:
 
 ```sh
