@@ -18,6 +18,8 @@ gem "ridgepole", "~> 3.2", require: false
 gem "paranoia", "~> 3.1"
 # Render GitHub Flavored Markdown-like review comments before sanitizing HTML.
 gem "commonmarker", "~> 2.8"
+# Use explicit HTTP clients for Slack and Google Calendar integrations.
+gem "faraday", "~> 2.14"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -80,4 +82,5 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+  gem "webmock", "~> 3.26"
 end

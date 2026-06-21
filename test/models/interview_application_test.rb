@@ -101,6 +101,14 @@ class InterviewApplicationTest < ActiveSupport::TestCase
     end
   end
 
+  test "accepts result only after calendar event is created" do
+    scheduled = InterviewApplication.new(status: :scheduled)
+    calendar_created = InterviewApplication.new(status: :calendar_created)
+
+    assert_not scheduled.result_decidable?
+    assert calendar_created.result_decidable?
+  end
+
   private
 
   def create_review_approved_exam_application(candidate:)

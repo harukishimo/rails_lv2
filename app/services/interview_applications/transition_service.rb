@@ -6,7 +6,7 @@ module InterviewApplications
       "requested" => %w[examiner_assigned schedule_requested],
       "examiner_assigned" => %w[schedule_requested],
       "schedule_requested" => %w[scheduled],
-      "scheduled" => %w[calendar_created completed],
+      "scheduled" => %w[calendar_created],
       "calendar_created" => %w[completed],
       "completed" => []
     }.freeze
@@ -22,6 +22,10 @@ module InterviewApplications
 
     def approve_schedule!
       transition_to!(:scheduled)
+    end
+
+    def create_calendar!
+      transition_to!(:calendar_created)
     end
 
     def complete!

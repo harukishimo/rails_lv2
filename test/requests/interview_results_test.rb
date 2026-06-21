@@ -2,7 +2,7 @@ require "test_helper"
 
 class InterviewResultsTest < ActionDispatch::IntegrationTest
   test "assigned examiner can register passed interview result" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
     sign_in_as(examiner)
 
     assert_difference -> { InterviewResult.count }, 1 do
@@ -23,7 +23,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "assigned examiner can register failed result without qualification" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
     sign_in_as(examiner)
 
     assert_difference -> { InterviewResult.count }, 1 do
@@ -44,7 +44,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "candidate cannot register interview result" do
-    interview_application, = create_scheduled_interview_application
+    interview_application, = create_calendar_created_interview_application
     candidate = interview_application.exam_application.candidate
     sign_in_as(candidate)
 
@@ -59,7 +59,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "unassigned capable examiner cannot register interview result" do
-    interview_application, = create_scheduled_interview_application
+    interview_application, = create_calendar_created_interview_application
     other_examiner = create_examiner_for(interview_application.exam_application.evaluation_target)
     sign_in_as(other_examiner)
 
@@ -74,7 +74,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "admin can register interview result for another candidate" do
-    interview_application, = create_scheduled_interview_application
+    interview_application, = create_calendar_created_interview_application
     admin = create_user_with_role(Role::ADMIN)
     sign_in_as(admin)
 
@@ -91,7 +91,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "admin candidate cannot register own interview result" do
-    interview_application, = create_scheduled_interview_application
+    interview_application, = create_calendar_created_interview_application
     candidate = interview_application.exam_application.candidate
     add_role(candidate, Role::ADMIN)
     sign_in_as(candidate)
@@ -107,7 +107,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "missing result returns validation error" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
     sign_in_as(examiner)
 
     post interview_application_interview_result_path(interview_application), params: {
@@ -121,7 +121,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
   end
 
   test "assigned examiner cannot register duplicate interview result" do
-    interview_application, examiner = create_scheduled_interview_application
+    interview_application, examiner = create_calendar_created_interview_application
     QualificationGrantService.call(
       interview_application: interview_application,
       examiner: examiner,
@@ -141,7 +141,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
 
   private
 
-  def create_scheduled_interview_application
+  def create_calendar_created_interview_application
     candidate = create_user_with_role(Role::CANDIDATE)
     exam_application = ExamApplications::CreateService.call(
       candidate: candidate,
@@ -169,6 +169,7 @@ class InterviewResultsTest < ActionDispatch::IntegrationTest
       }
     )
     InterviewSchedules::ApproveService.call(interview_schedule: schedule, actor: examiner)
+    CalendarEventCreateJob.perform_now(schedule.id, actor_id: examiner.id)
 
     [ interview_application.reload, examiner ]
   end
